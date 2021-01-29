@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 MediaTek Inc.
+ * Copyright (c) 2021 MediaTek Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -26,8 +26,8 @@
 #define INV_BIT			-1
 
 /* get spm power status struct to register inside clk_data */
-static struct pwr_status mfgcfg_pwr_stat = GATE_PWR_STAT(0xEF0,
-		0xEF4, INV_OFS, INV_BIT, INV_BIT);
+static struct pwr_status mfgcfg_pwr_stat = GATE_PWR_STAT(0xEF8,
+		0xEFC, INV_OFS, 0x3f, 0x3f);
 
 static const struct mtk_gate_regs mfgcfg_cg_regs = {
 	.set_ofs = 0x4,

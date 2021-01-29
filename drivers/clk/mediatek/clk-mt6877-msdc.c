@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 MediaTek Inc.
+ * Copyright (c) 2021 MediaTek Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -46,46 +46,6 @@ static const struct mtk_gate msdc0_clks[] = {
 			"msdc_new_rx_ck"/* parent */, 0),
 };
 
-static const struct mtk_gate_regs msdc0_top_cg_regs = {
-	.set_ofs = 0x4c,
-	.clr_ofs = 0x4c,
-	.sta_ofs = 0x4c,
-};
-
-#define GATE_MSDC0_TOP(_id, _name, _parent, _shift) {	\
-		.id = _id,				\
-		.name = _name,				\
-		.parent_name = _parent,			\
-		.regs = &msdc0_top_cg_regs,			\
-		.shift = _shift,			\
-		.ops = &mtk_clk_gate_ops_no_setclr_inv,	\
-	}
-
-static const struct mtk_gate msdc0_top_clks[] = {
-	GATE_MSDC0_TOP(CLK_MSDC0_TOP_TX_TEST_EN, "msdc0_tx_test_en",
-			"msdc50_0_ck"/* parent */, 31),
-};
-
-static const struct mtk_gate_regs msdc1_top_cg_regs = {
-	.set_ofs = 0x4c,
-	.clr_ofs = 0x4c,
-	.sta_ofs = 0x4c,
-};
-
-#define GATE_MSDC1_TOP(_id, _name, _parent, _shift) {	\
-		.id = _id,				\
-		.name = _name,				\
-		.parent_name = _parent,			\
-		.regs = &msdc1_top_cg_regs,			\
-		.shift = _shift,			\
-		.ops = &mtk_clk_gate_ops_no_setclr_inv,	\
-	}
-
-static const struct mtk_gate msdc1_top_clks[] = {
-	GATE_MSDC1_TOP(CLK_MSDC1_TOP_TX_TEST_EN, "msdc1_tx_test_en",
-			"msdc50_0_ck"/* parent */, 31),
-};
-
 static int clk_mt6877_msdc0_probe(struct platform_device *pdev)
 {
 	struct clk_onecell_data *clk_data;
@@ -114,72 +74,10 @@ static int clk_mt6877_msdc0_probe(struct platform_device *pdev)
 	return r;
 }
 
-static int clk_mt6877_msdc0_top_probe(struct platform_device *pdev)
-{
-	struct clk_onecell_data *clk_data;
-	int r;
-	struct device_node *node = pdev->dev.of_node;
-
-#if MT_CCF_BRINGUP
-	pr_notice("%s init begin\n", __func__);
-#endif
-
-	clk_data = mtk_alloc_clk_data(CLK_MSDC0_TOP_NR_CLK);
-
-	mtk_clk_register_gates(node, msdc0_top_clks, ARRAY_SIZE(msdc0_top_clks),
-			clk_data);
-
-	r = of_clk_add_provider(node, of_clk_src_onecell_get, clk_data);
-
-	if (r)
-		pr_err("%s(): could not register clock provider: %d\n",
-			__func__, r);
-
-#if MT_CCF_BRINGUP
-	pr_notice("%s init end\n", __func__);
-#endif
-
-	return r;
-}
-
-static int clk_mt6877_msdc1_top_probe(struct platform_device *pdev)
-{
-	struct clk_onecell_data *clk_data;
-	int r;
-	struct device_node *node = pdev->dev.of_node;
-
-#if MT_CCF_BRINGUP
-	pr_notice("%s init begin\n", __func__);
-#endif
-
-	clk_data = mtk_alloc_clk_data(CLK_MSDC1_TOP_NR_CLK);
-
-	mtk_clk_register_gates(node, msdc1_top_clks, ARRAY_SIZE(msdc1_top_clks),
-			clk_data);
-
-	r = of_clk_add_provider(node, of_clk_src_onecell_get, clk_data);
-
-	if (r)
-		pr_err("%s(): could not register clock provider: %d\n",
-			__func__, r);
-
-#if MT_CCF_BRINGUP
-	pr_notice("%s init end\n", __func__);
-#endif
-
-	return r;
-}
-
 static const struct of_device_id of_match_clk_mt6877_msdc[] = {
 	{
 		.compatible = "mediatek,mt6877-msdc0",
 		.data = clk_mt6877_msdc0_probe,
-	}, {
-		.compatible = "mediatek,mt6877-msdc0_top",
-		.data = clk_mt6877_msdc0_top_probe,
-	}, {
-		.compatible = "mediatek,mt6877-msdc1_top",
-		.data = clk_mt6877_msdc1_top_probe,
 	}, {
 		/* sentinel */
 	}

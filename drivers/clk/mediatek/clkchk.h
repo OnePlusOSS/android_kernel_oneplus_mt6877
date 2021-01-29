@@ -42,6 +42,21 @@ struct regname {
 	const char *name;
 };
 
+enum FMETER_TYPE {
+	FT_NULL,
+	ABIST,
+	CKGEN,
+	ABIST_2,
+};
+
+struct fmeter_clk {
+	enum FMETER_TYPE type;
+	u32 id;
+	const char *name;
+	u32 ofs;
+	u32 pdn;
+};
+
 struct clkchk_op {
 	const char *(*get_vf_name)(int id);
 	int (*get_vf_opp)(int id, int opp);

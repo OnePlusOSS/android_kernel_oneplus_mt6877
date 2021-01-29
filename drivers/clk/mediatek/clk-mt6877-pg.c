@@ -130,7 +130,8 @@ static void __iomem *spm_base;/* spm */
 static void __iomem *infra_base;/* infra */
 static void __iomem *infra_pdn_base;/* infra_pdn */
 static void __iomem *apu_vcore_base;
-static void __iomem *apu_conn_base;
+static void __iomem *apu_conn1_base;
+static void __iomem *apu_conn2_base;
 
 #define INFRACFG_REG(offset)		(infracfg_base + offset)
 #define SPM_REG(offset)			(spm_base + offset)
@@ -151,10 +152,10 @@ static void __iomem *apu_conn_base;
 
 #define XPU_PWR_STATUS		SPM_REG(0x0EF8)
 #define XPU_PWR_STATUS_2ND	SPM_REG(0x0EFC)
-#define OTHER_PWR_STATUS		SPM_REG(0x0178)
+#define OTHER_PWR_STATUS	SPM_REG(0x0178)
 
-#define MD1_PWR_CON		SPM_REG(0xE04)
-#define CONN_PWR_CON		SPM_REG(0xE08)
+#define MD1_PWR_CON		SPM_REG(0xE00)
+#define CONN_PWR_CON		SPM_REG(0xE04)
 #define MFG0_PWR_CON		SPM_REG(0xE80)
 #define MFG1_PWR_CON		SPM_REG(0xE84)
 #define MFG2_PWR_CON		SPM_REG(0xE88)
@@ -174,10 +175,8 @@ static void __iomem *apu_conn_base;
 #define CAM_RAWB_PWR_CON	SPM_REG(0xE64)
 #define CSI_PWR_CON		SPM_REG(0xE78)
 #define MD_BUCK_ISO_CON		SPM_REG(0xEE8)
-#define SOC_BUCK_ISO_CON		SPM_REG(0xEEC)
+#define SOC_BUCK_ISO_CON	SPM_REG(0xEEC)
 
-/* need confirm */
-#define EXT_BUCK_ISO		SPM_REG(0x39C)
 #define SPM_CROSS_WAKE_M01_REQ	SPM_REG(0x670)	/* for MT6873 APU wakeup src */
 #define APMCU_WAKEUP_APU	(0x1 << 0)
 
@@ -404,10 +403,9 @@ static void __iomem *apu_conn_base;
 #define MFG5_SRAM_PDN                    (0x1 << 8)
 #define MFG5_SRAM_PDN_ACK                (0x1 << 12)
 
-#define APU_VCORE_CG_CON		(apu_vcore_base + 0x0000)
-#define APU_CONN_CG_CON		(apu_conn_base + 0x0000)
-#define APU_VCORE_CG_CLR		(apu_vcore_base + 0x0008)
-#define APU_CONN_CG_CLR			(apu_conn_base + 0x0008)
+#define APUV_APUSYS_VCORE_CG_CLR	(apu_vcore_base + 0x0008)
+#define APU_CONN1_APU_CONN1_CG_CLR	(apu_conn1_base + 0x0008)
+#define APU_CONN2_APU_CONN_CG_CLR	(apu_conn2_base + 0x0008)
 
 static struct subsys syss[] =	/* NR_SYSS */
 {
@@ -785,7 +783,6 @@ static void ram_console_update(void)
 			if (id == SYS_MFG0 || id == SYS_MFG1
 			|| id == SYS_MFG2 || id == SYS_MFG3
 			|| id == SYS_MFG4 || id == SYS_MFG5)
-				print_subsys_reg(mfgcfg);
 				print_subsys_reg(mfg_ao);
 
 			if (id == SYS_AUDIO)
@@ -908,16 +905,23 @@ static void __iomem *find_and_iomap(char *comp_str)
 
 static void iomap_apu(void)
 {
-	apu_vcore_base = find_and_iomap("mediatek,apu_vcore");
+	apu_vcore_base = find_and_iomap("mediatek,mt6877-apu_vcore");
 	if (!apu_vcore_base) {
 		pr_notice("cannot get apu vcore base\n");
 
 		return;
 	}
 
-	apu_conn_base = find_and_iomap("mediatek,apu_conn");
-	if (!apu_conn_base) {
-		pr_notice("cannot get apu conn base\n");
+	apu_conn1_base = find_and_iomap("mediatek,mt6877-apu_conn1");
+	if (!apu_conn1_base) {
+		pr_notice("cannot get apu conn1 base\n");
+
+		return;
+	}
+
+	apu_conn2_base = find_and_iomap("mediatek,mt6877-apu_conn2");
+	if (!apu_conn2_base) {
+		pr_notice("cannot get apu conn2 base\n");
 
 		return;
 	}
@@ -927,8 +931,9 @@ static void iomap_apu(void)
 static void enable_subsys_hwcg(enum subsys_id id)
 {
 	if (id == SYS_APU) {
-		clk_writel(APU_VCORE_CG_CLR, 0xFFFFFFFF);
-		clk_writel(APU_CONN_CG_CLR, 0xFFFFFFFF);
+		clk_writel(APUV_APUSYS_VCORE_CG_CLR, 0x0000000F);
+		clk_writel(APU_CONN1_APU_CONN1_CG_CLR, 0x00000037);
+		clk_writel(APU_CONN2_APU_CONN_CG_CLR, 0x0007FFFE);
 	}
 }
 
@@ -3577,8 +3582,11 @@ int spm_mtcmos_ctrl_apu_pwr(int state)
 		/* mt6885: no need to wait for power down.*/
 		INCREASE_STEPS;
 	} else {
-		spm_write(EXT_BUCK_ISO, spm_read(EXT_BUCK_ISO) &
-							~(0x00000021));
+		spm_write(SOC_BUCK_ISO_CON, spm_read(SOC_BUCK_ISO_CON) &
+							~(0x1 << 2));
+
+		spm_write(SOC_BUCK_ISO_CON, spm_read(SOC_BUCK_ISO_CON) &
+							~(0x1 << 5));
 
 		spm_write(SPM_CROSS_WAKE_M01_REQ,
 			spm_read(SPM_CROSS_WAKE_M01_REQ) |
@@ -4659,11 +4667,9 @@ struct cg_list audio_cg2 = {
 
 struct cg_list adsp_cg = {.cg = {"adsp_sel"},};
 
-struct cg_list mfg_cg = {.cg = {"mfg_pll_sel", "mfg_ref_sel"},};
-
 struct cg_list mm_cg1 = {
-	.cg = {"disp_sel"},
-	.lp_cg = {"mdp_sel"},
+	.cg = {"disp0_sel"},
+	.lp_cg = {"mdp0_sel"},
 };
 
 struct cg_list mm_cg2 = {
@@ -4680,7 +4686,7 @@ struct cg_list isp0_cg1 = {.cg = {"img1_sel"},};
 
 struct cg_list isp0_cg2 = {.cg = {"imgsys1_larb9", "imgsys1_gals"},};
 
-struct cg_list isp1_cg1 = {.cg = {"img2_sel"},};
+struct cg_list isp1_cg1 = {.cg = {"img1_sel"},};
 
 struct cg_list isp1_cg2 = {
 	.cg = {
@@ -4707,7 +4713,7 @@ struct cg_list ven_cg2 = {.cg = {"venc_set1_venc"},};
 
 struct cg_list vde_cg1 = {.cg = {"vdec_sel"},};
 
-struct cg_list vde_cg2 = {.cg = {"vdec_cken", "vdec_larb1_cken"},};
+struct cg_list vde_cg2 = {.cg = {"vde2_vdec_cken", "vde2_larb1_cken"},};
 
 struct cg_list cam_cg1 = {.cg = {"cam_sel"},};
 
@@ -4726,12 +4732,12 @@ struct cg_list cam_rb_cg = {.cg = {"cam_rb_larbx"},};
 
 struct cg_list apu_cg1 = {
 	.cg = {
-		"ipu_if_sel",
 		"dsp_sel",
+		"dsp7_sel",
 	},
 };
 
-struct cg_list apu_cg2 = {.cg = {"apuc_iommu_0"},};
+struct cg_list apu_cg2 = {.cg = {"apu_conn1_iommu_0", "apu_conn2_iommu_0"},};
 
 struct mtk_power_gate {
 	int id;
@@ -4756,7 +4762,7 @@ struct mtk_power_gate scp_clks[] = {
 	PGATE(SCP_SYS_MD, "PG_MD", NULL, NULL, NULL, SYS_MD),
 	PGATE(SCP_SYS_CONN, "PG_CONN", NULL, NULL, NULL, SYS_CONN),
 	PGATE(SCP_SYS_DISP, "PG_DISP", NULL, &mm_cg1, &mm_cg2, SYS_DISP),
-	PGATE(SCP_SYS_MFG0, "PG_MFG0", NULL, &mfg_cg, NULL, SYS_MFG0),
+	PGATE(SCP_SYS_MFG0, "PG_MFG0", NULL, NULL, NULL, SYS_MFG0),
 	PGATE(SCP_SYS_MFG1, "PG_MFG1", "PG_MFG0", NULL, NULL, SYS_MFG1),
 	PGATE(SCP_SYS_MFG2, "PG_MFG2", "PG_MFG0", NULL, NULL, SYS_MFG2),
 	PGATE(SCP_SYS_MFG3, "PG_MFG3", "PG_MFG0", NULL, NULL, SYS_MFG3),
@@ -4975,7 +4981,7 @@ void mtcmos_force_off(void)
 
 	pr_notice("suspend test: md1\n");
 	spm_mtcmos_ctrl_md1_bus_prot(STA_POWER_DOWN);
-	spm_mtcmos_ctrl_md1_bus_prot(STA_POWER_DOWN);
+	spm_mtcmos_ctrl_md1_pwr(STA_POWER_DOWN);
 
 	pr_notice("suspend test: conn\n");
 	spm_mtcmos_ctrl_conn_bus_prot(STA_POWER_DOWN);

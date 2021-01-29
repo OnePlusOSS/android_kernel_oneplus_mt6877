@@ -1,7 +1,7 @@
 /*
  * Mediatek's MT6877 SoC device tree source
  *
- * Copyright (C) 2020 MediaTek Inc.
+ * Copyright (C) 2021 MediaTek Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -18,6 +18,7 @@
 #include <linux/of_address.h>
 
 #include "clk-fmeter.h"
+#include "clkchk.h"
 
 static DEFINE_SPINLOCK(meter_lock);
 #define fmeter_lock(flags)   spin_lock_irqsave(&meter_lock, flags)
@@ -105,7 +106,7 @@ static const struct fmeter_clk fclks[] = {
 	FMCLK(ABIST, FM_APPLLGP_MON_FM_CK, "fm_appllgp_mon_fm_ck"),
 	FMCLK(ABIST, FM_ARMPLL_BL_CK, "fm_armpll_bl_ck"),
 	FMCLK(ABIST, FM_ARMPLL_LL_CKDIV_CK, "fm_armpll_ll_ckdiv_ck"),
-	FMCLK(ABIST, FM_USBPLL_192M_OPP_CK, "fm_usbpll_192m_opp_ck"),
+	FMCLK(ABIST, FM_USBPLL_CKDIV_CK, "fm_usbpll_ckdiv_ck"),
 	FMCLK(ABIST, FM_CCIPLL_CKDIV_CK, "fm_ccipll_ckdiv_ck"),
 	FMCLK(ABIST, FM_CSI0A_CDPHY_DELAYCAL_CK, "fm_csi0a_cdphy_delaycal_ck"),
 	FMCLK(ABIST, FM_CSI0B_CDPHY_DELAYCAL_CK, "fm_csi0b_cdphy_delaycal_ck"),
@@ -129,7 +130,7 @@ static const struct fmeter_clk fclks[] = {
 	FMCLK(ABIST, FM_TVDPLL_CKDIV_CK, "fm_tvdpll_ckdiv_ck"),
 	FMCLK(ABIST, FM_ULPOSC2_CK, "fm_ulposc2_ck"),
 	FMCLK(ABIST, FM_ULPOSC_CK, "fm_ulposc_ck"),
-	FMCLK(ABIST, FM_UNIVPLL_192M_CK, "fm_univpll_192m_ck"),
+	FMCLK(ABIST, FM_UNIVPLL_CKDIV_CK, "fm_univpll_ckdiv_ck"),
 	FMCLK(ABIST, FM_USB20_192M_OPP_CK, "fm_usb20_192m_opp_ck"),
 	FMCLK(ABIST, FM_UFS_MP_CLK2FREQ, "fm_ufs_mp_clk2freq"),
 	FMCLK(ABIST, FM_WBG_DIG_BPLL_CK, "fm_wbg_dig_bpll_ck"),
@@ -183,7 +184,7 @@ static const struct fmeter_clk fclks[] = {
 	FMCLK(ABIST_2, FM_UNIV_499M_CK, "fm_univ_499m_ck"),
 	FMCLK(ABIST_2, FM_UNIV_416M_CK, "fm_univ_416m_ck"),
 	FMCLK(ABIST_2, FM_UNIV_356P6M_CK, "fm_univ_356p6m_ck"),
-	FMCLK(ABIST_2, FM_MMPLL_D3_CK, "fm_mmpll_d3_ck"),
+	FMCLK(ABIST_2, FM_MMPLL_D3_CK_2, "fm_mmpll_d3_ck_2"),
 	FMCLK(ABIST_2, FM_MMPLL_D4_CK, "fm_mmpll_d4_ck"),
 	FMCLK(ABIST_2, FM_MMPLL_D5_CK, "fm_mmpll_d5_ck"),
 	FMCLK(ABIST_2, FM_MMPLL_D6_CK, "fm_mmpll_d6_ck"),
@@ -201,13 +202,31 @@ static const struct fmeter_clk fclks[] = {
 	{},
 };
 
+const int abist_clkdiv_array[] = {
+    /* 00     */	0,
+    /* 01 - 10 */	1, 1, 1, 0, 1, 1, 2,
+    /* 11 - 15 */	1, 0, 0, 0, 0,
+    /* 16 - 20 */	0, 0, 0, 0, 0,
+    /* 21 - 25 */	0, 1, 0,
+    /* 26 - 30 */	0, 0, 1, 1,
+    /* 31 - 35 */	0, 0, 1, 1,
+    /* 36 - 45 */	0, 0, 2, 0, 0, 0, 0, 0, 0,
+    /* 46 - 50 */	0, 0, 0,
+    /* 51 - 55 */	0, 0, 0, 0, 0,
+    /* 56 - 60 */	0, 0,
+    /* 61 - 63 */	0, 0, 0,
+};
+
 #define _CKGEN(x)		(topck_base + (x))
+#define _APMIXED(x)		(apmixed_base + (x))
 #define CLK_MISC_CFG_0		_CKGEN(0x140)
 #define CLK_DBG_CFG		_CKGEN(0x17C)
 #define CLK26CALI_0		_CKGEN(0x220)
 #define CLK26CALI_1		_CKGEN(0x224)
+#define AP_PLLGP1_CON0		_APMIXED(0x200)
 
 static void __iomem *topck_base;
+static void __iomem *apmixed_base;
 
 const struct fmeter_clk *get_fmeter_clks(void)
 {
@@ -233,9 +252,235 @@ static unsigned int check_mux_pdn(unsigned int ID)
 		return 1;
 }
 
-/* need implement ckgen&abist api here */
+unsigned int mt_get_ckgen_freq(unsigned int ID)
+{
+	int output = 0, i = 0;
+	unsigned int temp, clk_dbg_cfg, clk_misc_cfg_0, clk26cali_1 = 0;
+	unsigned long flags;
 
-/* implement done */
+	if (check_mux_pdn(ID)) {
+		pr_notice("ID-%d: MUX PDN, return 0.\n", ID);
+		return 0;
+	}
+
+	fmeter_lock(flags);
+	while (clk_readl(CLK26CALI_0) & 0x1000) {
+		udelay(10);
+		i++;
+		if (i > 30)
+			break;
+	}
+
+	/* CLK26CALI_0[15]: rst 1 -> 0 */
+	clk_writel(CLK26CALI_0, (clk_readl(CLK26CALI_0) & 0xFFFF7FFF));
+	/* CLK26CALI_0[15]: rst 0 -> 1 */
+	clk_writel(CLK26CALI_0, (clk_readl(CLK26CALI_0) | 0x00008000));
+
+	clk_dbg_cfg = clk_readl(CLK_DBG_CFG);
+	clk_writel(CLK_DBG_CFG, (clk_dbg_cfg & 0xFFFFC0FC)|(ID << 8)|(0x1));
+
+	clk_misc_cfg_0 = clk_readl(CLK_MISC_CFG_0);
+	clk_writel(CLK_MISC_CFG_0, (clk_misc_cfg_0 & 0x00FFFFFF) | (3 << 24));
+
+	clk26cali_1 = clk_readl(CLK26CALI_1);
+	clk_writel(CLK26CALI_0, 0x9000);
+	clk_writel(CLK26CALI_0, 0x9010);
+
+	/* wait frequency meter finish */
+	while (clk_readl(CLK26CALI_0) & 0x10) {
+		udelay(10);
+		i++;
+		if (i > 30)
+			break;
+	}
+	/* illegal pass */
+	if (i == 0) {
+		clk_writel(CLK26CALI_0, 0x8000);
+		//re-trigger
+		clk_writel(CLK26CALI_0, 0x9000);
+		clk_writel(CLK26CALI_0, 0x9010);
+		while (clk_readl(CLK26CALI_0) & 0x10) {
+			udelay(10);
+			i++;
+			if (i > 30)
+				break;
+		}
+	}
+
+	temp = clk_readl(CLK26CALI_1) & 0xFFFF;
+
+	output = (temp * 26000) / 1024;
+
+	clk_writel(CLK_DBG_CFG, clk_dbg_cfg);
+	clk_writel(CLK_MISC_CFG_0, clk_misc_cfg_0);
+	/*clk_writel(CLK26CALI_0, clk26cali_0);*/
+	/*clk_writel(CLK26CALI_1, clk26cali_1);*/
+
+	clk_writel(CLK26CALI_0, 0x8000);
+	fmeter_unlock(flags);
+	/*print("ckgen meter[%d] = %d Khz\n", ID, output);*/
+	if (i > 30)
+		return 0;
+	if ((output * 4) < 25000) {
+		pr_notice("%s: CLK_DBG_CFG = 0x%x, CLK_MISC_CFG_0 = 0x%x, CLK26CALI_0 = 0x%x, CLK26CALI_1 = 0x%x\n",
+			__func__,
+			clk_readl(CLK_DBG_CFG),
+			clk_readl(CLK_MISC_CFG_0),
+			clk_readl(CLK26CALI_0),
+			clk_readl(CLK26CALI_1));
+	}
+	return (output * 4);
+
+}
+
+unsigned int mt_get_abist_freq(unsigned int ID)
+{
+	int output = 0, i = 0;
+	unsigned long flags;
+	unsigned int temp, clk_dbg_cfg, clk_misc_cfg_0, clk26cali_1 = 0, clk_div;
+
+	fmeter_lock(flags);
+	while (clk_readl(CLK26CALI_0) & 0x1000) {
+		udelay(10);
+		i++;
+		if (i > 30)
+			break;
+	}
+
+	/* CLK26CALI_0[15]: rst 1 -> 0 */
+	clk_writel(CLK26CALI_0, (clk_readl(CLK26CALI_0) & 0xFFFF7FFF));
+	/* CLK26CALI_0[15]: rst 0 -> 1 */
+	clk_writel(CLK26CALI_0, (clk_readl(CLK26CALI_0) | 0x00008000));
+
+	clk_dbg_cfg = clk_readl(CLK_DBG_CFG);
+	clk_writel(CLK_DBG_CFG, (clk_dbg_cfg & 0xFFC0FFFC)|(ID << 16));
+
+	clk_misc_cfg_0 = clk_readl(CLK_MISC_CFG_0);
+	clk_writel(CLK_MISC_CFG_0, (clk_misc_cfg_0 & 0x00FFFFFF) | (3 << 24));
+
+	clk26cali_1 = clk_readl(CLK26CALI_1);
+
+	clk_writel(CLK26CALI_0, 0x9000);
+	clk_writel(CLK26CALI_0, 0x9010);
+
+	/* wait frequency meter finish */
+	while (clk_readl(CLK26CALI_0) & 0x10) {
+		udelay(10);
+		i++;
+		if (i > 30)
+			break;
+	}
+	/* illegal pass */
+	if (i == 0) {
+		clk_writel(CLK26CALI_0, 0x8000);
+		//re-trigger
+		clk_writel(CLK26CALI_0, 0x9000);
+		clk_writel(CLK26CALI_0, 0x9010);
+		while (clk_readl(CLK26CALI_0) & 0x10) {
+			udelay(10);
+			i++;
+			if (i > 30)
+				break;
+		}
+	}
+	temp = clk_readl(CLK26CALI_1) & 0xFFFF;
+
+	if (abist_clkdiv_array[ID] == 1)
+		clk_div = (clk_readl(AP_PLLGP1_CON0) & (0xF << 24)) >> 24;
+	else if (abist_clkdiv_array[ID] == 2)
+		clk_div = (clk_readl(AP_PLLGP1_CON0) & (0xF << 27)) >> 27;
+	else
+		clk_div = 1;
+
+	output = (temp * 26000) / 1024 * clk_div;
+
+	clk_writel(CLK_DBG_CFG, clk_dbg_cfg);
+	clk_writel(CLK_MISC_CFG_0, clk_misc_cfg_0);
+	/*clk_writel(CLK26CALI_0, clk26cali_0);*/
+	/*clk_writel(CLK26CALI_1, clk26cali_1);*/
+	clk_writel(CLK26CALI_0, 0x8000);
+	fmeter_unlock(flags);
+
+	if (i > 30)
+		return 0;
+	if ((output * 4) < 25000) {
+		pr_notice("%s: CLK_DBG_CFG = 0x%x, CLK_MISC_CFG_0 = 0x%x, CLK26CALI_0 = 0x%x, CLK26CALI_1 = 0x%x\n",
+			__func__,
+			clk_readl(CLK_DBG_CFG),
+			clk_readl(CLK_MISC_CFG_0),
+			clk_readl(CLK26CALI_0),
+			clk_readl(CLK26CALI_1));
+		pr_notice("clk_div = 0x%x\n", clk_div);
+	}
+	return (output * 4);
+}
+
+unsigned int mt_get_abist2_freq(unsigned int ID)
+{
+	int output = 0, i = 0;
+	unsigned long flags;
+	unsigned int temp, clk_dbg_cfg, clk_misc_cfg_0, clk26cali_1 = 0;
+
+	fmeter_lock(flags);
+	while (clk_readl(CLK26CALI_0) & 0x1000) {
+		udelay(10);
+		i++;
+		if (i > 30)
+			break;
+	}
+
+	/* CLK26CALI_0[15]: rst 1 -> 0 */
+	clk_writel(CLK26CALI_0, (clk_readl(CLK26CALI_0) & 0xFFFF7FFF));
+	/* CLK26CALI_0[15]: rst 0 -> 1 */
+	clk_writel(CLK26CALI_0, (clk_readl(CLK26CALI_0) | 0x00008000));
+
+	clk_dbg_cfg = clk_readl(CLK_DBG_CFG);
+	clk_writel(CLK_DBG_CFG, (clk_dbg_cfg & 0xC0FFFFFC)
+			| (ID << 24) | (0x2));
+
+	clk_misc_cfg_0 = clk_readl(CLK_MISC_CFG_0);
+	clk_writel(CLK_MISC_CFG_0, (clk_misc_cfg_0 & 0x00FFFFFF) | (1 << 24));
+
+	clk26cali_1 = clk_readl(CLK26CALI_1);
+
+	clk_writel(CLK26CALI_0, 0x9000);
+	clk_writel(CLK26CALI_0, 0x9010);
+
+	/* wait frequency meter finish */
+	while (clk_readl(CLK26CALI_0) & 0x10) {
+		udelay(10);
+		i++;
+		if (i > 30)
+			break;
+	}
+	/* illegal pass */
+	if (i == 0) {
+		clk_writel(CLK26CALI_0, 0x8000);
+		//re-trigger
+		clk_writel(CLK26CALI_0, 0x9000);
+		clk_writel(CLK26CALI_0, 0x9010);
+		while (clk_readl(CLK26CALI_0) & 0x10) {
+			udelay(10);
+			i++;
+			if (i > 30)
+				break;
+		}
+	}
+	temp = clk_readl(CLK26CALI_1) & 0xFFFF;
+
+	output = (temp * 26000) / 1024;
+
+	clk_writel(CLK_DBG_CFG, clk_dbg_cfg);
+	clk_writel(CLK_MISC_CFG_0, clk_misc_cfg_0);
+	clk_writel(CLK26CALI_0, 0x8000);
+	/*pr_debug("%s = %d Khz\n", abist_array[ID-1], output);*/
+	fmeter_unlock(flags);
+
+	if (i > 30)
+		return 0;
+	else
+		return (output * 2);
+}
 
 static int __init clk_fmeter_mt6877_init(void)
 {
@@ -252,6 +497,21 @@ static int __init clk_fmeter_mt6877_init(void)
 		}
 	} else {
 		pr_err("%s can't find compatible node for topckgen\n",
+				__func__);
+		return -1;
+	}
+
+	node = of_find_compatible_node(NULL, NULL,
+		"mediatek,mt6877-apmixedsys");
+	if (node) {
+		apmixed_base = of_iomap(node, 0);
+		if (!apmixed_base) {
+			pr_err("%s() can't find iomem for apmixedsys\n",
+					__func__);
+			return -1;
+		}
+	} else {
+		pr_err("%s can't find compatible node for apmixedsys\n",
 				__func__);
 		return -1;
 	}

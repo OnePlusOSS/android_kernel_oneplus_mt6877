@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 MediaTek Inc.
+ * Copyright (c) 2021 MediaTek Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -85,7 +85,7 @@
 #define FM_APPLLGP_MON_FM_CK			4
 #define FM_ARMPLL_BL_CK				7
 #define FM_ARMPLL_LL_CKDIV_CK			9
-#define FM_USBPLL_192M_OPP_CK			10
+#define FM_USBPLL_CKDIV_CK			10
 #define FM_CCIPLL_CKDIV_CK			11
 #define FM_CSI0A_CDPHY_DELAYCAL_CK		12
 #define FM_CSI0B_CDPHY_DELAYCAL_CK		13
@@ -109,7 +109,7 @@
 #define FM_TVDPLL_CKDIV_CK			35
 #define FM_ULPOSC2_CK				36
 #define FM_ULPOSC_CK				37
-#define FM_UNIVPLL_192M_CK			38
+#define FM_UNIVPLL_CKDIV_CK			38
 #define FM_USB20_192M_OPP_CK			39
 #define FM_UFS_MP_CLK2FREQ			41
 #define FM_WBG_DIG_BPLL_CK			42
@@ -163,7 +163,7 @@
 #define FM_UNIV_499M_CK				32
 #define FM_UNIV_416M_CK				33
 #define FM_UNIV_356P6M_CK			34
-#define FM_MMPLL_D3_CK				35
+#define FM_MMPLL_D3_CK_2			35
 #define FM_MMPLL_D4_CK				36
 #define FM_MMPLL_D5_CK				37
 #define FM_MMPLL_D6_CK				38
@@ -178,5 +178,10 @@
 #define FM_ALVTS_TO_PLLGP_MON_L6		47
 #define FM_ALVTS_TO_PLLGP_MON_L7		48
 #define FM_ALVTS_TO_PLLGP_MON_L8		49
+
+extern unsigned int mt_get_ckgen_freq(unsigned int ID);
+extern unsigned int mt_get_abist_freq(unsigned int ID);
+extern unsigned int mt_get_abist2_freq(unsigned int ID);
+extern const struct fmeter_clk *get_fmeter_clks(void);
 
 #endif /* _CLK_MT6877_FMETER_H */

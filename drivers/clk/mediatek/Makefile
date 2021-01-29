@@ -97,7 +97,7 @@ obj-$(CONFIG_COMMON_CLK_MT6853_MMSYS_CONFIG) += clk-mt6853-mm.o
 obj-$(CONFIG_COMMON_CLK_MT6853_SCP) += clk-mt6853-scp_par.o
 obj-$(CONFIG_COMMON_CLK_MT6853_VDEC_GCON) += clk-mt6853-vdec.o
 obj-$(CONFIG_COMMON_CLK_MT6853_VENC_GCON) += clk-mt6853-venc.o
-obj-$(CONFIG_COMMON_CLK_MT6877) += clk-mt6877.o clk-mt6877-pg.o clk-mtk-v1.o clk-bringup.o clkchk.o clkchk-mt6877.o
+obj-$(CONFIG_COMMON_CLK_MT6877) += clk-mt6877.o clk-mt6877-pg.o clk-mtk-v1.o clk-bringup.o clkchk.o clkchk-mt6877.o clk-fmeter-mt6877.o
 obj-$(CONFIG_COMMON_CLK_MT6877_APU) += clk-mt6877-apu.o
 obj-$(CONFIG_COMMON_CLK_MT6877_AUDIOSYS) += clk-mt6877-audsys.o
 obj-$(CONFIG_COMMON_CLK_MT6877_CAM) += clk-mt6877-cam.o
@@ -113,6 +113,9 @@ obj-$(CONFIG_COMMON_CLK_MT6877_VDE) += clk-mt6877-vde.o
 obj-$(CONFIG_COMMON_CLK_MT6877_VEN) += clk-mt6877-ven.o
 
 ifeq ($(CONFIG_DEBUG_FS), y)
+ifeq ($(CONFIG_MTK_ENG_BUILD),y)
+obj-$(CONFIG_COMMON_CLK_MT6877) += clkdbg.o clkdbg-mt6877.o
+endif
 obj-$(CONFIG_COMMON_CLK_MT6768) +=  clkchk-mt6768.o clkdbg-mt6768.o mt6768_clkmgr.o
 obj-$(CONFIG_COMMON_CLK_MT6765) += clkdbg_mt6765.o clkchk-mt6765.o
 endif

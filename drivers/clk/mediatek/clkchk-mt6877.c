@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 MediaTek Inc.
+ * Copyright (c) 2021 MediaTek Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -95,8 +95,8 @@ static const char * const clks[] = {
 	"aes_msdcfde_sel",
 	"dsi_occ_sel",
 	"ufs_mbist_sel",
-	"mfg_internal1_sel",
 	"mfg_internal2_sel",
+	"mfg_internal1_sel",
 	"ap2conn_host_sel",
 	"msdc_new_rx_sel",
 	"apll_i2s0_mck_sel",
@@ -128,7 +128,6 @@ static const char * const clks[] = {
 	"ifrao_pmic_ap",
 	"ifrao_pmic_md",
 	"ifrao_pmic_conn",
-	"ifrao_sej",
 	"ifrao_apxgpt",
 	"ifrao_gce",
 	"ifrao_gce2",
@@ -175,13 +174,9 @@ static const char * const clks[] = {
 	"ifrao_apdma",
 	"ifrao_spi4",
 	"ifrao_spi5",
-	"ifrao_cq_dma",
 	"ifrao_ufs",
 	"ifrao_aes_ufsfde",
 	"ifrao_ssusb_xhci",
-	"ifrao_msdc0sf",
-	"ifrao_msdc1sf",
-	"ifrao_msdc2sf",
 	"ifrao_ap_msdc0",
 	"ifrao_md_msdc0",
 	"ifrao_ccif5_ap",
@@ -273,9 +268,6 @@ static const char * const clks[] = {
 	"impc_ap_clock_i2c10",
 	"impc_ap_clock_i2c11",
 
-	/* msdc1_top */
-	"msdc1_tx_test_en",
-
 	/* imp_iic_wrap_e */
 	"impe_ap_clock_i2c3",
 
@@ -295,9 +287,6 @@ static const char * const clks[] = {
 
 	/* imp_iic_wrap_n */
 	"impn_ap_clock_i2c6",
-
-	/* msdc0_top */
-	"msdc0_tx_test_en",
 
 	/* gpu_pll_ctrl */
 	"mfg_ao_mfgpll1",
@@ -657,7 +646,7 @@ static struct mtk_vf vf_table[] = {
 	MTK_VF_TABLE("spmi_p_mst_sel", 39000, 39000, 39000, 39000, 39000),
 	MTK_VF_TABLE("spmi_m_mst_sel", 39000, 39000, 39000, 39000, 39000),
 	MTK_VF_TABLE("dvfsrc_sel", 26000, 26000, 26000, 26000, 26000),
-	MTK_VF_TABLE("mem_sub_sel", 499200, 499200, 392857, 273000, 182000),
+	MTK_VF_TABLE("mem_sub_sel", 436800, 436800, 364000, 273000, 182000),
 	MTK_VF_TABLE("aes_msdcfde_sel", 416000, 416000, 416000, 416000, 416000),
 	MTK_VF_TABLE("dsi_occ_sel", 312000, 312000, 312000, 249600, 208000),
 	MTK_VF_TABLE("ufs_mbist_sel", 297000, 297000, 297000, 297000, 297000),
@@ -900,7 +889,7 @@ struct subsys_cgs_check mtk_subsys_check[] = {
 	{SYS_ISP1, imgsys2_swcgs, imgsys2},
 	{SYS_IPE, ipesys_swcgs, ipe},
 	{SYS_DISP, mdpsys_config_swcgs, mdp},
-	{SYS_MFG5, mfgcfg_swcgs, mfgcfg},
+	{SYS_MFG0, mfgcfg_swcgs, mfgcfg},
 	{SYS_DISP, mmsys_config_swcgs, mm},
 	{SYS_VDEC, vdec_gcon_swcgs, vde2},
 	{SYS_VENC, venc_gcon_swcgs, ven1},
@@ -981,13 +970,11 @@ static struct regbase rb[] = {
 	[audsys] = REGBASE_V(0x11210000, audsys, "PG_AUDIO"),
 	[msdc0] = REGBASE_V(0x11230000, msdc0, NULL),
 	[impc] = REGBASE_V(0x11282000, impc, "f_fi2c_pseudo_ck"),
-	[msdc1_top] = REGBASE_V(0x11c70000, msdc1_top, NULL),
 	[impe] = REGBASE_V(0x11cb1000, impe, "f_fi2c_pseudo_ck"),
 	[imps] = REGBASE_V(0x11d04000, imps, "f_fi2c_pseudo_ck"),
 	[impws] = REGBASE_V(0x11d23000, impws, "f_fi2c_pseudo_ck"),
 	[impw] = REGBASE_V(0x11e01000, impw, "f_fi2c_pseudo_ck"),
 	[impn] = REGBASE_V(0x11f01000, impn, "f_fi2c_pseudo_ck"),
-	[msdc0_top] = REGBASE_V(0x11f50000, msdc0_top, NULL),
 	[mfg_ao] = REGBASE_V(0x13fa0000, mfg_ao, NULL),
 	[mfgcfg] = REGBASE_V(0x13fbf000, mfgcfg, "PG_MFG5"),
 	[mm] = REGBASE_V(0x14000000, mm, "PG_DISP"),
@@ -1147,8 +1134,6 @@ static struct regname rn[] = {
 	REGNAME(msdc0,  0x68, MSDC_NEW_RX_CFG),
 	/* IMP_IIC_WRAP_C register */
 	REGNAME(impc,  0xe00, AP_CLOCK_CG_CEN),
-	/* MSDC1_TOP register */
-	REGNAME(msdc1_top,  0x4c, MSDC_TOP_TEST_CFG2),
 	/* IMP_IIC_WRAP_E register */
 	REGNAME(impe,  0xe00, AP_CLOCK_CG_EST),
 	/* IMP_IIC_WRAP_S register */
@@ -1159,8 +1144,6 @@ static struct regname rn[] = {
 	REGNAME(impw,  0xe00, AP_CLOCK_CG_WST),
 	/* IMP_IIC_WRAP_N register */
 	REGNAME(impn,  0xe00, AP_CLOCK_CG_NOR),
-	/* MSDC0_TOP register */
-	REGNAME(msdc0_top,  0x4c, MSDC_TOP_TEST_CFG2),
 	/* GPU_PLL_CTRL register */
 	REGNAME(mfg_ao,  0x8, MFGPLL1_CON0),
 	REGNAME(mfg_ao,  0xc, MFGPLL1_CON1),
@@ -1278,6 +1261,18 @@ static void devapc_dump(void)
 	print_subsys_reg(apu_ao);
 }
 
+static void __init init_regbase(void)
+{
+	struct regbase *rb = get_mt6877_all_reg_bases();
+
+	for (; rb->name; rb++) {
+		if (!rb->phys)
+			continue;
+
+		rb->virt = ioremap_nocache(rb->phys, 0x1000);
+	}
+}
+
 static const char * const compatible[] = {"mediatek,mt6877", NULL};
 
 static struct clkchk_cfg_t cfg = {
@@ -1307,6 +1302,8 @@ static struct clkchk_cfg_t cfg = {
 static int __init clkchk_platform_init(void)
 {
 	int i;
+
+	init_regbase();
 
 	for (i = 0; i < ARRAY_SIZE(mtk_subsys_check); i++)
 		clkchk_swcg_init(mtk_subsys_check[i].swcgs);
