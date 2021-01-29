@@ -39,6 +39,7 @@
 #define OFFSET_SDC_CSTS_EN              (0x5c)
 #define OFFSET_SDC_DCRC_STS             (0x60)
 #define OFFSET_SDC_ADV_CFG0             (0x64)
+#define OFFSET_MSDC_NEW_RX_CFG		(0x68)
 #define OFFSET_EMMC_CFG0                (0x70)
 #define OFFSET_EMMC_CFG1                (0x74)
 #define OFFSET_EMMC_STS                 (0x78)
@@ -633,6 +634,10 @@
 #define SDC_ADV_CFG0_DAT_BUF_FREQ_CTL_EN (0x1  << 18) /* RW */
 #define SDC_ADV_CFG0_SDIO_IRQ_ENHANCE_EN (0x1  << 19) /* RW */
 #define SDC_ADV_CFG0_SDC_RX_ENH_EN      (0x1  << 20) /* RW */
+#define SDC_ADV_CFG0_TX_PIPE_EN         (0x1 << 30)
+
+/* MSDC_NEW_RX_CFG mask  */
+#define MSDC_NEW_RX_PATH_SEL            (0x1 << 0)
 
 /* EMMC_CFG0 mask */
 #define EMMC_CFG0_BOOTSTART             (0x1  << 0)     /* W  */

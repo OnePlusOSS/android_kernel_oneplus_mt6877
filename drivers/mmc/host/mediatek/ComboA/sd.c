@@ -472,8 +472,8 @@ int msdc_clk_stable(struct msdc_host *host, u32 mode, u32 div,
 			pr_info("msdc%d on clock failed ===> retry twice\n",
 				host->id);
 
-			msdc_clk_disable(host);
-			msdc_clk_enable(host);
+			msdc_clk_disable_unprepare(host);
+			msdc_clk_prepare_enable(host);
 			msdc_dump_info(NULL, 0, NULL, host->id);
 			host->prev_cmd_cause_dump = 0;
 		}
@@ -3262,7 +3262,7 @@ int msdc_do_request(struct mmc_host *mmc, struct mmc_request *mrq)
 			pr_debug("[%s]: start pio read\n", __func__);
 #endif
 			if (msdc_pio_read(host, data)) {
-				msdc_clk_disable(host);
+				msdc_clk_disable_unprepare(host);
 				msdc_clk_enable_and_stable(host);
 				goto stop;      /* need cmd12 */
 			}
@@ -3271,7 +3271,7 @@ int msdc_do_request(struct mmc_host *mmc, struct mmc_request *mrq)
 			pr_debug("[%s]: start pio write\n", __func__);
 #endif
 			if (msdc_pio_write(host, data)) {
-				msdc_clk_disable(host);
+				msdc_clk_disable_unprepare(host);
 				msdc_clk_enable_and_stable(host);
 				goto stop;
 			}
@@ -5492,6 +5492,8 @@ static int msdc_drv_remove(struct platform_device *pdev)
 		clk_disable_unprepare(host->pclk_ctl);
 	if (host->src_hclk_ctl)
 		clk_disable_unprepare(host->src_hclk_ctl);
+	if (host->new_rx_clk_ctl)
+		clk_disable_unprepare(host->new_rx_clk_ctl);
 #endif
 	pm_qos_remove_request(&host->msdc_pm_qos_req);
 	pm_runtime_disable(&pdev->dev);
@@ -5531,6 +5533,8 @@ static int msdc_runtime_suspend(struct device *dev)
 		clk_disable_unprepare(host->pclk_ctl);
 	if (host->src_hclk_ctl)
 		clk_disable_unprepare(host->src_hclk_ctl);
+	if (host->new_rx_clk_ctl)
+		clk_disable_unprepare(host->new_rx_clk_ctl);
 
 	pm_qos_update_request(&host->msdc_pm_qos_req,
 		PM_QOS_DEFAULT_VALUE);
@@ -5546,6 +5550,8 @@ static int msdc_runtime_resume(struct device *dev)
 
 	pm_qos_update_request(&host->msdc_pm_qos_req, 0);
 
+	if (host->new_rx_clk_ctl)
+		(void)clk_prepare_enable(host->new_rx_clk_ctl);
 	if (host->src_hclk_ctl)
 		(void)clk_prepare_enable(host->src_hclk_ctl);
 	if (host->pclk_ctl)
