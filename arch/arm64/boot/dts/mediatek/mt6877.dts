@@ -4471,6 +4471,16 @@
 		_vsram_gpu-supply = <&mt_pmic_vsram_md_ldo_reg>;
 #endif
 	};
+
+	typec_mux_switch: typec_mux_switch {
+		compatible = "mediatek,typec_mux_switch";
+		status = "okay";
+	};
+
+	fusb340: fusb340 {
+		compatible = "mediatek,fusb340";
+		status = "disabled";
+	};
 };
 
 &spmi_bus {
@@ -4684,6 +4694,14 @@
 			input-schmitt-enable;
 			bias-disable;
 		};
+	};
+};
+
+&i2c6 {
+	ps5169: ps5169@28 {
+		compatible = "parade,ps5169";
+		reg = <0x28>;
+		status = "disabled";
 	};
 };
 
