@@ -457,7 +457,7 @@
 	auxadc: auxadc@11001000 {
 		compatible = "mediatek,mt6768-auxadc";
 		reg = <0 0x11001000 0 0x1000>;
-		interrupts = <GIC_SPI 64 IRQ_TYPE_EDGE_RISING>;
+		interrupts = <GIC_SPI 96 IRQ_TYPE_EDGE_RISING>;
 		clocks = <&infracfg_ao_clk CLK_IFRAO_AUXADC>;
 		clock-names = "main";
 		#io-channel-cells = <1>;
@@ -1078,6 +1078,25 @@
 	devapc_ao_infra_peri@10025000 {
 		compatible = "mediatek,devapc_ao_infra_peri";
 		reg = <0 0x10025000 0 0x1000>;
+	};
+
+	pwm@11006000 {
+		compatible = "mediatek,pwm";
+		reg = <0 0x10048000 0 0x1000>;
+		interrupts = <GIC_SPI 254 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&infracfg_ao_clk CLK_IFRAO_PWM1>,
+			<&infracfg_ao_clk CLK_IFRAO_PWM2>,
+			<&infracfg_ao_clk CLK_IFRAO_PWM3>,
+			<&infracfg_ao_clk CLK_IFRAO_PWM4>,
+			<&infracfg_ao_clk CLK_IFRAO_PWM_HCLK>,
+			<&infracfg_ao_clk CLK_IFRAO_PWM>;
+
+		clock-names = "PWM1-main",
+			"PWM2-main",
+			"PWM3-main",
+			"PWM4-main",
+			"PWM-HCLK-main",
+			"PWM-main";
 	};
 
 	sys_cirq@10204000 {
@@ -3628,6 +3647,12 @@
 
 	mtkfb: mtkfb {
 		compatible = "mediatek,mtkfb";
+	};
+
+	irtx_pwm:irtx_pwm {
+		compatible = "mediatek,irtx-pwm";
+		pwm_ch = <0>;
+		pwm_data_invert = <0>;
 	};
 
 	odm: odm {
