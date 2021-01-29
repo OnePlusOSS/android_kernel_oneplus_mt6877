@@ -3313,9 +3313,80 @@
 		#clock-cells = <1>;
 	};
 
-	vdec_gcon@16000000 {
-		compatible = "mediatek,vdec_gcon";
-		reg = <0 0x16000000 0 0x10000>;
+	vcu: vcu@16000000 {
+		compatible = "mediatek-vcu";
+		mediatek,vcuid = <0>;
+		mediatek,vcuname = "vcu";
+		reg = <0 0x16000000 0 0x40000>,	/* VDEC_BASE */
+			 <0 0x17020000 0 0x10000>;	/* VENC_BASE */
+#ifdef CONFIG_MTK_IOMMU_V2
+		iommus = <&iommu0 M4U_PORT_L4_VDEC_MC_EXT>;
+#endif
+		mediatek,mailbox-gce = <&gce_mbox>;
+		mediatek,dec_gce_th_num = <1>; /* VDEC GCE HW THREAD NUM*/
+		mediatek,enc_gce_th_num = <1>; /* VDEC GCE HW THREAD NUM*/
+
+		mboxes = <&gce_mbox 7 0 CMDQ_THR_PRIO_1>,
+			<&gce_mbox 12 0 CMDQ_THR_PRIO_1>,
+			<&gce_mbox_sec 12 0 CMDQ_THR_PRIO_1>;
+		gce-event-names = "venc_eof",
+			"venc_cmdq_pause_done",
+			"venc_mb_done",
+			"venc_sps_done",
+			"venc_pps_done",
+			"venc_128B_cnt_done",
+			"vdec_pic_start",
+			"vdec_decode_done",
+			"vdec_pause",
+			"vdec_dec_error",
+			"vdec_mc_busy_overflow_timeout",
+			"vdec_all_dram_req_done",
+			"vdec_ini_fetch_rdy",
+			"vdec_process_flag",
+			"vdec_search_start_code_done",
+			"vdec_ref_reorder_done",
+			"vdec_wp_tble_done",
+			"vdec_count_sram_clr_done",
+			"vdec_gce_cnt_op_threshold";
+
+		gce-events =  <&gce_mbox CMDQ_EVENT_VENC_CMDQ_FRAME_DONE>,
+			<&gce_mbox CMDQ_EVENT_VENC_CMDQ_PAUSE_DONE>,
+			<&gce_mbox CMDQ_EVENT_VENC_CMDQ_MB_DONE>,
+			<&gce_mbox CMDQ_EVENT_VENC_CMDQ_SPS_DONE>,
+			<&gce_mbox CMDQ_EVENT_VENC_CMDQ_PPS_DONE>,
+			<&gce_mbox CMDQ_EVENT_VENC_CMDQ_128BYTE_CNT_DONE>,
+			<&gce_mbox CMDQ_EVENT_LINE_COUNT_THRESHOLD_INTERRUPT>,
+			<&gce_mbox CMDQ_EVENT_VDEC_INT>,
+			<&gce_mbox CMDQ_EVENT_VDEC_PAUSE>,
+			<&gce_mbox CMDQ_EVENT_VDEC_DEC_ERROR>,
+			<&gce_mbox CMDQ_EVENT_MDEC_TIMEOUT>,
+			<&gce_mbox CMDQ_EVENT_WAIT_ALL_DONE>,
+			<&gce_mbox CMDQ_EVENT_INITIAL_FETCH_READY>,
+			<&gce_mbox CMDQ_EVENT_PROCESS_FLAG>,
+			<&gce_mbox CMDQ_EVENT_SPEC_EVENT_0>,
+			<&gce_mbox CMDQ_EVENT_SPEC_EVENT_1>,
+			<&gce_mbox CMDQ_EVENT_SPEC_EVENT_2>,
+			<&gce_mbox CMDQ_EVENT_SPEC_EVENT_3>,
+			<&gce_mbox CMDQ_EVENT_GCE_CNT_OP_THRESHOLD>;
+
+		gce-gpr = <GCE_GPR_R10>, <GCE_GPR_R11>;
+	};
+
+	vdec@16000000 {
+		compatible = "mediatek,mt6877-vcodec-dec";
+		reg = <0 0x1602f000 0 0x1000>,		/* VDEC_SYS */
+			 <0 0x16020000 0 0x400>,		/* VDEC_VLD */
+			 <0 0x16025000 0 0x1000>;		/* VDEC_MISC */
+#ifdef CONFIG_MTK_IOMMU_V2
+		iommus = <&iommu0 M4U_PORT_L4_VDEC_MC_EXT>;
+#endif
+		mediatek,larb = <&smi_larb4>;
+		interrupts = <GIC_SPI 512 IRQ_TYPE_LEVEL_HIGH>;
+		mediatek,vcu = <&vcu>;
+		clocks =
+			<&vdec_gcon_clk CLK_VDE2_VDEC_CKEN>;
+		clock-names =
+			"MT_CG_VDEC";
 	};
 
 	vdec_gcon@16010000 {
@@ -3358,6 +3429,21 @@
 	venc_gcon@17000000 {
 		compatible = "mediatek,venc_gcon";
 		reg = <0 0x17000000 0 0x10000>;
+	};
+
+	venc@17000000 {
+		compatible = "mediatek,mt6877-vcodec-enc";
+		reg = <0 0x17020000 0 0x2000>;
+#ifdef CONFIG_MTK_IOMMU_V2
+		iommus = <&iommu0 M4U_PORT_L7_VENC_RD_COMV>;
+#endif
+		mediatek,larb = <&smi_larb7>;
+		interrupts = <GIC_SPI 382 IRQ_TYPE_LEVEL_HIGH>;
+		mediatek,vcu = <&vcu>;
+		clocks =
+			<&venc_gcon_clk CLK_VEN1_CKE1_VENC>;
+		clock-names =
+			"MT_CG_VENC";
 	};
 
 	smi_larb7: smi_larb7@17010000 {
