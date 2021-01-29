@@ -698,6 +698,13 @@ static const struct mtk_pin_field_calc mt6877_pin_eh_range[] = {
 	PIN_FIELD_BASE(187, 187, 7, 0x0030, 0x10, 3, 3),
 };
 
+static const struct mtk_eint_hw mt6877_eint_hw = {
+	.port_mask = 7,
+	.ports     = 7,
+	.ap_num    = 128,
+	.db_cnt    = 32,
+};
+
 static const struct mtk_pin_reg_calc mt6877_reg_cals[PINCTRL_PIN_REG_MAX] = {
 	[PINCTRL_PIN_REG_MODE] = MTK_RANGE(mt6877_pin_mode_range),
 	[PINCTRL_PIN_REG_DIR] = MTK_RANGE(mt6877_pin_dir_range),
@@ -749,6 +756,7 @@ static const struct mtk_pin_soc mt6877_data = {
 	.pins = mtk_pins_mt6877,
 	.npins = ARRAY_SIZE(mtk_pins_mt6877),
 	.ngrps = ARRAY_SIZE(mtk_pins_mt6877),
+	.eint_hw = &mt6877_eint_hw,
 	.nfuncs = 8,
 	.gpio_m = 0,
 	.race_free_access = true,
