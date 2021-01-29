@@ -140,6 +140,8 @@ extern unsigned int mt_gpufreq_get_real_dvfs_table_num(void);
 extern unsigned int mt_gpufreq_target(unsigned int request_idx,
 		enum mt_gpufreq_kicker);
 #if MT_GPUFREQ_SHADER_PWR_CTL_WA
+extern void mt_gpufreq_clock_parking_lock(unsigned long *pFlags);
+extern void mt_gpufreq_clock_parking_unlock(unsigned long *pFlags);
 extern unsigned int mt_gpufreq_clock_parking(int clksrc);
 #endif
 extern unsigned int mt_gpufreq_update_volt(unsigned int pmic_volt[],

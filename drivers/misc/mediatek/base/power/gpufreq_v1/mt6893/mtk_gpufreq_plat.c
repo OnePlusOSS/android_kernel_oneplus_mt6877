@@ -37,10 +37,6 @@
 #include "mtk_gpufreq_internal.h"
 #include "mtk_gpufreq_common.h"
 
-#if MT_GPUFREQ_SHADER_PWR_CTL_WA
-#include <linux/atomic.h>
-#endif
-
 #include "clk-fmeter.h"
 
 #include "mtk_pmic_wrap.h"
@@ -197,11 +193,6 @@ static bool g_cg_on;
 static bool g_mtcmos_on;
 static bool g_buck_on;
 static bool g_fixed_freq_volt_state;
-#if MT_GPUFREQ_SHADER_PWR_CTL_WA
-static atomic_t g_under_clock_switch_state;
-static atomic_t g_under_clksrc_parking_state;
-static atomic_t g_lower_clksrc;
-#endif
 static bool g_probe_done;
 static int g_power_count;
 static unsigned int g_opp_stress_test_state;
@@ -465,12 +456,6 @@ static unsigned int mt_gpufreq_return_by_condition(
 			g_cur_opp_vgpu == g_opp_table[limit_idx].gpufreq_vgpu)
 		ret |= (1 << 4);
 
-#if MT_GPUFREQ_SHADER_PWR_CTL_WA
-	if (atomic_read(&g_under_clksrc_parking_state) == 1 ||
-		atomic_read(&g_lower_clksrc) == 1)
-		ret |= (1 << 5);
-#endif
-
 	gpufreq_pr_logbuf("return_by_condition: 0x%x\n", ret);
 
 	return ret;
@@ -649,7 +634,16 @@ unsigned int mt_gpufreq_target(unsigned int request_idx,
 
 
 #if MT_GPUFREQ_SHADER_PWR_CTL_WA
-#define MAX_RETRY_COUNT 30
+void mt_gpufreq_clock_parking_lock(unsigned long *pFlags)
+{
+	spin_lock_irqsave(&mt_gpufreq_clksrc_parking_lock, *pFlags);
+}
+
+void mt_gpufreq_clock_parking_unlock(unsigned long *pFlags)
+{
+	spin_unlock_irqrestore(&mt_gpufreq_clksrc_parking_lock, *pFlags);
+}
+
 unsigned int mt_gpufreq_clock_parking(int clksrc)
 {
 	/*
@@ -658,20 +652,7 @@ unsigned int mt_gpufreq_clock_parking(int clksrc)
 	 * (that will result the sleep/schedule operations).
 	 */
 
-	int retry_count = 0;
-
 	gpufreq_pr_logbuf("%s, clksrc: %d\n", __func__, clksrc);
-
-	spin_lock(&mt_gpufreq_clksrc_parking_lock);
-
-	while (atomic_read(&g_under_clock_switch_state) == 1 &&
-		retry_count <= MAX_RETRY_COUNT) {
-		retry_count++;
-		gpufreq_pr_logbuf("%s: retry: %d times ...\n", __func__, retry_count);
-		udelay(20);
-	}
-
-	atomic_set(&g_under_clksrc_parking_state, 1);
 
 	if (clksrc == CLOCK_MAIN) {
 		/* Switch to <&topckgen TOP_MFGPLL_CK>: 1150MHz */
@@ -684,8 +665,6 @@ unsigned int mt_gpufreq_clock_parking(int clksrc)
 
 		/* update bit [21] */
 		writel(0x00200000, g_topckgen + 0x04);
-
-		atomic_set(&g_lower_clksrc, 0);
 	} else if (clksrc == CLOCK_SUB) {
 		/* Switch to <&topckgen TOP_MAINPLL_D5_D2>: 218MHz */
 
@@ -697,8 +676,6 @@ unsigned int mt_gpufreq_clock_parking(int clksrc)
 
 		/* update bit [21] */
 		writel(0x00200000, g_topckgen + 0x04);
-
-		atomic_set(&g_lower_clksrc, 1);
 	} else if (clksrc == CLOCK_SUB2) {
 		/* Switch to <&clk26m>: 26MHz */
 
@@ -710,13 +687,7 @@ unsigned int mt_gpufreq_clock_parking(int clksrc)
 
 		/* update bit [21] */
 		writel(0x00200000, g_topckgen + 0x04);
-
-		atomic_set(&g_lower_clksrc, 1);
 	}
-
-	atomic_set(&g_under_clksrc_parking_state, 0);
-
-	spin_unlock(&mt_gpufreq_clksrc_parking_lock);
 
 	gpufreq_pr_debug("%s, clksrc: %d ... [Done]\n", __func__, clksrc);
 
@@ -2717,7 +2688,8 @@ static void __mt_gpufreq_clock_switch(unsigned int freq_new)
 	bool parking = false;
 
 #if MT_GPUFREQ_SHADER_PWR_CTL_WA
-	int retry_count = 0;
+	int ret;
+	unsigned long flags;
 #endif
 
 	/*
@@ -2743,22 +2715,18 @@ static void __mt_gpufreq_clock_switch(unsigned int freq_new)
 		parking = false;
 #endif
 
-#if MT_GPUFREQ_SHADER_PWR_CTL_WA
-	while ((atomic_read(&g_under_clksrc_parking_state) == 1 ||
-		atomic_read(&g_lower_clksrc) == 1) &&
-		retry_count <= MAX_RETRY_COUNT) {
-		retry_count++;
-		gpufreq_pr_logbuf("%s: retry: %d times ...\n", __func__, retry_count);
-		udelay(20);
-	}
-
-	atomic_set(&g_under_clock_switch_state, 1);
-#endif
-
 	if (parking) {
+#if MT_GPUFREQ_SHADER_PWR_CTL_WA
+		ret = clk_prepare_enable(g_clk->clk_mux);
+		if (ret)
+			gpufreq_pr_info("enable clk_mux(TOP_MUX_MFG) failed:%d\n", ret);
+
+		mt_gpufreq_clock_parking_lock(&flags);
+		mt_gpufreq_clock_parking(CLOCK_SUB);
+#else
 		/* mfgpll_ck to univpll_d3(416MHz) */
 		__mt_gpufreq_switch_to_clksrc(CLOCK_SUB);
-
+#endif
 		/*
 		 * MFGPLL_CON1[31:31] = MFGPLL_SDM_PCW_CHG
 		 * MFGPLL_CON1[26:24] = MFGPLL_POSDIV
@@ -2769,17 +2737,20 @@ static void __mt_gpufreq_clock_switch(unsigned int freq_new)
 		/* PLL spec */
 		udelay(20);
 
+#if MT_GPUFREQ_SHADER_PWR_CTL_WA
+		mt_gpufreq_clock_parking(CLOCK_MAIN);
+		mt_gpufreq_clock_parking_unlock(&flags);
+
+		clk_disable_unprepare(g_clk->clk_mux);
+#else
 		/* univpll_d3(416MHz) to mfgpll_ck */
 		__mt_gpufreq_switch_to_clksrc(CLOCK_MAIN);
+#endif
 	} else {
 #ifdef CONFIG_MTK_FREQ_HOPPING
 		mt_dfs_general_pll(MFGPLL_FH_PLL, dds);
 #endif
 	}
-
-#if MT_GPUFREQ_SHADER_PWR_CTL_WA
-	atomic_set(&g_under_clock_switch_state, 0);
-#endif
 
 	gpufreq_pr_logbuf(
 	"posdiv: %d, real_posdiv: %d, dds: 0x%x, pll: 0x%08x, parking: %d\n",

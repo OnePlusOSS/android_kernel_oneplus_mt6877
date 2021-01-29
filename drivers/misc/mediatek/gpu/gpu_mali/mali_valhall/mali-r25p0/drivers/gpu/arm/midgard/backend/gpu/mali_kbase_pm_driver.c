@@ -268,6 +268,7 @@ static void kbase_pm_invoke(struct kbase_device *kbdev,
 
 #ifdef SHADER_PWR_CTL_WA
 	int clksrc = 0;
+	unsigned long flags;
 #endif
 
 	lockdep_assert_held(&kbdev->hwaccess_lock);
@@ -331,6 +332,7 @@ static void kbase_pm_invoke(struct kbase_device *kbdev,
 		(action == ACTION_PWRON || action == ACTION_PWROFF)) {
 		//clksrc = 1;  /* CLOCK_SUB: 218.4MHz */
 		clksrc = 2;  /* CLOCK_SUB2: 26MHz */
+		mtk_set_mt_gpufreq_clock_parking_lock(&flags);
 		mtk_set_mt_gpufreq_clock_parking(clksrc);
 	}
 #endif
@@ -353,6 +355,7 @@ static void kbase_pm_invoke(struct kbase_device *kbdev,
 		(action == ACTION_PWRON || action == ACTION_PWROFF)) {
 		clksrc = 0;  /* CLOCK_MAIN: 1150MHz */
 		mtk_set_mt_gpufreq_clock_parking(clksrc);
+		mtk_set_mt_gpufreq_clock_parking_unlock(&flags);
 	}
 #endif
 
