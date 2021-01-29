@@ -522,7 +522,7 @@ static int lcm_unprepare(struct drm_panel *panel)
 #if defined(CONFIG_LEDS_MTK_I2C)
 	/*this is rt4831a*/
 	mtk_leds_deinit_power();
-	lcm_i2c_write_bytes(0x09, 0x18)
+	lcm_i2c_write_bytes(0x09, 0x18);
 	ctx->pm_enable_gpio = devm_gpiod_get(ctx->dev,
 		"pm-enable", GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->pm_enable_gpio)) {
