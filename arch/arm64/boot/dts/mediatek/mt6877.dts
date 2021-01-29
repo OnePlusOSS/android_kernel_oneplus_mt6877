@@ -540,12 +540,6 @@
 		#clock-cells = <1>;
 	};
 
-	msdc1_top_clk: syscon@11c70000 {
-		compatible = "mediatek,mt6877-msdc1_top", "syscon";
-		reg = <0 0x11c70000 0 0x1000>;
-		#clock-cells = <1>;
-	};
-
 	imp_iic_wrap_e_clk: syscon@11cb1000 {
 		compatible = "mediatek,mt6877-imp_iic_wrap_e", "syscon";
 		reg = <0 0x11cb1000 0 0x1000>;
@@ -2131,12 +2125,6 @@
 			"cpccfg_reg";
 	};
 
-	msdc0_top_clk: syscon@11f50000 {
-		compatible = "mediatek,mt6877-msdc0_top", "syscon";
-		reg = <0 0x11f50000 0 0x1000>;
-		#clock-cells = <1>;
-	};
-
 	mali: mali@13000000 {
 		compatible = "mediatek,mali", "arm,mali-valhall";
 		reg = <0 0x13000000 0 0x4000>;
@@ -2181,10 +2169,12 @@
 	};
 
 	mmsys_config_clk: syscon@14000000 {
-		compatible = "mediatek,mt6877-mmsys", "syscon";
+		compatible = "mediatek,mt6877-dispsys", "syscon";
 		reg = <0 0x14000000 0 0x1000>;
 		pwr-regmap = <&scpsys>;
+		#clock-cells = <1>;
 	};
+
 	dispsys_config: dispsys_config@14000000 {
 		compatible = "mediatek,dispsys_config",
 					"syscon",
