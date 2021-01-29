@@ -115,11 +115,11 @@ struct lvts_thermal_controller lvts_tscpu_g_tc[LVTS_CONTROLLER_NUM] = {
 	[0] = {/*(MCU CPU B)*/
 		.ts = {L_TS_LVTS1_0, L_TS_LVTS1_1},
 		.ts_number = 2,
-		.dominator_ts_idx = 0, //TODO: need confirm dominator sensor
+		.dominator_ts_idx = 1, //TODO: need confirm dominator sensor
 		.tc_offset = 0x26D000,
 		.tc_speed = {
 			.group_interval_delay = 0x001,
-			.period_unit = 0x00C,
+			.period_unit = 0x001,
 			.filter_interval_delay = 0x001,
 			.sensor_interval_delay = 0x001
 		}
@@ -189,28 +189,65 @@ int lvts_hw_protect_enabled;
 #endif
 
 #if DUMP_LVTS_REGISTER_FOR_ZERO_RAW_ISSUE
-#define NUM_LVTS_DEVICE_REG (5)
+#define NUM_LVTS_DEVICE_REG (34)
 static const unsigned int g_lvts_device_addrs[NUM_LVTS_DEVICE_REG] = {
 	0x00,
+	0x01,
+	0x02,
+	0x03,
 	0x04,
+	0x05,
+	0x06,
+	0x07,
 	0x08,
+	0x09,
+	0x0A,
+	0x0B,
 	0x0C,
-	0xF0};
+	0x0D,
+	0x0E,
+	0x10,
+	0x11,
+	0x12,
+	0x13,
+	0x14,
+	0x15,
+	0x16,
+	0x17,
+	0x18,
+	0x19,
+	0x1A,
+	0x1B,
+	0xF0,
+	0xF1,
+	0xF2,
+	0xF3,
+	0xFC,
+	0xFD,
+	0xFF};
 
 static unsigned int g_lvts_device_value_b[LVTS_CONTROLLER_NUM]
 	[NUM_LVTS_DEVICE_REG];
 static unsigned int g_lvts_device_value_e[LVTS_CONTROLLER_NUM]
 	[NUM_LVTS_DEVICE_REG];
 
-#define NUM_LVTS_CONTROLLER_REG (17)
+#define NUM_LVTS_CONTROLLER_REG (28)
 static const unsigned int g_lvts_controller_addrs[NUM_LVTS_CONTROLLER_REG] = {
 	0x00,//LVTSMONCTL0_0
 	0x04,//LVTSMONCTL1_0
 	0x08,//LVTSMONCTL2_0
+	0x0C,//LVTSMONINT_0
+	0x10,//LVTSMONINTSTS_0
+	0x20,//LVTSMONIDET3_0
 	0x38,//LVTSMSRCTL0_0
+	0x3C,//LVTSMSRCTL1_0
 	0x40,//LVTSTSSEL_0
 	0x4C,//LVTS_ID_0
 	0x50,//LVTS_CONFIG_0
+	0x54,//LVTSSEDATA00_0
+	0x58,//LVTSSEDATA01_0
+	0x5C,//LVTSSEDATA02_0
+	0x60,//LVTSSEDATA03_0
 	0x90,//LVTSMSR0_0
 	0x94,//LVTSMSR1_0
 	0x98,//LVTSMSR2_0
@@ -219,6 +256,9 @@ static const unsigned int g_lvts_controller_addrs[NUM_LVTS_CONTROLLER_REG] = {
 	0xB4,//LVTSRDATA1_0
 	0xB8,//LVTSRDATA2_0
 	0xBC,//LVTSRDATA3_0
+	0xC0,//LVTSPROTCTCTL_0
+	0xCC,//LVTSPROTTC_0
+	0xFC,//LVTSPRRE3_0
 	0xE8,//LVTSDBGSEL_0
 	0xE4};//LVTSCLKEN_0
 static unsigned int g_lvts_controller_value_b[LVTS_CONTROLLER_NUM]
@@ -423,6 +463,21 @@ static void read_controller_reg_when_error(void)
 	}
 }
 
+static void read_controller_reg_when_error_by_ctrl_num(int ctrl_num)
+{
+	int j, offset, temp;
+
+	//for (i = 0; i < ARRAY_SIZE(lvts_tscpu_g_tc); i++) {
+		offset = lvts_tscpu_g_tc[ctrl_num].tc_offset; //tc offset
+
+		for (j = 0; j < NUM_LVTS_CONTROLLER_REG; j++) {
+			temp = readl(LVTSMONCTL0_0 + g_lvts_controller_addrs[j]
+				+ offset);
+			g_lvts_controller_value_e[ctrl_num][j] = temp;
+		}
+	//}
+}
+
 static void read_device_reg_before_active(void)
 {
 	int i, j;
@@ -471,6 +526,41 @@ static void read_device_reg_when_error(void)
 	}
 }
 
+static void read_device_reg_when_error_by_ctrl_num(int ctrl_num)
+{
+	int j, offset, cnt;
+	unsigned int addr;
+
+	//for (i = 0; i < ARRAY_SIZE(lvts_tscpu_g_tc); i++) {
+
+		offset = lvts_tscpu_g_tc[ctrl_num].tc_offset; //tc offset
+
+		for (j = 0; j < NUM_LVTS_DEVICE_REG; j++) {
+			addr = g_lvts_device_addrs[j];
+			lvts_write_device(0x81020000, addr, 0x00, ctrl_num);
+			/* wait 2us + 3us buffer*/
+			udelay(5);
+			/* Check ASIF bus status for transaction finished
+			 * Wait until DEVICE_ACCESS_START = 0
+			 */
+			cnt = 0;
+			while ((readl(LVTS_CONFIG_0 + offset) & _BIT_(24))) {
+				cnt++;
+
+				if (cnt == 100) {
+					lvts_printk("Error: DEVICE_ACCESS_START didn't ready\n");
+					break;
+				}
+				udelay(2);
+			}
+
+			g_lvts_device_value_e[ctrl_num][j] = (readl(LVTSRDATA0_0
+				+ offset));
+		}
+	//}
+}
+
+
 void clear_lvts_register_value_array(void)
 {
 	int i, j;
@@ -487,6 +577,59 @@ void clear_lvts_register_value_array(void)
 		}
 	}
 }
+
+static void dump_lvts_register_value_by_ctrl_num(int ctrl_num)
+{
+	int j, offset, tc_offset;
+	char buffer[512];
+
+	//for (i = 0; i < ARRAY_SIZE(lvts_tscpu_g_tc); i++) {
+		lvts_printk("[LVTS_ERROR][BEFROE][CONTROLLER_%d][DUMP]\n", ctrl_num);
+		tc_offset = lvts_tscpu_g_tc[ctrl_num].tc_offset; //tc offset
+
+		offset = sprintf(buffer, "[LVTS_ERROR][BEFORE][TC][DUMP] ");
+		for (j = 0; j < NUM_LVTS_CONTROLLER_REG; j++)
+			offset += sprintf(buffer + offset, "0x%x:%x ",
+					tc_offset + g_lvts_controller_addrs[j],
+					g_lvts_controller_value_b[ctrl_num][j]);
+
+		buffer[offset] = '\0';
+		lvts_printk("%s\n", buffer);
+
+		offset = sprintf(buffer, "[LVTS_ERROR][BEFORE][DEVICE][DUMP] ");
+		for (j = 0; j < NUM_LVTS_DEVICE_REG; j++)
+			offset += sprintf(buffer + offset, "0x%x:%x ",
+					g_lvts_device_addrs[j],
+					g_lvts_device_value_b[ctrl_num][j]);
+
+		buffer[offset] = '\0';
+		lvts_printk("%s\n", buffer);
+	//}
+
+	//for (i = 0; i < ARRAY_SIZE(lvts_tscpu_g_tc); i++) {
+		lvts_printk("[LVTS_ERROR][AFTER][CONTROLLER_%d][DUMP]\n", ctrl_num);
+		tc_offset = lvts_tscpu_g_tc[ctrl_num].tc_offset; //tc offset
+
+		offset = sprintf(buffer, "[LVTS_ERROR][AFTER][TC][DUMP] ");
+		for (j = 0; j < NUM_LVTS_CONTROLLER_REG; j++)
+			offset += sprintf(buffer + offset, "0x%x:%x ",
+					tc_offset + g_lvts_controller_addrs[j],
+					g_lvts_controller_value_e[ctrl_num][j]);
+
+		buffer[offset] = '\0';
+		lvts_printk("%s\n", buffer);
+
+		offset = sprintf(buffer, "[LVTS_ERROR][AFTER][DEVICE][DUMP] ");
+		for (j = 0; j < NUM_LVTS_DEVICE_REG; j++)
+			offset += sprintf(buffer + offset, "0x%x:%x ",
+					g_lvts_device_addrs[j],
+					g_lvts_device_value_e[ctrl_num][j]);
+
+		buffer[offset] = '\0';
+		lvts_printk("%s\n", buffer);
+	//}
+}
+
 static void dump_lvts_register_value(void)
 {
 	int i, j, offset, tc_offset;
@@ -548,6 +691,17 @@ void dump_lvts_error_info(void)
 
 	read_device_reg_when_error();
 	dump_lvts_register_value();
+}
+
+void dump_lvts_error_info_by_ctrl_num(int crtl_num)
+{
+	read_controller_reg_when_error_by_ctrl_num(crtl_num);
+
+	lvts_disable_all_sensing_points();
+	lvts_wait_for_all_sensing_point_idle();
+
+	read_device_reg_when_error_by_ctrl_num(crtl_num);
+	dump_lvts_register_value_by_ctrl_num(crtl_num);
 }
 
 #endif
@@ -635,7 +789,8 @@ void lvts_device_read_count_RC_N_resume(void)
 			data = lvts_read_device(0xC1020000, 0x00, i);
 
 			/* Get RCK value from LSB[23:0] */
-			g_count_rc_now[s_index] = (data & _BITMASK_(23:0));
+			// not assign new rc value when resume LVTS
+			//g_count_rc_now[s_index] = (data & _BITMASK_(23:0));
 			/* Recover Setting for Normal Access on
 			 * temperature fetch
 			 */
@@ -1178,8 +1333,10 @@ static void lvts_interrupt_handler(int tc_num)
 	if (ret & THERMAL_HOT2NORMAL_INTERRUPT_3)
 		lvts_dbg_printk("[Thermal IRQ]: Hot to normal interrupt triggered, sensor point 3\n");
 
-	if (ret & THERMAL_IMMEDIATE_INTERRUPT_3)
-		lvts_dbg_printk("[Thermal IRQ]: Immediate sense interrupt triggered, sensor point 3\n");
+	if (ret & THERMAL_IMMEDIATE_INTERRUPT_3) {
+		lvts_printk("[Thermal IRQ]: Immediate sense interrupt triggered, sensor point 3\n");
+		dump_lvts_error_info_by_ctrl_num(tc_num);
+	}
 
 	if (ret & THERMAL_FILTER_INTERRUPT_3)
 		lvts_dbg_printk("[Thermal IRQ]: Filter sense interrupt triggered, sensor point 3\n");
@@ -1194,27 +1351,36 @@ static void lvts_interrupt_handler(int tc_num)
 #endif
 	}
 
-	if (ret & THERMAL_PROTECTION_STAGE_3)
+	if (ret & THERMAL_PROTECTION_STAGE_3) {
 		lvts_printk("[Thermal IRQ]: Thermal protection stage 3 interrupt triggered, Thermal HW reboot\n");
+		dump_lvts_error_info_by_ctrl_num(tc_num);
+	}
 }
 
 irqreturn_t lvts_tscpu_thermal_all_tc_interrupt_handler(int irq, void *dev_id)
 {
-	unsigned int ret = 0, i, mask = 1;
+	unsigned int ret = 0, ret_mcu = 0, i, mask = 1;
 
-	ret = readl(THERMINTST);
-	ret = ret & 0x7F;
+	ret = readl(THERMINTST +
+		lvts_tscpu_g_tc[LVTS_AP_CONTROLLER0].tc_offset);
+	ret = ret & 0x1E;
+	ret_mcu = readl(THERMINTST +
+		lvts_tscpu_g_tc[LVTS_MCU_CONTROLLER0].tc_offset);
+	ret_mcu = ret_mcu & 0x1E;
+
 	/* MSB LSB NAME
-	 * 6   6   LVTSINT3
-	 * 5   5   LVTSINT2
-	 * 4   4   LVTSINT1
-	 * 3   3   LVTSINT0
-	 * 2   2   THERMINT2
-	 * 1   1   THERMINT1
+	 * 4   4   LVTSINT3
+	 * 3   3   LVTSINT2
+	 * 2   2   LVTSINT1
+	 * 1   1   LVTSINT0
 	 * 0   0   THERMINT0
 	 */
+	lvts_printk("%s : THERMINTST = 0x%x THERMINTST_MCU = 0x%x\n",
+		__func__, ret, ret_mcu);
 
-	lvts_printk("%s : THERMINTST = 0x%x\n", __func__, ret);
+	ret = ((ret_mcu >> 1) << LVTS_MCU_CONTROLLER0) |
+		((ret >> 1) << LVTS_AP_CONTROLLER0);
+
 	for (i = 0; i < ARRAY_SIZE(lvts_tscpu_g_tc); i++) {
 		mask = 1 << i;
 
@@ -1257,8 +1423,8 @@ static void lvts_configure_polling_speed_and_filter(int tc_num)
 	 */
 	mt_reg_sync_writel_print(lvtsMonCtl2, offset + LVTSMONCTL2_0);
 
-	/* temperature sampling control, 2 out of 4 samples */
-	mt_reg_sync_writel_print(0x00000492, offset + LVTSMSRCTL0_0);
+	/* temperature sampling control, 1 sample */
+	mt_reg_sync_writel_print(0x0, offset + LVTSMSRCTL0_0);
 
 	udelay(1);
 	lvts_dbg_printk(
