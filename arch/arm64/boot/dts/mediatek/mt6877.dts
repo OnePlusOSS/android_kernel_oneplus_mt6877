@@ -2127,24 +2127,21 @@
 		#clock-cells = <1>;
 	};
 
-	g3d_gpueb@13c00000 {
-		compatible = "mediatek,g3d_gpueb";
-		reg = <0 0x13c00000 0 0x100000>;
-	};
-
-	dfd@13e00000 {
-		compatible = "mediatek,dfd";
-		reg = <0 0x13e00000 0 0x112000>;
-	};
-
-	g3d_config@13f90000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13f90000 0 0x10000>;
-	};
-
-	g3d_config@13fa0000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fa0000 0 0x10000>;
+	mali: mali@13000000 {
+		compatible = "mediatek,mali", "arm,mali-valhall";
+		reg = <0 0x13000000 0 0x4000>;
+		interrupts =
+			<GIC_SPI 453 IRQ_TYPE_LEVEL_HIGH>,
+			<GIC_SPI 454 IRQ_TYPE_LEVEL_HIGH>,
+			<GIC_SPI 455 IRQ_TYPE_LEVEL_HIGH>,
+			<GIC_SPI 456 IRQ_TYPE_LEVEL_HIGH>,
+			<GIC_SPI 457 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-names =
+			"GPU",
+			"MMU",
+			"JOB",
+			"EVENT",
+			"PWR";
 	};
 
 	gpu_pll_ctrl_clk: syscon@13fa0000 {
@@ -2153,66 +2150,12 @@
 		#clock-cells = <1>;
 	};
 
-	g3d_config@13fb7000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fb7000 0 0x1000>;
-	};
-
-	g3d_config@13fb8000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fb8000 0 0x1000>;
-	};
-
-	g3d_config@13fb9c00 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fb9c00 0 0x100>;
-	};
-
-	g3d_config@13fbb000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fbb000 0 0x1000>;
-	};
-
-	g3d_dvfs@13fbc000 {
-		compatible = "mediatek,g3d_dvfs";
-		reg = <0 0x13fbc000 0 0x1000>;
-	};
-
-	g3d_config@13fbd000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fbd000 0 0x1000>;
-	};
-
-	g3d_config@13fbf000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fbf000 0 0x1000>;
-	};
-
 	mfgcfg_clk: syscon@13fbf000 {
-		compatible = "mediatek,mt6877-mfgcfg", "syscon";
+		compatible = "mediatek,mfgcfg",
+			"mediatek,mt6877-mfgcfg", "syscon";
 		reg = <0 0x13fbf000 0 0x1000>;
 		pwr-regmap = <&scpsys>;
 		#clock-cells = <1>;
-	};
-
-	g3d_config@13fcc000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fcc000 0 0x1000>;
-	};
-
-	g3d_config@13fcd000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fcd000 0 0x1000>;
-	};
-
-	g3d_config@13fce000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fce000 0 0x1000>;
-	};
-
-	g3d_config@13fcf000 {
-		compatible = "mediatek,g3d_config";
-		reg = <0 0x13fcf000 0 0x1000>;
 	};
 
 	disp_pwm: disp_pwm0@1100e000 {
