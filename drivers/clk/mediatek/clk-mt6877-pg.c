@@ -4730,14 +4730,12 @@ struct cg_list cam_ra_cg = {.cg = {"cam_ra_larbx"},};
 
 struct cg_list cam_rb_cg = {.cg = {"cam_rb_larbx"},};
 
-struct cg_list apu_cg1 = {
+struct cg_list apu_cg = {
 	.cg = {
 		"dsp_sel",
 		"dsp7_sel",
 	},
 };
-
-struct cg_list apu_cg2 = {.cg = {"apu_conn1_iommu_0", "apu_conn2_iommu_0"},};
 
 struct mtk_power_gate {
 	int id;
@@ -4786,7 +4784,7 @@ struct mtk_power_gate scp_clks[] = {
 	PGATE(SCP_SYS_CSI, "PG_CSI", "PG_CAM", NULL,
 			NULL, SYS_CSI),
 	/* Gary Wang: no need to turn on disp mtcmos*/
-	PGATE(SCP_SYS_APU, "PG_APU", NULL, &apu_cg1, &apu_cg2, SYS_APU),
+	PGATE(SCP_SYS_APU, "PG_APU", NULL, &apu_cg, NULL, SYS_APU),
 };
 
 static void init_clk_scpsys(struct clk_onecell_data *clk_data)

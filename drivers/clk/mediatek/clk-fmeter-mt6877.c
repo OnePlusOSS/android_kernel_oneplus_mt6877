@@ -24,6 +24,12 @@ static DEFINE_SPINLOCK(meter_lock);
 #define fmeter_lock(flags)   spin_lock_irqsave(&meter_lock, flags)
 #define fmeter_unlock(flags) spin_unlock_irqrestore(&meter_lock, flags)
 
+static DEFINE_SPINLOCK(subsys_meter_lock);
+#define subsys_fmeter_lock(flags)	\
+	spin_lock_irqsave(&subsys_meter_lock, flags)
+#define subsys_fmeter_unlock(flags)	\
+	spin_unlock_irqrestore(&subsys_meter_lock, flags)
+
 /*
  * clkdbg fmeter
  */
@@ -217,16 +223,22 @@ const int abist_clkdiv_array[] = {
     /* 61 - 63 */	0, 0, 0,
 };
 
-#define _CKGEN(x)		(topck_base + (x))
-#define _APMIXED(x)		(apmixed_base + (x))
-#define CLK_MISC_CFG_0		_CKGEN(0x140)
-#define CLK_DBG_CFG		_CKGEN(0x17C)
-#define CLK26CALI_0		_CKGEN(0x220)
-#define CLK26CALI_1		_CKGEN(0x224)
-#define AP_PLLGP1_CON0		_APMIXED(0x200)
+#define _CKGEN(x)			(topck_base + (x))
+#define _APMIXED(x)			(apmixed_base + (x))
+#define _GPU_PLL_CTRL(x)		(gpu_pll_ctrl_base + (x))
+#define _APU_PLL_CTRL(x)		(apu_pll_ctrl_base + (x))
+#define CLK_MISC_CFG_0			_CKGEN(0x140)
+#define CLK_DBG_CFG			_CKGEN(0x17C)
+#define CLK26CALI_0			_CKGEN(0x220)
+#define CLK26CALI_1			_CKGEN(0x224)
+#define AP_PLLGP1_CON0			_APMIXED(0x200)
+#define PLL4H_FQMTR_CON0_OFS		(0x200)
+#define PLL4H_FQMTR_CON1_OFS		(0x204)
 
 static void __iomem *topck_base;
 static void __iomem *apmixed_base;
+static void __iomem *gpu_pll_ctrl_base;
+static void __iomem *apu_pll_ctrl_base;
 
 const struct fmeter_clk *get_fmeter_clks(void)
 {
@@ -482,6 +494,69 @@ unsigned int mt_get_abist2_freq(unsigned int ID)
 		return (output * 2);
 }
 
+unsigned int mt_get_subsys_freq(unsigned int ID)
+{
+	int output = 0, i = 0;
+	unsigned int temp, pll4h_fqmtr_con0, pll4h_fqmtr_con1;
+	unsigned long flags;
+	void __iomem *con0, *con1;
+	unsigned int sys = FM_SYS(ID);
+	unsigned int id = FM_ID(ID);
+
+	subsys_fmeter_lock(flags);
+	if (sys == FM_GPU_PLL_CTRL) {
+		con0 = _GPU_PLL_CTRL(PLL4H_FQMTR_CON0_OFS);
+		con1 = _GPU_PLL_CTRL(PLL4H_FQMTR_CON1_OFS);
+	} else if (sys == FM_APU_PLL_CTRL) {
+		con0 = _APU_PLL_CTRL(PLL4H_FQMTR_CON0_OFS);
+		con1 = _APU_PLL_CTRL(PLL4H_FQMTR_CON1_OFS);
+	} else {
+		pr_notice("id: %d not available\n", ID);
+		return 0;
+	}
+
+	pll4h_fqmtr_con0 = clk_readl(con0);
+	pll4h_fqmtr_con1 = clk_readl(con1);
+
+	/* PLL4H_FQMTR_CON1[15]: rst 1 -> 0 */
+	clk_writel(con0, clk_readl(con0) & 0xFFFF7FFF);
+	/* PLL4H_FQMTR_CON1[15]: rst 0 -> 1 */
+	clk_writel(con0, clk_readl(con0) | 0x000080000);
+
+	/* sel fqmtr_cksel */
+	clk_writel(con0, (clk_readl(con0) & 0x00FFFFF8) | (id << 0));
+	/* set ckgen_load_cnt to 1024 */
+	clk_writel(con1, (clk_readl(con1) & 0xFC00FFFF) | 0x3FF);
+
+	/* sel fqmtr_cksel and set ckgen_k1 to 0(DIV4) */
+	clk_writel(con0, (clk_readl(con0) & 0x00FFFFFF) | (3 << 24));
+
+	/* fqmtr_en set to 1, fqmtr_exc set to 0, fqmtr_start set to 0 */
+	clk_writel(con0, clk_readl(con0) | 0x00001000 & 0xFFFFFEEF);
+	/*fqmtr_start set to 1 */
+	clk_writel(con0, clk_readl(con0) | 0x00000010);
+
+	/* wait frequency meter finish */
+	while (clk_readl(con0) & 0x10) {
+		udelay(10);
+		i++;
+		if (i > 30) {
+			pr_notice("[%d]con0: 0x%x, con1: 0x%x\n",
+				ID, clk_readl(con0), clk_readl(con1));
+			break;
+		}
+	}
+
+	temp = clk_readl(con1) & 0xFFFF;
+	output = ((temp * 26000)) / 1024; // Khz
+
+	clk_writel(con0, pll4h_fqmtr_con0);
+
+	subsys_fmeter_lock(flags);
+
+	return output;
+}
+
 static int __init clk_fmeter_mt6877_init(void)
 {
 	struct device_node *node;
@@ -496,9 +571,7 @@ static int __init clk_fmeter_mt6877_init(void)
 			return -1;
 		}
 	} else {
-		pr_err("%s can't find compatible node for topckgen\n",
-				__func__);
-		return -1;
+		goto ERR;
 	}
 
 	node = of_find_compatible_node(NULL, NULL,
@@ -510,13 +583,39 @@ static int __init clk_fmeter_mt6877_init(void)
 					__func__);
 			return -1;
 		}
-	} else {
-		pr_err("%s can't find compatible node for apmixedsys\n",
-				__func__);
-		return -1;
-	}
+	} else
+		goto ERR;
+
+	node = of_find_compatible_node(NULL, NULL,
+		"mediatek,mt6877-gpu_pll_ctrl");
+	if (node) {
+		gpu_pll_ctrl_base = of_iomap(node, 0);
+		if (!gpu_pll_ctrl_base) {
+			pr_err("%s() can't find iomem for gpu_pll_ctrl\n",
+					__func__);
+			return -1;
+		}
+	} else
+		goto ERR;
+
+	node = of_find_compatible_node(NULL, NULL,
+		"mediatek,mt6877-apu_pll_ctrl");
+	if (node) {
+		apu_pll_ctrl_base = of_iomap(node, 0);
+		if (!apu_pll_ctrl_base) {
+			pr_err("%s() can't find iomem for apu_pll_ctrl\n",
+					__func__);
+			return -1;
+		}
+	} else
+		goto ERR;
 
 	return 0;
+
+ERR:
+	pr_err("%s can't find compatible node for apmixedsys\n",
+				__func__);
+		return -1;
 }
 subsys_initcall(clk_fmeter_mt6877_init);
 

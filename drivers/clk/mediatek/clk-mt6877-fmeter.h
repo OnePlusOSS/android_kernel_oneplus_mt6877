@@ -179,9 +179,26 @@
 #define FM_ALVTS_TO_PLLGP_MON_L7		48
 #define FM_ALVTS_TO_PLLGP_MON_L8		49
 
+enum fm_sys_id {
+	FM_GPU_PLL_CTRL = 0,
+	FM_APU_PLL_CTRL = 1,
+	FM_SYS_NUM = 2,
+};
+
+#define FM_MFGPLL1				((FM_GPU_PLL_CTRL << 8) | 0)
+#define FM_MFGPLL2				((FM_GPU_PLL_CTRL << 8) | 1)
+#define FM_MFGPLL3				((FM_GPU_PLL_CTRL << 8) | 2)
+#define FM_MFGPLL4				((FM_GPU_PLL_CTRL << 8) | 3)
+
+#define FM_APUPLL				((FM_APU_PLL_CTRL << 8) | 0)
+#define FM_APUPLL1				((FM_APU_PLL_CTRL << 8) | 1)
+#define FM_APUPLL2				((FM_APU_PLL_CTRL << 8) | 2)
+#define FM_NPUPLL				((FM_APU_PLL_CTRL << 8) | 3)
+
 extern unsigned int mt_get_ckgen_freq(unsigned int ID);
 extern unsigned int mt_get_abist_freq(unsigned int ID);
 extern unsigned int mt_get_abist2_freq(unsigned int ID);
+extern unsigned int mt_get_subsys_freq(unsigned int ID);
 extern const struct fmeter_clk *get_fmeter_clks(void);
 
 #endif /* _CLK_MT6877_FMETER_H */

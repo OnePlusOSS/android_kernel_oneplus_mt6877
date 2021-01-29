@@ -26,4 +26,6 @@
 #include "clk-mt6877-fmeter.h"
 #endif
 
+#define FM_SYS(_id)		((_id & (0xFF00)) >> 8)
+#define FM_ID(_id)		(_id & (0xFF))
 #endif
