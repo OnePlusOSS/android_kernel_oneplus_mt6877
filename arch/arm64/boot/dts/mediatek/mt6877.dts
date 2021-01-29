@@ -5360,6 +5360,16 @@
 		reg = <0x28>;
 		status = "disabled";
 	};
+
+	backlight0: backlight0@11 {
+		compatible = "mediatek,i2c-leds";
+		reg = <0x11>;
+		label = "lcd-backlight";
+		trans-bits = <11>;
+		led-bits = <8>;
+		default-state = "full";
+		status = "okay";
+	};
 };
 
 #include "mediatek/mt6315_s6.dtsi"
