@@ -3755,8 +3755,8 @@ static int __mt_gpufreq_pdrv_probe(struct platform_device *pdev)
 static int __init __mt_gpufreq_init(void)
 {
 	int ret = 0;
-
 	if (mt_gpufreq_bringup()) {
+		spin_lock_init(&mt_gpufreq_clksrc_parking_lock);
 		__mt_gpufreq_dump_bringup_status();
 		gpufreq_pr_info("@%s: skip driver init when bringup\n",
 				__func__);
