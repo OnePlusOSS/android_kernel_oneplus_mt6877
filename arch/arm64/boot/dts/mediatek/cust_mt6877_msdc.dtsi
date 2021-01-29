@@ -69,7 +69,7 @@
 	cd_level = /bits/ 8 <MSDC_CD_LOW>;
 	cd-gpios = <&pio 3 0>;
 
-	status = "disabled";
+	status = "okay";
 
 	vmmc-supply = <&mt_pmic_vmch_ldo_reg>;
 	vqmmc-supply = <&mt_pmic_vmc_ldo_reg>;
