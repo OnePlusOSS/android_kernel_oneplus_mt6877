@@ -238,7 +238,9 @@ static int g_opp_sb_idx_down[NUM_OF_OPP_IDX] = { 0 };
 static DEFINE_MUTEX(mt_gpufreq_lock);
 static DEFINE_MUTEX(mt_gpufreq_power_lock);
 static DEFINE_MUTEX(mt_gpufreq_limit_table_lock);
-
+#if MT_GPUFREQ_SHADER_PWR_CTL_WA
+static spinlock_t mt_gpufreq_clksrc_parking_lock;
+#endif
 static void __iomem *g_gpu_pll_ctrl;
 static void __iomem *g_topckgen_base;
 static void __iomem *g_mfg_base;
@@ -650,6 +652,58 @@ unsigned int mt_gpufreq_target(unsigned int request_idx,
 	mutex_unlock(&mt_gpufreq_lock);
 	return 0;
 }
+
+#if MT_GPUFREQ_SHADER_PWR_CTL_WA
+void mt_gpufreq_clock_parking_lock(unsigned long *pFlags)
+{
+	spin_lock_irqsave(&mt_gpufreq_clksrc_parking_lock, *pFlags);
+}
+void mt_gpufreq_clock_parking_unlock(unsigned long *pFlags)
+{
+	spin_unlock_irqrestore(&mt_gpufreq_clksrc_parking_lock, *pFlags);
+}
+unsigned int mt_gpufreq_clock_parking(int clksrc)
+{
+	/*
+	 * This function will be called under the Interrupt-Handler,
+	 * so can't implement any mutex-lock behaviors
+	 * (that will result the sleep/schedule operations).
+	 */
+
+	if (clksrc == CLOCK_MAIN) {
+		/* Switch to <&topckgen_clk CLK_TOP_MFGPLL1> */
+		/* 0. set reg bit [18] */
+		writel(0x00040000, g_topckgen_base + 0x124);
+
+		/* Switch to <&clk26m>: 26MHz */
+		/* 1. clr reg bit [19] */
+		writel(0x00080000, g_topckgen_base + 0x128);
+
+	} else if (clksrc == CLOCK_SUB) {
+		/* Switch to <&topckgen_clk CLK_TOP_MFGPLL4> */
+		/* 0. set reg bit [19] */
+		writel(0x00080000, g_topckgen_base + 0x124);
+
+		/* Switch to <&topckgen_clk CLK_TOP_MFG_INTERNAL1> */
+		/* 1. clr reg bit [18] */
+		writel(0x00040000, g_topckgen_base + 0x128);
+
+	} else if (clksrc == CLOCK_SUB2) {
+		/* Switch to <&clk26m>: 26MHz */
+		/* 0. clr reg bit [19] */
+		writel(0x00080000, g_topckgen_base + 0x128);
+
+		/* Switch to <&topckgen_clk CLK_TOP_MFG_INTERNAL1> */
+		/* 1. clr reg bit [18] */
+		writel(0x00040000, g_topckgen_base + 0x128);
+	}
+
+	gpufreq_pr_logbuf("%s, clksrc: %d ... [MUX] = 0x%08X\n",
+		__func__, clksrc, readl(g_topckgen_base + 0x120));
+
+	return 0;
+}
+#endif
 
 void mt_gpufreq_set_timestamp(void)
 {
@@ -1066,6 +1120,8 @@ void mt_gpufreq_power_control(enum mt_power_state power, enum mt_cg_state cg,
 #ifdef CONFIG_MTK_GPU_SUPPORT
 		mtk_notify_gpu_power_change(0);
 #endif
+
+		__mt_gpufreq_switch_to_clksrc(CLOCK_SUB);
 
 		gpu_dvfs_vgpu_footprint(GPU_DVFS_VGPU_STEP_5);
 
@@ -2605,6 +2661,11 @@ static void __mt_gpufreq_clock_switch(unsigned int freq_new)
 	bool parking = false;
 	int hopping = -1;
 
+#if MT_GPUFREQ_SHADER_PWR_CTL_WA
+	int ret;
+	unsigned long flags;
+#endif
+
 	curr_freq = __mt_gpufreq_get_cur_freq();
 	curr_posdiv_power = __mt_gpufreq_get_curr_posdiv_power();
 	posdiv_power = __mt_gpufreq_get_posdiv_power(freq_new);
@@ -2628,7 +2689,20 @@ static void __mt_gpufreq_clock_switch(unsigned int freq_new)
 
 	if (parking) {
 #ifndef GLITCH_FREE
+#if MT_GPUFREQ_SHADER_PWR_CTL_WA
+		ret = clk_prepare_enable(g_clk->clk_mux);
+		if (ret)
+			gpufreq_pr_info("enable clk_mux(TOP_MUX_MFG) failed:%d\n", ret);
+
+		ret = clk_prepare_enable(g_clk->clk_pll4);
+		if (ret)
+			gpufreq_pr_info("enable clk_pll4 failed:%d\n", ret);
+
+		mt_gpufreq_clock_parking_lock(&flags);
+		mt_gpufreq_clock_parking(CLOCK_SUB);
+#else
 		__mt_gpufreq_switch_to_clksrc(CLOCK_SUB);
+#endif
 
 		/*
 		 * MFGPLL1_CON1[31:31] = MFGPLL_SDM_PCW_CHG
@@ -2639,8 +2713,15 @@ static void __mt_gpufreq_clock_switch(unsigned int freq_new)
 
 		/* PLL spec */
 		udelay(20);
+#if MT_GPUFREQ_SHADER_PWR_CTL_WA
+		mt_gpufreq_clock_parking(CLOCK_MAIN);
+		mt_gpufreq_clock_parking_unlock(&flags);
 
+		clk_disable_unprepare(g_clk->clk_pll4);
+		clk_disable_unprepare(g_clk->clk_mux);
+#else
 		__mt_gpufreq_switch_to_clksrc(CLOCK_MAIN);
+#endif
 #else
 		/*
 		 * MFGPLL1_CON0[0] = RG_MFGPLL_EN
@@ -3331,6 +3412,12 @@ static int __mt_gpufreq_init_clk(struct platform_device *pdev)
 		return PTR_ERR(g_clk->clk_sub_parent);
 	}
 
+	g_clk->clk_pll4 = devm_clk_get(&pdev->dev, "clk_pll4");
+	if (IS_ERR(g_clk->clk_pll4)) {
+		gpufreq_pr_info("@%s: cannot get clk_pll4\n", __func__);
+		return PTR_ERR(g_clk->clk_pll4);
+	}
+
 	g_clk->subsys_bg3d = devm_clk_get(&pdev->dev, "subsys_bg3d");
 	if (IS_ERR(g_clk->subsys_bg3d)) {
 		gpufreq_pr_info("@%s: cannot get subsys_bg3d\n", __func__);
@@ -3372,6 +3459,10 @@ static int __mt_gpufreq_init_clk(struct platform_device *pdev)
 		gpufreq_pr_info("@%s: cannot get mtcmos_mfg5\n", __func__);
 		return PTR_ERR(g_clk->mtcmos_mfg5);
 	}
+
+#if MT_GPUFREQ_SHADER_PWR_CTL_WA
+	spin_lock_init(&mt_gpufreq_clksrc_parking_lock);
+#endif
 
 	// 0x1020E000
 	g_infracfg_base = __mt_gpufreq_of_ioremap("mediatek,infracfg", 0);
@@ -3554,6 +3645,14 @@ static void __mt_gpufreq_dump_bringup_status(void)
 	if (!mt_gpufreq_bringup())
 		return;
 
+	// 0x10000000
+	g_topckgen_base =
+			__mt_gpufreq_of_ioremap("mediatek,topckgen", 0);
+	if (!g_topckgen_base) {
+		gpufreq_pr_info("@%s: ioremap failed at topckgen\n", __func__);
+		return;
+	}
+
 	// 0x13fa0000
 	g_gpu_pll_ctrl =
 			__mt_gpufreq_of_ioremap(
@@ -3570,12 +3669,15 @@ static void __mt_gpufreq_dump_bringup_status(void)
 		return;
 	}
 
-	// [SPM] pwr_status: pwr_ack (@0x1000_6EF0)
-	// [SPM] pwr_status_2nd: pwr_ack_2nd (@x1000_6EF4)
+	// [SPM] pwr_status: pwr_ack (@0x1000_6EF8)
+	// [SPM] pwr_status_2nd: pwr_ack_2nd (@x1000_6EFC)
 	gpufreq_pr_info("@%s: [PWR_ACK] PWR_STATUS=0x%08X, PWR_STATUS_2ND=0x%08X\n",
 			__func__,
-			readl(g_sleep + 0xEF0),
-			readl(g_sleep + 0xEF4));
+			readl(g_sleep + 0xEF8),
+			readl(g_sleep + 0xEFC));
+	gpufreq_pr_info("@%s: [MUX] =0x%08X\n",
+			__func__,
+			readl(g_topckgen_base + 0x120));
 	gpufreq_pr_info("@%s: [MFGPLL] FREQ=%d\n",
 			__func__,
 			__mt_gpufreq_get_cur_freq());

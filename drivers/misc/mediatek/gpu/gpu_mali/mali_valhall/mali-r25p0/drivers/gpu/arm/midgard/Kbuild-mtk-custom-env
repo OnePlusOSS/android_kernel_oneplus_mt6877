@@ -52,5 +52,7 @@ endif
 # Enable by specific platform
 ifeq ($(findstring k6893v1_64_for_6877,$(PROJECT_DTB_NAMES)),k6893v1_64_for_6877)
 	ccflags-y += -DSHADER_PWR_CTL_WA
+else ifeq ($(CONFIG_MACH_MT6877),y)
+	ccflags-y += -DSHADER_PWR_CTL_WA
 endif
 
