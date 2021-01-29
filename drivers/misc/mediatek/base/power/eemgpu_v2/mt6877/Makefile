@@ -27,21 +27,8 @@ ccflags-y += \
 	-I$(srctree)/drivers/misc/mediatek/thermal/$(CONFIG_MTK_PLATFORM)/inc/mach	\
 	-I$(srctree)/include/linux/	\
 	-I$(srctree)/drivers/misc/mediatek/dramc/$(MTK_PLATFORM)	\
-	-I$(EEMGPU_ROOT_DIR)/mt6833/inc	\
+	-I$(EEMGPU_ROOT_DIR)/mt6877/inc	\
 	-I$(srctree)/drivers/misc/mediatek/base/power/mcdi/include/	\
-
-
-ifeq ($(PROJECT_DTB_NAMES),mediatek/k6833v1_64_alpha_mcl)
-	subdir-ccflags-y += -DMC50_LOAD
-endif
-
-ifeq ($(PROJECT_DTB_NAMES),mediatek/k6833v1_64_mcl)
-	subdir-ccflags-y += -DMC50_LOAD
-endif
-
-ifeq ($(PROJECT_DTB_NAMES),mediatek/k6833v1_64_33m_mcl)
-	subdir-ccflags-y += -DMC50_LOAD
-endif
 
 
 obj-y += mtk_eemgpu.o

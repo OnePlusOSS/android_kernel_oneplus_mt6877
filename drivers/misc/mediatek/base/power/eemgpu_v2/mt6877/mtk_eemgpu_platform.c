@@ -133,12 +133,16 @@ void get_freq_table_gpu(struct eemg_det *det)
 	}
 
 	det->num_freq_tbl = i;
+#if SUPPORT_GPU_VB
 	gpu_vb_turn_pt = 0;
+#endif
 	for (i = 0; i < det->num_freq_tbl; i++) {
 		curfreq = mt_gpufreq_get_freq_by_real_idx
 			(mt_gpufreq_get_ori_opp_idx(i));
 		if (curfreq <= GPU_FREQ_BASE) {
+#if SUPPORT_GPU_VB
 			gpu_vb_turn_pt = i;
+#endif
 			break;
 		}
 	}
@@ -157,9 +161,15 @@ void get_freq_table_gpu(struct eemg_det *det)
 #endif
 #endif
 
+#if SUPPORT_GPU_VB
 	eemg_debug("[%s] freq_num:%d, max_freq=%d, turn_pt:%d vb_pt: %d\n",
 		det->name+8, det->num_freq_tbl,
 		det->max_freq_khz, det->turn_pt, gpu_vb_turn_pt);
+#else
+	eemg_debug("[%s] freq_num:%d, max_freq=%d, turn_pt:%d\n",
+		det->name+8, det->num_freq_tbl,
+		det->max_freq_khz, det->turn_pt);
+#endif
 #endif
 
 	FUNC_EXIT(FUNC_LV_HELP);

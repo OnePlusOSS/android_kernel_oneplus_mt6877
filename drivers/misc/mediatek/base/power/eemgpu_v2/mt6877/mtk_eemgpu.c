@@ -965,6 +965,7 @@ static void eemg_calculate_aging_margin(struct eemg_det *det,
 
 }
 
+#if SUPPORT_GPU_VB
 static void eemg_save_final_volt_aee(struct eemg_det *ndet)
 {
 #ifdef CONFIG_EEMG_AEE_RR_REC
@@ -1003,6 +1004,7 @@ static void eemg_save_final_volt_aee(struct eemg_det *ndet)
 	}
 #endif
 }
+#endif
 
 #if SUPPORT_GPU_VB
 static void eemg_interpolate_mid_opp(struct eemg_det *ndet)
