@@ -10,6 +10,7 @@
 #include <linux/platform_device.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
+#include <linux/of_device.h>
 #include <linux/printk.h>
 #include <linux/slab.h>
 #include <linux/io.h>
@@ -21,6 +22,7 @@ struct emi_cen {
 	/*
 	 * EMI setting from device tree
 	 */
+	int ver;
 	unsigned int emi_cen_cnt;
 	unsigned int ch_cnt;
 	unsigned int rk_cnt;
@@ -34,7 +36,6 @@ struct emi_cen {
 	/*
 	 * EMI addr2dram settings from device tree
 	 */
-	unsigned int a2d_ver;
 	unsigned int disph;
 	unsigned int hash;
 
@@ -517,7 +518,7 @@ int mtk_emicen_addr2dram(unsigned long addr, struct emi_addr_map *map)
 	if (!global_emi_cen)
 		return -1;
 
-	if (global_emi_cen->a2d_ver == 1)
+	if (global_emi_cen->ver == 1)
 		return mtk_emicen_addr2dram_v1(addr, map);
 	else
 		return -1;
@@ -582,6 +583,8 @@ static int emicen_probe(struct platform_device *pdev)
 	if (!cen)
 		return -ENOMEM;
 
+	cen->ver = (int)of_device_get_match_data(&pdev->dev);
+
 	ret = of_property_read_u32(emicen_node,
 		"ch_cnt", &(cen->ch_cnt));
 	if (ret) {
@@ -633,13 +636,6 @@ static int emicen_probe(struct platform_device *pdev)
 		cen->emi_chn_base[i] = of_iomap(emichn_node, i);
 
 	ret = of_property_read_u32(emicen_node,
-		"a2d_ver", &(cen->a2d_ver));
-	if (ret) {
-		dev_info(&pdev->dev, "No a2d_ver\n");
-		cen->a2d_ver = MTK_EMI_A2D_VERSION;
-	}
-
-	ret = of_property_read_u32(emicen_node,
 		"a2d_disph", &(cen->disph));
 	if (ret) {
 		dev_info(&pdev->dev, "No a2d_disph\n");
@@ -663,7 +659,14 @@ static int emicen_probe(struct platform_device *pdev)
 
 	global_emi_cen = cen;
 
-	dev_info(&pdev->dev, "a2d_ver %d\n", cen->a2d_ver);
+	dev_info(&pdev->dev, "%s(%d) %s(%d), %s(%d)\n",
+		"version", cen->ver,
+		"ch_cnt", cen->ch_cnt,
+		"rk_cnt", cen->rk_cnt);
+
+	for (i = 0; i < cen->rk_cnt; i++)
+		dev_info(&pdev->dev, "rk_size%d(0x%llx)\n",
+			i, cen->rk_size[i]);
 
 	dev_info(&pdev->dev, "a2d_disph %d\n", cen->disph);
 
@@ -686,7 +689,9 @@ static int emicen_remove(struct platform_device *dev)
 }
 
 static const struct of_device_id emicen_of_ids[] = {
-	{.compatible = "mediatek,common-emicen",},
+	{.compatible = "mediatek,common-emicen", .data = (void *)1 },
+	{.compatible = "mediatek,mt6873-emicen", .data = (void *)1 },
+	{.compatible = "mediatek,mt6877-emicen", .data = (void *)2 },
 	{}
 };
 
