@@ -554,7 +554,7 @@ unsigned int mt_get_subsys_freq(unsigned int ID)
 
 	subsys_fmeter_lock(flags);
 
-	return output;
+	return output * 4;
 }
 
 static int __init clk_fmeter_mt6877_init(void)
