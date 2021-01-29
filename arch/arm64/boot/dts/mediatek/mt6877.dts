@@ -4306,8 +4306,8 @@
 		reg = <0 0x11e00000 0 0x1000>,
 			<0 0x10220200 0 0x80>;
 		interrupts = <GIC_SPI 112 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_w CLK_IMPW_AP_CLOCK_RO_I2C0>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_w_clk CLK_IMPW_AP_CLOCK_I2C0>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <97>;
@@ -4326,8 +4326,8 @@
 		reg = <0 0x11d20000 0 0x1000>,
 			<0 0x10220280 0 0x80>;
 		interrupts = <GIC_SPI 113 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_ws CLK_IMPWS_AP_CLOCK_RO_I2C1>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_ws_clk CLK_IMPWS_AP_CLOCK_I2C1>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <99>;
@@ -4346,8 +4346,8 @@
 		reg = <0 0x11d21000 0 0x1000>,
 			<0 0x10220300 0 0x180>;
 		interrupts = <GIC_SPI 114 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_ws CLK_IMPWS_AP_CLOCK_RO_I2C2>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_ws_clk CLK_IMPWS_AP_CLOCK_I2C2>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <101>;
@@ -4366,8 +4366,8 @@
 		reg = <0 0x11cb0000 0 0x1000>,
 			<0 0x10220480 0 0x80>;
 		interrupts = <GIC_SPI 115 IRQ_TYPE_LEVEL_HIGH>;
-		/*clocks = <&imp_iic_wrap_e CLK_IMPE_AP_CLOCK_RO_I2C3>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_e_clk CLK_IMPE_AP_CLOCK_I2C3>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <103>;
@@ -4386,8 +4386,8 @@
 		reg = <0 0x11d22000 0 0x1000>,
 			<0 0x10220500 0 0x180>;
 		interrupts = <GIC_SPI 116 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_ws CLK_IMPWS_AP_CLOCK_RO_I2C4>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_ws_clk CLK_IMPWS_AP_CLOCK_I2C4>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <105>;
@@ -4406,8 +4406,8 @@
 		reg = <0 0x11d00000 0 0x1000>,
 			<0 0x10220680 0 0x80>;
 		interrupts = <GIC_SPI 117 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_w CLK_IMPW_AP_CLOCK_RO_I2C5>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_s_clk CLK_IMPS_AP_CLOCK_I2C5>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <107>;
@@ -4426,8 +4426,8 @@
 		reg = <0 0x11f00000 0 0x1000>,
 			<0 0x10220700 0 0x80>;
 		interrupts = <GIC_SPI 118 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_n CLK_IMPN_AP_CLOCK_RO_I2C6>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_n_clk CLK_IMPN_AP_CLOCK_I2C6>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <109>;
@@ -4446,8 +4446,8 @@
 		reg = <0 0x11d01000 0 0x1000>,
 			<0 0x10220780 0 0x180>;
 		interrupts = <GIC_SPI 119 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_w CLK_IMPW_AP_CLOCK_RO_I2C7>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_s_clk CLK_IMPS_AP_CLOCK_I2C7>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <111>;
@@ -4466,8 +4466,8 @@
 		reg = <0 0x11d02000 0 0x1000>,
 			<0 0x10220900 0 0x180>;
 		interrupts = <GIC_SPI 120 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_s CLK_IMPS_AP_CLOCK_RO_I2C8>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_s_clk CLK_IMPS_AP_CLOCK_I2C8>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <113>;
@@ -4486,8 +4486,8 @@
 		reg = <0 0x11d03000 0 0x1000>,
 			<0 0x10220a80 0 0x180>;
 		interrupts = <GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_s CLK_IMPS_AP_CLOCK_RO_I2C9>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_s_clk CLK_IMPS_AP_CLOCK_I2C9>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <141>;
@@ -4506,8 +4506,8 @@
 		reg = <0 0x11280000 0 0x1000>,
 			<0 0x10220c00 0 0x80>;
 		interrupts = <GIC_SPI 122 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_s CLK_IMPS_AP_CLOCK_RO_I2C9>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_c_clk CLK_IMPC_AP_CLOCK_I2C10>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <141>;
@@ -4526,8 +4526,8 @@
 		reg = <0 0x11281000 0 0x1000>,
 			<0 0x10220c80 0 0x80>;
 		interrupts = <GIC_SPI 123 IRQ_TYPE_LEVEL_HIGH>;
-		/* clocks = <&imp_iic_wrap_s CLK_IMPS_AP_CLOCK_RO_I2C9>, */
-			/* <&infracfg_ao CLK_IFRAO_AP_DMA>; */
+		clocks = <&imp_iic_wrap_c_clk CLK_IMPC_AP_CLOCK_I2C11>,
+			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
 		scl-gpio-id = <141>;
