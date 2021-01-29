@@ -4937,6 +4937,7 @@
 			<&topckgen_clk CLK_TOP_MFG_INTERNAL2_SEL>,
 			<&topckgen_clk CLK_TOP_MFGPLL1>,
 			<&topckgen_clk CLK_TOP_MFG_INTERNAL1>,
+			<&topckgen_clk CLK_TOP_MFGPLL4>,
 			<&mfgcfg_clk CLK_MFGCFG_BG3D>,
 			<&scpsys SCP_SYS_MFG0>,
 			<&scpsys SCP_SYS_MFG1>,
@@ -4948,6 +4949,7 @@
 			"clk_mux",          /* switch main/sub */
 			"clk_main_parent",  /* main pll freq */
 			"clk_sub_parent",   /* parking clk: 385 MHz */
+			"clk_pll4",
 			"subsys_bg3d",
 			"mtcmos_mfg0",      /* ASYNC */
 			"mtcmos_mfg1",      /* MFG_TOP */
