@@ -79,17 +79,18 @@ struct mt_gpufreq_power_table_info {
 
 enum thermal_sensor {
 #if CFG_THERM_LVTS
-	TS_LVTS1_0 = 0,	/* LVTS1-0 Little */
-	TS_LVTS1_1,		/* LVTS1-1 Little */
-	TS_LVTS1_2,		/* LVTS1-2 Little */
-	TS_LVTS1_3,		/* LVTS1-3 Little */
-	TS_LVTS2_0,		/* LVTS2-0 Big */
-	TS_LVTS2_1,		/* LVTS2-1 Big */
+	TS_LVTS1_0 = 0,	/* LVTS1-0 Big */
+	TS_LVTS1_1,		/* LVTS1-1 Big */
+	TS_LVTS2_0,		/* LVTS2-0 Little */
+	TS_LVTS2_1,		/* LVTS2-1 Little */
+	TS_LVTS2_2,		/* LVTS2-2 Little */
+	TS_LVTS2_3,		/* LVTS2-3 Little */
 	TS_LVTS3_0,		/* LVTS3-0 GPU */
-	TS_LVTS3_1,		/* LVTS3-1 CAM */
+	TS_LVTS3_1,		/* LVTS3-1 GPU */
 	TS_LVTS3_2,		/* LVTS3-2 VP */
 	TS_LVTS3_3,		/* LVTS3-3 VP */
 	TS_LVTS4_0,		/* LVTS4-0 VPU */
+	TS_LVTS4_1,		/* LVTS4-1 VPU */
 	TS_LVTS5_0,		/* LVTS5-0 MD-4G */
 	TS_LVTS5_1,		/* LVTS5-1 MD-5G */
 	TS_LVTS5_2,		/* LVTS5-2 MD-3G */
@@ -159,15 +160,16 @@ enum mtk_thermal_sensor_cpu_id_met {
 #if CFG_THERM_LVTS
 	MTK_THERMAL_SENSOR_LVTS1_0,
 	MTK_THERMAL_SENSOR_LVTS1_1,
-	MTK_THERMAL_SENSOR_LVTS1_2,
-	MTK_THERMAL_SENSOR_LVTS1_3,
 	MTK_THERMAL_SENSOR_LVTS2_0,
 	MTK_THERMAL_SENSOR_LVTS2_1,
+	MTK_THERMAL_SENSOR_LVTS2_2,
+	MTK_THERMAL_SENSOR_LVTS2_3,
 	MTK_THERMAL_SENSOR_LVTS3_0,
 	MTK_THERMAL_SENSOR_LVTS3_1,
 	MTK_THERMAL_SENSOR_LVTS3_2,
 	MTK_THERMAL_SENSOR_LVTS3_3,
 	MTK_THERMAL_SENSOR_LVTS4_0,
+	MTK_THERMAL_SENSOR_LVTS4_1,
 	MTK_THERMAL_SENSOR_LVTS5_0,
 	MTK_THERMAL_SENSOR_LVTS5_1,
 	MTK_THERMAL_SENSOR_LVTS5_2,
@@ -204,15 +206,16 @@ extern int get_immediate_ts9_wrap(void);
 #if CFG_THERM_LVTS
 extern int get_immediate_tslvts1_0_wrap(void);
 extern int get_immediate_tslvts1_1_wrap(void);
-extern int get_immediate_tslvts1_2_wrap(void);
-extern int get_immediate_tslvts1_3_wrap(void);
 extern int get_immediate_tslvts2_0_wrap(void);
 extern int get_immediate_tslvts2_1_wrap(void);
+extern int get_immediate_tslvts2_2_wrap(void);
+extern int get_immediate_tslvts2_3_wrap(void);
 extern int get_immediate_tslvts3_0_wrap(void);
 extern int get_immediate_tslvts3_1_wrap(void);
 extern int get_immediate_tslvts3_2_wrap(void);
 extern int get_immediate_tslvts3_3_wrap(void);
 extern int get_immediate_tslvts4_0_wrap(void);
+extern int get_immediate_tslvts4_1_wrap(void);
 extern int get_immediate_tslvts5_0_wrap(void);
 extern int get_immediate_tslvts5_1_wrap(void);
 extern int get_immediate_tslvts5_2_wrap(void);
