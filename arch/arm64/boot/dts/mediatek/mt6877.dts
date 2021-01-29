@@ -749,7 +749,7 @@
 	toprgu@10007000 {
 		compatible = "mediatek,toprgu";
 		reg = <0 0x10007000 0 0x1000>;
-		interrupts = <GIC_SPI 489 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 109 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
 	apxgpt@10008000 {
@@ -958,7 +958,7 @@
 		compatible = "mediatek,sys_timer";
 		reg = <0 0x10017000 0 0x1000>;
 		reg-names = "sys_timer_base";
-		interrupts = <GIC_SPI 245 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 277 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&clk13m>;
 	};
 
