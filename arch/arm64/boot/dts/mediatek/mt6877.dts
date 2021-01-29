@@ -3114,6 +3114,21 @@
 		reg = <0 0x14030000 0 0xd0000>;
 	};
 
+	wpe_a@15811000 {
+		compatible = "mediatek,wpe_a";
+		reg = <0 0x15811000 0 0x1000>;
+		interrupts = <GIC_SPI 399 IRQ_TYPE_LEVEL_HIGH>;
+		clocks =
+			<&imgsys2_clk CLK_IMGSYS2_LARB9>,
+			<&imgsys2_clk CLK_IMGSYS2_WPE>,
+			<&scpsys SCP_SYS_ISP0>;
+
+		clock-names =
+			"WPE_CLK_IMG_LARB9",
+			"WPE_CLK_IMG_WPE_A",
+			"WPE_CLK_IMG";
+	};
+
 	smi_larb11: smi_larb11@1582e000 {
 		compatible = "mediatek,smi_larb11", "mediatek,smi_larb";
 		reg = <0 0x1582e000 0 0x1000>;
