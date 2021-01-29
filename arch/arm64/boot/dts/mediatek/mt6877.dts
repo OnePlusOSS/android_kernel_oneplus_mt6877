@@ -396,6 +396,11 @@
 		reg = <0 0x11f30000 0 0x1000>;
 	};
 
+	eint: apirq@1000b000 {
+		compatible = "mediatek,apirq";
+		reg = <0 0x1000b000 0 0x1000>;
+	};
+
 	gpio: gpio@10005000 {
 		compatible = "mediatek,gpio";
 		reg = <0 0x10005000 0 0x1000>;
@@ -422,10 +427,15 @@
 			    <&iocfg_lm>,
 			    <&iocfg_rt>,
 			    <&iocfg_tl>;
+		reg_base_eint = <&eint>;
 		pins-are-numbered;
 		gpio-controller;
 		gpio-ranges = <&pio 0 0 209>;
 		#gpio-cells = <2>;
+		interrupt-controller;
+		#interrupt-cells = <2>;
+		interrupts = <GIC_SPI 256 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-parent = <&gic>;
 	};
 
 	/* ATF logger */
@@ -755,12 +765,6 @@
 		compatible = "mediatek,sej";
 		reg = <0 0x1000a000 0 0x1000>;
 		interrupts = <GIC_SPI 274 IRQ_TYPE_LEVEL_HIGH>;
-	};
-
-	apirq@1000b000 {
-		compatible = "mediatek,apirq";
-		reg = <0 0x1000b000 0 0x1000>;
-		interrupts = <GIC_SPI 256 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
 	apmixed@1000c000 {
