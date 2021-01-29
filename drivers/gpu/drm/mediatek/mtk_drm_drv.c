@@ -2060,6 +2060,7 @@ void mtk_drm_top_clk_disable_unprepare(struct drm_device *drm)
 
 bool mtk_drm_top_clk_isr_get(char *master)
 {
+#ifndef MTK_DRM_BRINGUP_STAGE
 	unsigned long flags = 0;
 
 	spin_lock_irqsave(&top_clk_lock, flags);
@@ -2071,11 +2072,14 @@ bool mtk_drm_top_clk_isr_get(char *master)
 	}
 	atomic_inc(&top_isr_ref);
 	spin_unlock_irqrestore(&top_clk_lock, flags);
+#endif
 	return true;
 }
 
 void mtk_drm_top_clk_isr_put(char *master)
 {
+#ifndef MTK_DRM_BRINGUP_STAGE
+
 	unsigned long flags = 0;
 
 	spin_lock_irqsave(&top_clk_lock, flags);
@@ -2087,6 +2091,7 @@ void mtk_drm_top_clk_isr_put(char *master)
 
 	atomic_dec(&top_isr_ref);
 	spin_unlock_irqrestore(&top_clk_lock, flags);
+#endif
 }
 
 static void mtk_drm_first_enable(struct drm_device *drm)
