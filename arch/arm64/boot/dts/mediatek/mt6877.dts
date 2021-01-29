@@ -2339,6 +2339,7 @@
 					"mediatek,mt6877-disp-mutex";
 		reg = <0 0x14001000 0 0x1000>;
 		interrupts = <GIC_SPI 329 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&mmsys_config_clk CLK_MM_DISP_MUTEX0>;
 	};
 
 	smi_common@14002000 {
