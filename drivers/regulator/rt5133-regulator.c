@@ -147,7 +147,6 @@ struct rt5133_priv {
 	struct regmap *regmap;
 	struct gpio_desc *enable_gpio;
 	struct regulator_dev *rdev[RT5133_REGULATOR_MAX];
-	struct regulator *gpio_supply;
 	struct gpio_chip gc;
 	unsigned int gpio_output_flag;
 	u8 crc8_tbls[CRC8_TABLE_SIZE];
@@ -536,22 +535,6 @@ static void rt5133_gpio_set(struct gpio_chip *chip, unsigned int offset,
 	else
 		next_flag &= ~BIT(offset);
 
-	ret = regulator_is_enabled(priv->gpio_supply);
-	if (ret > 0 && !next_flag) {
-		ret = regulator_disable(priv->gpio_supply);
-		if (ret) {
-			dev_err(priv->dev, "Failed to disable gpio_supply\n");
-			return;
-		}
-	} else if (ret == 0 && next_flag) {
-		ret = regulator_enable(priv->gpio_supply);
-		if (ret) {
-			dev_err(priv->dev, "Failed to enable gpio supply\n");
-			return;
-		}
-	} else if (ret < 0)
-		return;
-
 	ret = regmap_update_bits(priv->regmap, RT5133_REG_GPIO_CTRL, mask, val);
 	if (ret) {
 		dev_err(priv->dev, "Failed to set gpio [%d] val %d\n", offset,
@@ -928,10 +911,6 @@ static int rt5133_probe(struct i2c_client *i2c)
 			return PTR_ERR(priv->rdev[i]);
 		}
 	}
-
-	priv->gpio_supply = devm_regulator_get(&i2c->dev, "gpio");
-	if (IS_ERR(priv->gpio_supply))
-		return PTR_ERR(priv->gpio_supply);
 
 	priv->gc.label = dev_name(&i2c->dev);
 	priv->gc.parent = &i2c->dev;
