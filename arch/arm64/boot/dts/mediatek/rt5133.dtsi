@@ -51,7 +51,7 @@
 		compatible = "richtek,rt5133";
 		reg = <0x18>;
 		wakeup-source;
-		interrupts-extended = <&pio 163 0x0>;
+		interrupts-extended = <&pio 92 0x0>;
 		enable-gpio = <&pio 162 0x0>;
 		gpio-supply = <&rt5133_ldo1>;
 		gpio-controller;
