@@ -163,7 +163,7 @@ struct fw_update_ctrl {
 	struct gt9896s_ts_device *ts_dev;
 	struct gt9896s_ts_core *core_data;
 
-	char fw_name[32];
+	char fw_name[64];
 	struct bin_attribute attr_fwimage;
 };
 static struct fw_update_ctrl gt9896s_fw_update_ctrl;
