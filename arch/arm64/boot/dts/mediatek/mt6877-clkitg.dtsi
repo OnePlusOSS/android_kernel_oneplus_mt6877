@@ -18,7 +18,6 @@
 	bring-up {
 		compatible = "mediatek,clk-bring-up";
 		clocks =
-			<&scpsys SCP_SYS_MD>,
 			<&topckgen_clk CLK_TOP_MSDC50_0_HCLK_SEL>,
 			<&infracfg_ao_clk CLK_IFRAO_PMIC_TMR>,
 			<&infracfg_ao_clk CLK_IFRAO_PMIC_AP>,
