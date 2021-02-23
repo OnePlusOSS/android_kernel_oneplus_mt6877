@@ -83,6 +83,7 @@ CONFIG_MTK_THERMAL_PA_VIA_ATCMD=y
 CONFIG_CUSTOM_KERNEL_IMGSENSOR="imx586_mipi_raw imx576_mipi_raw s5k3m5sx_mipi_raw imx481_mipi_raw imx519_mipi_raw imx398_mipi_raw imx350_mipi_raw s5k2l7_mipi_raw imx386_mipi_raw imx386_mipi_mono s5k2t7sp_mipi_raw imx499_mipi_raw"
 # CONFIG_MTK_CAMERA_ISP is not set
 CONFIG_MTK_CAM_CAL=y
+CONFIG_MTK_SMI_EXT=y
 CONFIG_MTK_LCM_PHYSICAL_ROTATION="0"
 CONFIG_LCM_HEIGHT="2300"
 CONFIG_MTK_CAM_SECURITY_SUPPORT=y
