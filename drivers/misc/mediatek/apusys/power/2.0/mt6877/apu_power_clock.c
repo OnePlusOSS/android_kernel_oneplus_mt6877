@@ -692,7 +692,7 @@ static unsigned int pll_freqmeter_get(unsigned int pll_sel)
 		i++;
 		if (i > 30) {
 			timeout = true;
-			LOG_WRN("timeout! [PLL%d]con0: 0x%x, con1: 0x%x\n",
+			LOG_DBG("timeout! [PLL%d]con0: 0x%x, con1: 0x%x\n",
 				pll_sel, DRV_Reg32(con0), DRV_Reg32(con1));
 			break;
 		}
@@ -747,7 +747,7 @@ static unsigned int acc_freqmeter_get(unsigned int acc_sel)
 		i++;
 		if (i > 30) {
 			timeout = true;
-			LOG_WRN("timeout! [ACC%d]fm_sel: 0x%x, confg_set: 0x%x\n",
+			LOG_DBG("timeout! [ACC%d]fm_sel: 0x%x, confg_set: 0x%x\n",
 				acc_sel, DRV_Reg32(fm_sel), DRV_Reg32(confg_set));
 			break;
 		}
@@ -789,11 +789,6 @@ void dump_frequency(struct apu_power_info *info)
 	uint8_t opp_index = 0;
 #endif
 
-	apupll_fmeter = pll_freqmeter_get(FM_PLL1_CK);
-	npupll_fmeter = pll_freqmeter_get(FM_PLL2_CK);
-	apupll1_fmeter = pll_freqmeter_get(FM_PLL3_CK);
-	apupll2_fmeter = pll_freqmeter_get(FM_PLL4_CK);
-
 	info->acc_status[0] = DRV_Reg32(APU_ACC_CONFG_SET0);
 	info->acc_status[1] = DRV_Reg32(APU_ACC_CONFG_SET1);
 	info->acc_status[2] = DRV_Reg32(APU_ACC_CONFG_SET2);
@@ -802,16 +797,24 @@ void dump_frequency(struct apu_power_info *info)
 
 #if FMETER_CHK
 	if (info->acc_status[0] & BIT(BIT_CGEN_APU)) {
+		apupll1_fmeter = pll_freqmeter_get(FM_PLL3_CK);
 		acc0_fmeter = acc_freqmeter_get(FM_ACC0);
 		acc0_pout_fmeter = acc_freqmeter_get(FM_ACC0_Pout);
 	}
-	if (info->acc_status[1] & BIT(BIT_CGEN_APU))
+	if (info->acc_status[1] & BIT(BIT_CGEN_APU)) {
+		npupll_fmeter = pll_freqmeter_get(FM_PLL2_CK);
 		acc1_fmeter = acc_freqmeter_get(FM_ACC1);
-	if (info->acc_status[2] & BIT(BIT_CGEN_APU))
+	}
+	if (info->acc_status[2] & BIT(BIT_CGEN_APU)) {
+		npupll_fmeter = pll_freqmeter_get(FM_PLL2_CK);
 		acc2_fmeter = acc_freqmeter_get(FM_ACC2);
-	if (info->acc_status[4] & BIT(BIT_CGEN_APU))
+	}
+	if (info->acc_status[4] & BIT(BIT_CGEN_APU)) {
+		apupll_fmeter = pll_freqmeter_get(FM_PLL1_CK);
 		acc4_fmeter = acc_freqmeter_get(FM_ACC4);
+	}
 	if (info->acc_status[7] & BIT(BIT_CGEN_APU)) {
+		apupll2_fmeter = pll_freqmeter_get(FM_PLL4_CK);
 		acc7_fmeter = acc_freqmeter_get(FM_ACC7);
 		acc7_pout_fmeter = acc_freqmeter_get(FM_ACC7_Pout);
 	}
@@ -893,6 +896,7 @@ void dump_frequency(struct apu_power_info *info)
 	do_div(info->iommu_freq, dump_div * KHZ);
 #endif
 
+#if 0
 #if FMETER_CHK
 	LOG_DBG("apupll_fmeter = %d\n", apupll_fmeter);
 	LOG_DBG("npupll_fmeter = %d\n", npupll_fmeter);
@@ -916,4 +920,5 @@ void dump_frequency(struct apu_power_info *info)
 	LOG_DBG("mdla0_freq = %d, acc4_status = 0x%x\n", info->mdla0_freq, info->acc_status[4]);
 	LOG_DBG("conn_freq = %d, acc0_status = 0x%x\n", info->conn_freq, info->acc_status[0]);
 	LOG_DBG("iommu_freq = %d, acc7_status = 0x%x\n", info->iommu_freq, info->acc_status[7]);
+#endif
 }
