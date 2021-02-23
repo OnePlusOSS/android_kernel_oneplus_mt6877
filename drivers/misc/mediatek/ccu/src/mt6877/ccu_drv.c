@@ -535,7 +535,7 @@ static long ccu_ioctl(struct file *flip, unsigned int cmd,
 	enum CCU_BIN_TYPE type;
 	struct ccu_run_s ccu_run_info;
 
-	if (cmd != CCU_IOCTL_WAIT_IRQ)
+	if ((cmd != CCU_IOCTL_WAIT_IRQ) && (cmd != CCU_IOCTL_WAIT_AF_IRQ))
 		mutex_lock(&g_ccu_device->dev_mutex);
 
 	LOG_DBG("%s+, cmd:%d\n", __func__, cmd);
@@ -1054,7 +1054,7 @@ EXIT:
 			current->comm, current->pid, current->tgid);
 	}
 
-	if (cmd != CCU_IOCTL_WAIT_IRQ)
+	if ((cmd != CCU_IOCTL_WAIT_IRQ) && (cmd != CCU_IOCTL_WAIT_AF_IRQ))
 		mutex_unlock(&g_ccu_device->dev_mutex);
 
 	return ret;
@@ -1064,7 +1064,7 @@ static int ccu_release(struct inode *inode, struct file *flip)
 {
 	struct ccu_user_s *user = flip->private_data;
 	int i = 0;
-	struct CcuMemHandle handle;
+	struct CcuMemHandle handle = {0};
 
 	mutex_lock(&g_ccu_device->dev_mutex);
 
