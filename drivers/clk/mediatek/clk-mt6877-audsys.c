@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 MediaTek Inc.
+ * Copyright (c) 2021 MediaTek Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -41,12 +41,6 @@ static const struct mtk_gate_regs audsys1_cg_regs = {
 	.sta_ofs = 0x4,
 };
 
-static const struct mtk_gate_regs audsys2_cg_regs = {
-	.set_ofs = 0x8,
-	.clr_ofs = 0x8,
-	.sta_ofs = 0x8,
-};
-
 #define GATE_AUDSYS0(_id, _name, _parent, _shift) {	\
 		.id = _id,				\
 		.name = _name,				\
@@ -62,16 +56,6 @@ static const struct mtk_gate_regs audsys2_cg_regs = {
 		.name = _name,				\
 		.parent_name = _parent,			\
 		.regs = &audsys1_cg_regs,			\
-		.shift = _shift,			\
-		.ops = &mtk_clk_gate_ops_no_setclr,	\
-		.pwr_stat = &audsys_pwr_stat,			\
-	}
-
-#define GATE_AUDSYS2(_id, _name, _parent, _shift) {	\
-		.id = _id,				\
-		.name = _name,				\
-		.parent_name = _parent,			\
-		.regs = &audsys2_cg_regs,			\
 		.shift = _shift,			\
 		.ops = &mtk_clk_gate_ops_no_setclr,	\
 		.pwr_stat = &audsys_pwr_stat,			\
@@ -102,14 +86,6 @@ static const struct mtk_gate audsys_clks[] = {
 	GATE_AUDSYS0(CLK_AUDSYS_NLE, "aud_nle",
 			"audio_ck"/* parent */, 28),
 	/* AUDSYS1 */
-	GATE_AUDSYS1(CLK_AUDSYS_I2S1_BCLK, "aud_i2s1_bclk",
-			"audio_ck"/* parent */, 4),
-	GATE_AUDSYS1(CLK_AUDSYS_I2S2_BCLK, "aud_i2s2_bclk",
-			"audio_ck"/* parent */, 5),
-	GATE_AUDSYS1(CLK_AUDSYS_I2S3_BCLK, "aud_i2s3_bclk",
-			"audio_ck"/* parent */, 6),
-	GATE_AUDSYS1(CLK_AUDSYS_I2S4_BCLK, "aud_i2s4_bclk",
-			"audio_ck"/* parent */, 7),
 	GATE_AUDSYS1(CLK_AUDSYS_CONNSYS_I2S_ASRC, "aud_connsys_i2s_asrc",
 			"audio_ck"/* parent */, 12),
 	GATE_AUDSYS1(CLK_AUDSYS_GENERAL1_ASRC, "aud_general1_asrc",
@@ -134,17 +110,6 @@ static const struct mtk_gate audsys_clks[] = {
 			"audio_ck"/* parent */, 30),
 	GATE_AUDSYS1(CLK_AUDSYS_3RD_DAC_HIRES, "aud_3rd_dac_hires",
 			"audio_h_ck"/* parent */, 31),
-	/* AUDSYS2 */
-	GATE_AUDSYS2(CLK_AUDSYS_I2S5_BCLK, "aud_i2s5_bclk",
-			"audio_ck"/* parent */, 0),
-	GATE_AUDSYS2(CLK_AUDSYS_I2S6_BCLK, "aud_i2s6_bclk",
-			"audio_ck"/* parent */, 1),
-	GATE_AUDSYS2(CLK_AUDSYS_I2S7_BCLK, "aud_i2s7_bclk",
-			"audio_ck"/* parent */, 2),
-	GATE_AUDSYS2(CLK_AUDSYS_I2S8_BCLK, "aud_i2s8_bclk",
-			"audio_ck"/* parent */, 3),
-	GATE_AUDSYS2(CLK_AUDSYS_I2S9_BCLK, "aud_i2s9_bclk",
-			"audio_ck"/* parent */, 4),
 };
 
 static int clk_mt6877_audsys_probe(struct platform_device *pdev)

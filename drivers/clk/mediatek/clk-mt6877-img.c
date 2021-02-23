@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 MediaTek Inc.
+ * Copyright (c) 2021 MediaTek Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -49,8 +49,6 @@ static const struct mtk_gate_regs imgsys1_cg_regs = {
 static const struct mtk_gate imgsys1_clks[] = {
 	GATE_IMGSYS1(CLK_IMGSYS1_LARB9, "imgsys1_larb9",
 			"img1_ck"/* parent */, 0),
-	GATE_IMGSYS1(CLK_IMGSYS1_LARB10, "imgsys1_larb10",
-			"img1_ck"/* parent */, 1),
 	GATE_IMGSYS1(CLK_IMGSYS1_DIP, "imgsys1_dip",
 			"img1_ck"/* parent */, 2),
 	GATE_IMGSYS1(CLK_IMGSYS1_GALS, "imgsys1_gals",

@@ -30,67 +30,24 @@
 static struct pwr_status vde2_pwr_stat = GATE_PWR_STAT(0xEF0,
 		0xEF4, INV_OFS, BIT(12), BIT(12));
 
-static const struct mtk_gate_regs vde20_cg_regs = {
+static const struct mtk_gate_regs vde2_cg_regs = {
 	.set_ofs = 0x0,
 	.clr_ofs = 0x4,
 	.sta_ofs = 0x0,
 };
 
-static const struct mtk_gate_regs vde21_cg_regs = {
-	.set_ofs = 0x200,
-	.clr_ofs = 0x204,
-	.sta_ofs = 0x200,
-};
-
-static const struct mtk_gate_regs vde22_cg_regs = {
-	.set_ofs = 0x8,
-	.clr_ofs = 0xc,
-	.sta_ofs = 0x8,
-};
-
-#define GATE_VDE20(_id, _name, _parent, _shift) {	\
+#define GATE_VDE2(_id, _name, _parent, _shift) {	\
 		.id = _id,				\
 		.name = _name,				\
 		.parent_name = _parent,			\
-		.regs = &vde20_cg_regs,			\
-		.shift = _shift,			\
-		.ops = &mtk_clk_gate_ops_setclr_inv,	\
-		.pwr_stat = &vde2_pwr_stat,			\
-	}
-
-#define GATE_VDE21(_id, _name, _parent, _shift) {	\
-		.id = _id,				\
-		.name = _name,				\
-		.parent_name = _parent,			\
-		.regs = &vde21_cg_regs,			\
-		.shift = _shift,			\
-		.ops = &mtk_clk_gate_ops_setclr_inv,	\
-		.pwr_stat = &vde2_pwr_stat,			\
-	}
-
-#define GATE_VDE22(_id, _name, _parent, _shift) {	\
-		.id = _id,				\
-		.name = _name,				\
-		.parent_name = _parent,			\
-		.regs = &vde22_cg_regs,			\
+		.regs = &vde2_cg_regs,			\
 		.shift = _shift,			\
 		.ops = &mtk_clk_gate_ops_setclr_inv,	\
 		.pwr_stat = &vde2_pwr_stat,			\
 	}
 
 static const struct mtk_gate vde2_clks[] = {
-	/* VDE20 */
-	GATE_VDE20(CLK_VDE2_VDEC_CKEN, "vde2_vdec_cken",
-			"vdec_ck"/* parent */, 0),
-	GATE_VDE20(CLK_VDE2_VDEC_ACTIVE, "vde2_vdec_active",
-			"vdec_ck"/* parent */, 4),
-	/* VDE21 */
-	GATE_VDE21(CLK_VDE2_LAT_CKEN, "vde2_lat_cken",
-			"vdec_ck"/* parent */, 0),
-	GATE_VDE21(CLK_VDE2_LAT_ACTIVE, "vde2_lat_active",
-			"vdec_ck"/* parent */, 4),
-	/* VDE22 */
-	GATE_VDE22(CLK_VDE2_LARB1_CKEN, "vde2_larb1_cken",
+	GATE_VDE2(CLK_VDE2_VDEC_CKEN, "vde2_vdec_cken",
 			"vdec_ck"/* parent */, 0),
 };
 

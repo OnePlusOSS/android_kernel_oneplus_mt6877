@@ -91,8 +91,6 @@ static const struct mtk_gate mdp_clks[] = {
 			"mdp0_ck"/* parent */, 12),
 	GATE_MDP0(CLK_MDP_RSZ1, "mdp_rsz1",
 			"mdp0_ck"/* parent */, 13),
-	GATE_MDP0(CLK_MDP_FAKE_ENG0, "mdp_fake_eng0",
-			"mdp0_ck"/* parent */, 14),
 	GATE_MDP0(CLK_MDP_AAL0, "mdp_aal0",
 			"mdp0_ck"/* parent */, 15),
 	GATE_MDP0(CLK_MDP_AAL1, "mdp_aal1",

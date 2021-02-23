@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 MediaTek Inc.
+ * Copyright (c) 2021 MediaTek Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -49,8 +49,6 @@ static const struct mtk_gate_regs cam_m_cg_regs = {
 static const struct mtk_gate cam_m_clks[] = {
 	GATE_CAM_M(CLK_CAM_M_LARB13, "cam_m_larb13",
 			"cam_ck"/* parent */, 0),
-	GATE_CAM_M(CLK_CAM_M_DFP_VAD, "cam_m_dfp_vad",
-			"cam_ck"/* parent */, 1),
 	GATE_CAM_M(CLK_CAM_M_LARB14, "cam_m_larb14",
 			"cam_ck"/* parent */, 2),
 	GATE_CAM_M(CLK_CAM_M_RESERVED0, "cam_m_reserved0",
@@ -61,6 +59,8 @@ static const struct mtk_gate cam_m_clks[] = {
 			"cam_ck"/* parent */, 7),
 	GATE_CAM_M(CLK_CAM_M_SENINF, "cam_m_seninf",
 			"cam_ck"/* parent */, 8),
+	GATE_CAM_M(CLK_CAM_M_CAMSV0, "cam_m_camsv0",
+			"cam_ck"/* parent */, 9),
 	GATE_CAM_M(CLK_CAM_M_CAMSV1, "cam_m_camsv1",
 			"cam_ck"/* parent */, 10),
 	GATE_CAM_M(CLK_CAM_M_CAMSV2, "cam_m_camsv2",
@@ -75,8 +75,6 @@ static const struct mtk_gate cam_m_clks[] = {
 			"cam_ck"/* parent */, 15),
 	GATE_CAM_M(CLK_CAM_M_RESERVED2, "cam_m_reserved2",
 			"cam_ck"/* parent */, 16),
-	GATE_CAM_M(CLK_CAM_M_FAKE_ENG, "cam_m_fake_eng",
-			"cam_ck"/* parent */, 17),
 	GATE_CAM_M(CLK_CAM_M_CCU_GALS, "cam_m_ccu_gals",
 			"cam_ck"/* parent */, 18),
 	GATE_CAM_M(CLK_CAM_M_CAM2MM_GALS, "cam_m_cam2mm_gals",
