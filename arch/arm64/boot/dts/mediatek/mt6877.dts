@@ -1022,6 +1022,15 @@
 			interrupts = <122 IRQ_TYPE_LEVEL_HIGH 122 0>;
 			status = "okay";
 
+#ifdef CONFIG_REGULATOR_MT6315
+			mt635x_ot_debug: mt635x-ot-debug {
+				compatible = "mediatek,mt635x-ot-debug";
+				interrupts-extended =
+					<&mt6315_6_regulator INT_TEMP_H IRQ_TYPE_EDGE_RISING>,
+					<&mt6315_3_regulator INT_TEMP_H IRQ_TYPE_EDGE_RISING>;
+			};
+#endif
+
 			pmic_oc_debug: pmic-oc-debug {
 				compatible = "mediatek,pmic-oc-debug";
 			};
@@ -5501,7 +5510,7 @@
 		mt6315_6_regulator: mt6315_6_regulator {
 			compatible = "mediatek,mt6315_6-regulator";
 			interrupt-parent = <&pio>;
-			interrupts = <194 IRQ_TYPE_LEVEL_HIGH 194 0>;
+			interrupts = <109 IRQ_TYPE_LEVEL_HIGH 109 0>;
 		};
 	};
 	mt6315_3: mt6315@3 {
@@ -5512,7 +5521,7 @@
 		mt6315_3_regulator: mt6315_3_regulator {
 			compatible = "mediatek,mt6315_3-regulator";
 			interrupt-parent = <&pio>;
-			interrupts = <193 IRQ_TYPE_LEVEL_HIGH 193 0>;
+			interrupts = <108 IRQ_TYPE_LEVEL_HIGH 108 0>;
 		};
 	};
 };
