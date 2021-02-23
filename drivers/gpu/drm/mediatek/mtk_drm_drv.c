@@ -1186,7 +1186,7 @@ static const struct mtk_addon_scenario_data mt6853_addon_ext[ADDON_SCN_NR] = {
 };
 
 static const enum mtk_ddp_comp_id mt6877_mtk_ddp_main[] = {
-#if 0
+#ifndef MTK_DRM_BRINGUP_STAGE
 	DDP_COMPONENT_OVL0_2L,
 #endif
 	DDP_COMPONENT_OVL0, DDP_COMPONENT_RDMA0,
@@ -2892,7 +2892,7 @@ static int mtk_drm_bind(struct device *dev)
 	crtc = list_first_entry(&(drm)->mode_config.crtc_list, typeof(*crtc),
 				head);
 	mtk_drm_assert_layer_init(crtc);
-#if 0
+#ifdef MTK_DRM_BRINGUP_STAGE
 	pan_display_test(1, 32);
 	mtk_drm_crtc_analysis(crtc);
 	mtk_drm_crtc_dump(crtc);
