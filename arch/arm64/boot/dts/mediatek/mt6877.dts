@@ -56,6 +56,8 @@
 			reg = <0x0000>;
 			enable-method = "psci";
 			clock-frequency = <2000000000>;
+			cpu-idle-states = <&cpuoff_l &clusteroff_l
+						&mcusysoff &s2idle>;
 		};
 
 		cpu1: cpu@001 {
@@ -64,6 +66,8 @@
 			reg = <0x0100>;
 			enable-method = "psci";
 			clock-frequency = <2000000000>;
+			cpu-idle-states = <&cpuoff_l &clusteroff_l
+						&mcusysoff &s2idle>;
 		};
 
 		cpu2: cpu@002 {
@@ -72,6 +76,8 @@
 			reg = <0x0200>;
 			enable-method = "psci";
 			clock-frequency = <2000000000>;
+			cpu-idle-states = <&cpuoff_l &clusteroff_l
+						&mcusysoff &s2idle>;
 		};
 
 		cpu3: cpu@003 {
@@ -80,6 +86,8 @@
 			reg = <0x0300>;
 			enable-method = "psci";
 			clock-frequency = <2000000000>;
+			cpu-idle-states = <&cpuoff_l &clusteroff_l
+						&mcusysoff &s2idle>;
 		};
 
 		cpu4: cpu@004 {
@@ -88,6 +96,8 @@
 			reg = <0x0400>;
 			enable-method = "psci";
 			clock-frequency = <2000000000>;
+			cpu-idle-states = <&cpuoff_l &clusteroff_l
+						&mcusysoff &s2idle>;
 		};
 
 		cpu5: cpu@005 {
@@ -96,6 +106,8 @@
 			reg = <0x0500>;
 			enable-method = "psci";
 			clock-frequency = <2000000000>;
+			cpu-idle-states = <&cpuoff_l &clusteroff_l
+						&mcusysoff &s2idle>;
 		};
 
 		cpu6: cpu@100 {
@@ -104,6 +116,8 @@
 			reg = <0x0600>;
 			enable-method = "psci";
 			clock-frequency = <2000000000>;
+			cpu-idle-states = <&cpuoff_b &clusteroff_b
+						&mcusysoff &s2idle>;
 		};
 
 		cpu7: cpu@101 {
@@ -112,6 +126,8 @@
 			reg = <0x0700>;
 			enable-method = "psci";
 			clock-frequency = <2000000000>;
+			cpu-idle-states = <&cpuoff_b &clusteroff_b
+						&mcusysoff &s2idle>;
 		};
 
 		cpu-map {
@@ -275,18 +291,23 @@
 		constraint-list {
 			rc_bus26m: rc_bus26m {
 				id = <0x00000000>;
-				value = <0>;
+				value = <1>;
 			};
 			rc_syspll: rc_syspll {
 				id = <0x00000001>;
-				value = <0>;
+				value = <1>;
 			};
 			rc_dram: rc_dram {
 				id = <0x00000002>;
-				value = <0>;
+				value = <1>;
 			};
 		};
 	};
+
+	mcusys_ctrl: mcusys-ctrl@0c53a000 {
+	compatible = "mediatek,mcusys-ctrl";
+	reg = <0 0x0c53a000 0 0x1000>;
+};
 
 	memory {
 		device_type = "memory";
