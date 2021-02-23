@@ -9,14 +9,15 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 # GNU General Public License for more details.
+#-I$(srctree)/drivers/misc/mediatek/base/power/drcc_v1/$(CONFIG_MTK_PLATFORM)/inc/	\
 #
-export PTP3_ROOT_DIR ?= $(srctree)/drivers/misc/mediatek/base/power/ptp3_v1
-ifeq ($(CONFIG_MACH_MT6893),y)
-obj-y += mt6893/
-else ifeq ($(CONFIG_MACH_MT6833),y)
-obj-y += mt6833/
-else ifeq ($(CONFIG_MACH_MT6877),y)
-obj-y += mt6877/
-else
-obj-y += $(subst ",,$(CONFIG_MTK_PLATFORM))/
-endif
+
+ccflags-y += \
+	-I$(srctree)/drivers/misc/mediatek/base/power/include/	\
+	-I$(srctree)/drivers/misc/mediatek/mcupm/mt6877	\
+	-I$(srctree)/drivers/misc/mediatek/base/power/eem_v2/mt6877/inc	\
+	-I$(srctree)/include/linux/	\
+	-I$(PTP3_ROOT_DIR)/mt6877/inc	\
+
+obj-y += mtk_ptp3_main.o
+
