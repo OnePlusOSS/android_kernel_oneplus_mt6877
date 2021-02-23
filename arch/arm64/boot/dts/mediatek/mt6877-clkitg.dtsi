@@ -25,7 +25,6 @@
 			<&infracfg_ao_clk CLK_IFRAO_PMIC_MD>,
 			<&infracfg_ao_clk CLK_IFRAO_PMIC_CONN>,
 			<&infracfg_ao_clk CLK_IFRAO_APXGPT>,
-			<&infracfg_ao_clk CLK_IFRAO_DXCC_SEC_CORE>,
 			<&infracfg_ao_clk CLK_IFRAO_RG_MUX_TIA_CK>,
 			<&infracfg_ao_clk CLK_IFRAO_RG_PWARP_SYS_P_CK>,
 			<&infracfg_ao_clk CLK_IFRAO_RG_PWRAP_TMR_P_CK>,
