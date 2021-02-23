@@ -183,7 +183,6 @@ static const char * const clks[] = {
 	"ifrao_pwarp_sys_p_ck",
 	"ifrao_aes_0p_ck",
 	"ifrao_pwrap_tmr_p_ck",
-	"ifrao_ufs_mem_sub",
 
 	/* apmixedsys */
 	"armpll_ll",
