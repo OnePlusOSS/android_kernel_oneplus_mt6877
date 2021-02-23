@@ -636,6 +636,7 @@ config MACH_MT6833
 
 config MACH_MT6877
 	bool "MediaTek MT6877"
+	select ARM_MTK_NEW_ARCH_CPUIDLE
 	select GENERIC_TIME
 	select GENERIC_CLOCKEVENTS
 	select ARM_AMBA
@@ -656,7 +657,10 @@ config MACH_MT6877
 	select CRYPTO_SHA2_ARM64_CE
 	select CRYPTO_AES_ARM64_CE_BLK
 	select MFD_SYSCON
+	select MTK_LPM
+	select MTK_LOW_POWER_MODULE
 	select MTK_TIMER_SYSTIMER
+	select MTK_LPM_MT6877
 	select OVERLAY_FS
 	select EXT4_FS
 	select EXT4_FS_SECURITY
