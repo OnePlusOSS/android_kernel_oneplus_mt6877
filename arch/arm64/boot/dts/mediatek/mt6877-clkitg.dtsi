@@ -129,7 +129,6 @@
 			<&infracfg_ao_clk CLK_IFRAO_APXGPT>,
 			<&infracfg_ao_clk CLK_IFRAO_GCE>,
 			<&infracfg_ao_clk CLK_IFRAO_GCE2>,
-			<&infracfg_ao_clk CLK_IFRAO_THERM>,
 			<&infracfg_ao_clk CLK_IFRAO_PWM_HCLK>,
 			<&infracfg_ao_clk CLK_IFRAO_PWM1>,
 			<&infracfg_ao_clk CLK_IFRAO_PWM2>,
