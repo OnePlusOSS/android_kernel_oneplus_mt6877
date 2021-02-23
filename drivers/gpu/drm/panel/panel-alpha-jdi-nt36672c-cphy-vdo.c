@@ -641,6 +641,7 @@ static int jdi_unprepare(struct drm_panel *panel)
 	 * gpiod_set_value(ctx->reset_gpio, 0);
 	 * devm_gpiod_put(ctx->dev, ctx->reset_gpio);
 	 */
+#ifndef CONFIG_LEDS_MTK_I2C
 	ctx->bias_neg =
 	    devm_gpiod_get_index(ctx->dev, "bias", 1, GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->bias_neg)) {
@@ -662,7 +663,7 @@ static int jdi_unprepare(struct drm_panel *panel)
 	}
 	gpiod_set_value(ctx->bias_pos, 0);
 	devm_gpiod_put(ctx->dev, ctx->bias_pos);
-
+#endif
 	ctx->error = 0;
 	ctx->prepared = false;
 
@@ -692,6 +693,7 @@ static int jdi_prepare(struct drm_panel *panel)
 	gpiod_set_value(ctx->reset_gpio, 1);
 	devm_gpiod_put(ctx->dev, ctx->reset_gpio);
 	// end
+#ifndef CONFIG_LEDS_MTK_I2C
 	ctx->bias_pos =
 	    devm_gpiod_get_index(ctx->dev, "bias", 0, GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->bias_pos)) {
@@ -712,6 +714,7 @@ static int jdi_prepare(struct drm_panel *panel)
 	}
 	gpiod_set_value(ctx->bias_neg, 1);
 	devm_gpiod_put(ctx->dev, ctx->bias_neg);
+#endif
 	_lcm_i2c_write_bytes(0x0, 0xf);
 	_lcm_i2c_write_bytes(0x1, 0xf);
 	jdi_panel_init(ctx);
@@ -1326,6 +1329,7 @@ static int jdi_probe(struct mipi_dsi_device *dsi)
 		return PTR_ERR(ctx->reset_gpio);
 	}
 	devm_gpiod_put(dev, ctx->reset_gpio);
+#ifndef CONFIG_LEDS_MTK_I2C
 	ctx->bias_pos = devm_gpiod_get_index(dev, "bias", 0, GPIOD_OUT_HIGH);
 	if (IS_ERR(ctx->bias_pos)) {
 		dev_info(dev, "cannot get bias-gpios 0 %ld\n",
@@ -1341,6 +1345,7 @@ static int jdi_probe(struct mipi_dsi_device *dsi)
 		return PTR_ERR(ctx->bias_neg);
 	}
 	devm_gpiod_put(dev, ctx->bias_neg);
+#endif
 	ctx->prepared = true;
 	ctx->enabled = true;
 	drm_panel_init(&ctx->panel);
