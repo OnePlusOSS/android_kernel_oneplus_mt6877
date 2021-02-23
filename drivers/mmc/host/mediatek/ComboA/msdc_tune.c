@@ -31,6 +31,63 @@ void msdc_sdio_restore_after_resume(struct msdc_host *host)
 {
 }
 
+void msdc_new_tx_setting(struct mmc_host *mmc)
+{
+	struct msdc_host *host = mmc_priv(mmc);
+	void __iomem *base = host->base, *base_top = host->base_top;
+
+	MSDC_SET_FIELD(SDC_ADV_CFG0, SDC_ADV_CFG0_TX_PIPE_EN_2, 1);
+
+	if (host->id == 0) {
+		pr_notice("msdc0 new tx timing set...\n");
+		if (host->timing == MMC_TIMING_MMC_DDR52) {
+			pr_notice("ddr52 timing set...\n");
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_LATCH_MUX1, 1);
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_EN_SEL_CLK, 0);
+			MSDC_SET_FIELD(EMMC_TOP_CONTROL, PAD_DAT_RD_RXDLY2, 0);
+			MSDC_SET_FIELD(EMMC_TOP_CONTROL, PAD_DAT_RD_RXDLY, 20);
+			MSDC_SET_FIELD(EMMC_TOP_CONTROL, PAD_DAT_RD_RXDLY2_SEL, 0);
+			MSDC_SET_FIELD(EMMC_TOP_CONTROL, PAD_DAT_RD_RXDLY_SEL, 1);
+		} else if (host->timing == MMC_TIMING_MMC_HS200) {
+			pr_notice("hs200 timing set...\n");
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_LATCH_MUX1, 1);
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_EN_SEL_CLK, 1);
+		} else if (host->timing == MMC_TIMING_MMC_HS400) {
+			pr_notice("hs400 timing set...\n");
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_LATCH_MUX1, 0);
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_EN_SEL_CLK, 0);
+		} else {
+			pr_notice("hs timing set...\n");
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_LATCH_MUX1, 1);
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_EN_SEL_CLK, 0);
+		}
+	}
+	if (host->id == 1) {
+		pr_notice("msdc1 new tx timing set...\n");
+		if ((host->timing == MMC_TIMING_UHS_SDR104) ||
+			(host->timing == MMC_TIMING_UHS_SDR50)) {
+			pr_notice("sdr104/sdr50 timing set...\n");
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_LATCH_MUX1, 1);
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_EN_SEL_CLK, 1);
+		} else if (host->timing == MMC_TIMING_UHS_DDR50) {
+			pr_notice("ddr50 timing set...\n");
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_LATCH_MUX1, 1);
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_EN_SEL_CLK, 0);
+			MSDC_SET_FIELD(EMMC_TOP_CONTROL, PAD_DAT_RD_RXDLY2, 0);
+			MSDC_SET_FIELD(EMMC_TOP_CONTROL, PAD_DAT_RD_RXDLY, 20);
+			MSDC_SET_FIELD(EMMC_TOP_CONTROL, PAD_DAT_RD_RXDLY2_SEL, 0);
+			MSDC_SET_FIELD(EMMC_TOP_CONTROL, PAD_DAT_RD_RXDLY_SEL, 1);
+		} else if ((host->timing == MMC_TIMING_UHS_SDR25) ||
+			(host->timing == MMC_TIMING_UHS_SDR12)) {
+			pr_notice("sdr12 sdr25 timing set...\n");
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_LATCH_MUX1, 1);
+			MSDC_SET_FIELD(TOP_TEST_LOOP, TEST_LOOP_EN_SEL_CLK, 0);
+		} else {
+			pr_notice("no sd card\n");
+		}
+	}
+}
+
 void msdc_save_timing_setting(struct msdc_host *host)
 {
 	struct msdc_hw *hw = host->hw;

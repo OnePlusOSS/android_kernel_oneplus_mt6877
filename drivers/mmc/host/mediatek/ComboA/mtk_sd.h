@@ -730,6 +730,7 @@ void msdc_save_timing_setting(struct msdc_host *host);
 void msdc_set_bad_card_and_remove(struct msdc_host *host);
 void msdc_ops_set_bad_card_and_remove(struct mmc_host *mmc);
 void msdc_remove_card(struct work_struct *work);
+void msdc_new_tx_setting(struct mmc_host *mmc);
 
 /* Function provided by mmc/core/sd.c */
 /* FIX ME: maybe removed in kernel 4.4 */

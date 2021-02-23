@@ -4406,6 +4406,9 @@ void msdc_ops_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 			mmc_retune_disable(host->mmc);
 		}
 	}
+#ifdef SUPPORT_NEW_TX
+	msdc_new_tx_setting(mmc);
+#endif
 
 	spin_unlock(&host->lock);
 }

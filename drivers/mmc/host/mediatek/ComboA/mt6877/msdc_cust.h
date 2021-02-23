@@ -40,6 +40,7 @@
 #define MSDC0_IOCFG_NAME        "mediatek,iocfg_tl"
 #define MSDC1_IOCFG_NAME        "mediatek,iocfg_rm"
 
+#define SUPPORT_NEW_TX
 /**************************************************************/
 /* Section 2: Power                                           */
 /**************************************************************/
