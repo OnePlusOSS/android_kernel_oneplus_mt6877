@@ -3706,6 +3706,9 @@ static int __mt_gpufreq_pdrv_probe(struct platform_device *pdev)
 	/* init opp table */
 	__mt_gpufreq_init_table();
 
+	if (g_aging_enable)
+		mt_gpufreq_apply_aging(true);
+
 #if MT_GPUFREQ_DFD_ENABLE
 	__mt_gpufreq_dbgtop_pwr_on(true);
 #endif
