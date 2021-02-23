@@ -3183,7 +3183,7 @@ static void __mt_gpufreq_init_table(void)
 
 	/* determine max_opp/num/segment_table... by segment  */
 	if (segment_id == MT6877_SEGMENT)
-		g_segment_max_opp_idx = 0;
+		g_segment_max_opp_idx = 4;
 	else
 		g_segment_max_opp_idx = 0;
 
