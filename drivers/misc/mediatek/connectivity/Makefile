@@ -51,8 +51,11 @@ endif
         ifneq (,$(filter $(CONFIG_MTK_COMBO_CHIP), "CONSYS_6885" "CONSYS_6893" "CONSYS_6877"))
             export MTK_COMBO_CHIP=CONNAC2X2_SOC3_0
             PATH_TO_WMT_DRV      = vendor/mediatek/kernel_modules/connectivity/conninfra
+        else ifneq (,$(filter $(CONFIG_MTK_COMBO_CHIP), "CONSYS_6833"))
+            export MTK_COMBO_CHIP=SOC2_1X1
+            PATH_TO_WMT_DRV      = vendor/mediatek/kernel_modules/connectivity/common
         else ifneq (,$(filter $(CONFIG_MTK_COMBO_CHIP), "CONSYS_6779" "CONSYS_6873" "CONSYS_6853"))
-            export MTK_COMBO_CHIP=CONNAC2X2
+            export MTK_COMBO_CHIP=SOC2_2X2
             PATH_TO_WMT_DRV      = vendor/mediatek/kernel_modules/connectivity/common
         else
             export MTK_COMBO_CHIP=CONNAC
