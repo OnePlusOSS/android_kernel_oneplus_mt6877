@@ -209,7 +209,6 @@
 			<&audio_clk CLK_AUDSYS_3RD_DAC_PREDIS>,
 			<&audio_clk CLK_AUDSYS_3RD_DAC_TML>,
 			<&audio_clk CLK_AUDSYS_3RD_DAC_HIRES>,
-			<&msdc0_clk CLK_MSDC0_MSDC_NEW_RX_PATH_SEL>,
 			<&mfgcfg_clk CLK_MFGCFG_BG3D>,
 			<&mmsys_config_clk CLK_MM_DISP_MUTEX0>,
 			<&mmsys_config_clk CLK_MM_APB_BUS>,
