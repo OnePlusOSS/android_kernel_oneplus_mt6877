@@ -5007,13 +5007,13 @@
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
-		scl-gpio-id = <97>;
-		sda-gpio-id = <98>;
-		gpio_start = <0x11e60000>;
+		scl-gpio-id = <64>;
+		sda-gpio-id = <65>;
+		gpio_start = <0x11e20000>;
 		mem_len = <0x200>;
-		eh_cfg = <0x50>;
-		pu_cfg = <0xe0>;
-		rsel_cfg = <0x110>;
+		eh_cfg = <0x30>;
+		pu_cfg = <0x80>;
+		rsel_cfg = <0xa0>;
 		aed = <0x1a>;
 	};
 
@@ -5027,13 +5027,13 @@
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
-		scl-gpio-id = <99>;
-		sda-gpio-id = <100>;
-		gpio_start = <0x11d10000>;
+		scl-gpio-id = <130>;
+		sda-gpio-id = <131>;
+		gpio_start = <0x11d40000>;
 		mem_len = <0x200>;
-		eh_cfg = <0x70>;
-		pu_cfg = <0x120>;
-		rsel_cfg = <0x170>;
+		eh_cfg = <0x50>;
+		pu_cfg = <0xc0>;
+		rsel_cfg = <0xf0>;
 		aed = <0x1a>;
 	};
 
@@ -5047,13 +5047,13 @@
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
-		scl-gpio-id = <101>;
-		sda-gpio-id = <102>;
-		gpio_start = <0x11d10000>;
+		scl-gpio-id = <143>;
+		sda-gpio-id = <144>;
+		gpio_start = <0x11d40000>;
 		mem_len = <0x200>;
-		eh_cfg = <0x60>;
-		pu_cfg = <0x100>;
-		rsel_cfg = <0x170>;
+		eh_cfg = <0x40>;
+		pu_cfg = <0xb0>;
+		rsel_cfg = <0xe0>;
 		aed = <0x1a>;
 	};
 
@@ -5067,13 +5067,13 @@
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
-		scl-gpio-id = <103>;
-		sda-gpio-id = <104>;
+		scl-gpio-id = <186>;
+		sda-gpio-id = <187>;
 		gpio_start = <0x11ea0000>;
 		mem_len = <0x200>;
-		eh_cfg = <0x40>;
-		pu_cfg = <0xa0>;
-		rsel_cfg = <0xd0>;
+		eh_cfg = <0x30>;
+		pu_cfg = <0x90>;
+		rsel_cfg = <0xc0>;
 		aed = <0x1a>;
 	};
 
@@ -5087,13 +5087,13 @@
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
-		scl-gpio-id = <105>;
-		sda-gpio-id = <106>;
-		gpio_start = <0x11d10000>;
+		scl-gpio-id = <145>;
+		sda-gpio-id = <146>;
+		gpio_start = <0x11d40000>;
 		mem_len = <0x200>;
-		eh_cfg = <0x60>;
-		pu_cfg = <0x100>;
-		rsel_cfg = <0x170>;
+		eh_cfg = <0x40>;
+		pu_cfg = <0xb0>;
+		rsel_cfg = <0xe0>;
 		aed = <0x1a>;
 	};
 
@@ -5107,13 +5107,13 @@
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
-		scl-gpio-id = <107>;
-		sda-gpio-id = <108>;
-		gpio_start = <0x11e60000>;
+		scl-gpio-id = <132>;
+		sda-gpio-id = <133>;
+		gpio_start = <0x11d40000>;
 		mem_len = <0x200>;
-		eh_cfg = <0x50>;
-		pu_cfg = <0xe0>;
-		rsel_cfg = <0x110>;
+		eh_cfg = <0x40>;
+		pu_cfg = <0xc0>;
+		rsel_cfg = <0xe0>;
 		aed = <0x1a>;
 	};
 
@@ -5127,9 +5127,9 @@
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
-		scl-gpio-id = <109>;
-		sda-gpio-id = <110>;
-		gpio_start = <0x11e20000>;
+		scl-gpio-id = <36>;
+		sda-gpio-id = <37>;
+		gpio_start = <0x11f30000>;
 		mem_len = <0x200>;
 		eh_cfg = <0x30>;
 		pu_cfg = <0x80>;
@@ -5147,13 +5147,13 @@
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
-		scl-gpio-id = <111>;
-		sda-gpio-id = <112>;
-		gpio_start = <0x11e60000>;
+		scl-gpio-id = <134>;
+		sda-gpio-id = <135>;
+		gpio_start = <0x11d40000>;
 		mem_len = <0x200>;
-		eh_cfg = <0x50>;
-		pu_cfg = <0xe0>;
-		rsel_cfg = <0x110>;
+		eh_cfg = <0x40>;
+		pu_cfg = <0xb0>;
+		rsel_cfg = <0xe0>;
 		aed = <0x1a>;
 	};
 
@@ -5167,13 +5167,13 @@
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
-		scl-gpio-id = <113>;
-		sda-gpio-id = <114>;
+		scl-gpio-id = <136>;
+		sda-gpio-id = <137>;
 		gpio_start = <0x11d10000>;
 		mem_len = <0x200>;
-		eh_cfg = <0x70>;
-		pu_cfg = <0x100>;
-		rsel_cfg = <0x170>;
+		eh_cfg = <0x30>;
+		pu_cfg = <0x90>;
+		rsel_cfg = <0xe0>;
 		aed = <0x1a>;
 	};
 
@@ -5187,13 +5187,13 @@
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
 		clock-names = "main", "dma";
 		clock-div = <5>;
-		scl-gpio-id = <141>;
-		sda-gpio-id = <142>;
-		gpio_start = <0x11d10000>;
+		scl-gpio-id = <147>;
+		sda-gpio-id = <148>;
+		gpio_start = <0x11d40000>;
 		mem_len = <0x200>;
-		eh_cfg = <0x70>;
-		pu_cfg = <0x100>;
-		rsel_cfg = <0x170>;
+		eh_cfg = <0x40>;
+		pu_cfg = <0xb0>;
+		rsel_cfg = <0xe0>;
 		aed = <0x1a>;
 	};
 
