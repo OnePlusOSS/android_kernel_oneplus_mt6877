@@ -42,7 +42,7 @@ static unsigned long mcucfg_base	= 0x0c530000;
 #define MCUCFG_NODE		"mediatek,mcucfg-dvfs"
 #define ARMPLL_LL_CON1		(apmixed_base + 0x20c)	/* ARMPLL1 */
 #define ARMPLL_L_CON1		(apmixed_base + 0x21c)	/* ARMPLL2 */
-#define CCIPLL_CON1			(apmixed_base + 0x25c)
+#define CCIPLL_CON1		(apmixed_base + 0x23c)
 
 #define CKDIV1_LL_CFG		(mcucfg_base + 0xa2a0)	/* MP0_PLL_DIVIDER */
 #define CKDIV1_L_CFG		(mcucfg_base + 0xa2a4)	/* MP1_PLL_DIVIDER */
@@ -628,18 +628,7 @@ int mt_cpufreq_dts_map(void)
 
 unsigned int _mt_cpufreq_get_cpu_level(void)
 {
-	unsigned int lv = CPU_LEVEL_0;
-	int val = get_devinfo_with_index(7) & 0xF; /* segment code */
-
-	if (val < 3 && val > 0)
-		lv = CPU_LEVEL_0;
-	else
-		lv = CPU_LEVEL_1;
-#ifdef MTK_5GCM_PROJECT
-	lv = CPU_LEVEL_1;
-#endif
-	tag_pr_info("%d, Settle time(%d, %d) efuse_val = 0x%x\n",
-		lv, UP_SRATE, DOWN_SRATE, val);
+	unsigned int lv = CPU_LEVEL_1;
 
 	return lv;
 }
