@@ -690,6 +690,8 @@ config MACH_MT6877
 	select MTK_PLAT_SRAM_FLAG
 	select MTK_DEBUG_TRACER
 	select MTK_BUS_TRACER
+	select MTK_SDA
+	select MTK_BUS_PARITY_CHECK
 	help
 	  This enables support for MediaTek MT6877
 	  Support for aarch64 Architecture
