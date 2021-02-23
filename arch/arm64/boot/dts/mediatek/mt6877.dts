@@ -5327,7 +5327,7 @@
 		compatible = "mediatek,i2c";
 		id = <1>;
 		reg = <0 0x11d20000 0 0x1000>,
-			<0 0x10220280 0 0x80>;
+			<0 0x10220380 0 0x80>;
 		interrupts = <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_ws_clk CLK_IMPWS_AP_CLOCK_I2C1>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
@@ -5347,7 +5347,7 @@
 		compatible = "mediatek,i2c";
 		id = <2>;
 		reg = <0 0x11d21000 0 0x1000>,
-			<0 0x10220300 0 0x180>;
+			<0 0x10220400 0 0x180>;
 		interrupts = <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_ws_clk CLK_IMPWS_AP_CLOCK_I2C2>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
@@ -5367,7 +5367,7 @@
 		compatible = "mediatek,i2c";
 		id = <3>;
 		reg = <0 0x11cb0000 0 0x1000>,
-			<0 0x10220480 0 0x80>;
+			<0 0x10220580 0 0x80>;
 		interrupts = <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_e_clk CLK_IMPE_AP_CLOCK_I2C3>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
@@ -5387,7 +5387,7 @@
 		compatible = "mediatek,i2c";
 		id = <4>;
 		reg = <0 0x11d22000 0 0x1000>,
-			<0 0x10220500 0 0x180>;
+			<0 0x10220600 0 0x180>;
 		interrupts = <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_ws_clk CLK_IMPWS_AP_CLOCK_I2C4>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
@@ -5407,7 +5407,7 @@
 		compatible = "mediatek,i2c";
 		id = <5>;
 		reg = <0 0x11d00000 0 0x1000>,
-			<0 0x10220680 0 0x80>;
+			<0 0x10220780 0 0x80>;
 		interrupts = <GIC_SPI 149 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_s_clk CLK_IMPS_AP_CLOCK_I2C5>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
@@ -5427,7 +5427,7 @@
 		compatible = "mediatek,i2c";
 		id = <6>;
 		reg = <0 0x11f00000 0 0x1000>,
-			<0 0x10220700 0 0x80>;
+			<0 0x10220800 0 0x80>;
 		interrupts = <GIC_SPI 150 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_n_clk CLK_IMPN_AP_CLOCK_I2C6>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
@@ -5447,7 +5447,7 @@
 		compatible = "mediatek,i2c";
 		id = <7>;
 		reg = <0 0x11d01000 0 0x1000>,
-			<0 0x10220780 0 0x180>;
+			<0 0x10220880 0 0x180>;
 		interrupts = <GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_s_clk CLK_IMPS_AP_CLOCK_I2C7>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
@@ -5467,7 +5467,7 @@
 		compatible = "mediatek,i2c";
 		id = <8>;
 		reg = <0 0x11d02000 0 0x1000>,
-			<0 0x10220900 0 0x180>;
+			<0 0x10220a00 0 0x180>;
 		interrupts = <GIC_SPI 152 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_s_clk CLK_IMPS_AP_CLOCK_I2C8>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
@@ -5487,7 +5487,7 @@
 		compatible = "mediatek,i2c";
 		id = <9>;
 		reg = <0 0x11d03000 0 0x1000>,
-			<0 0x10220a80 0 0x180>;
+			<0 0x10220b80 0 0x180>;
 		interrupts = <GIC_SPI 153 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_s_clk CLK_IMPS_AP_CLOCK_I2C9>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
@@ -5507,7 +5507,7 @@
 		compatible = "mediatek,i2c";
 		id = <10>;
 		reg = <0 0x11280000 0 0x1000>,
-			<0 0x10220c00 0 0x80>;
+			<0 0x10220d00 0 0x80>;
 		interrupts = <GIC_SPI 154 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_c_clk CLK_IMPC_AP_CLOCK_I2C10>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
@@ -5527,7 +5527,7 @@
 		compatible = "mediatek,i2c";
 		id = <11>;
 		reg = <0 0x11281000 0 0x1000>,
-			<0 0x10220c80 0 0x80>;
+			<0 0x10220d80 0 0x80>;
 		interrupts = <GIC_SPI 155 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&imp_iic_wrap_c_clk CLK_IMPC_AP_CLOCK_I2C11>,
 			<&infracfg_ao_clk CLK_IFRAO_APDMA>;
