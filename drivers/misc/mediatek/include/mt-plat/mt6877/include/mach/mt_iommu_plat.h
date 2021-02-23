@@ -30,7 +30,7 @@
 #include "clk-mt6877-pg.h"
 
 enum subsys_id iommu_mtcmos_subsys[MTK_IOMMU_M4U_COUNT] = {
-	SYS_DIS, SYS_VPU
+	SYS_DISP, SYS_APU
 };
 #endif
 #endif

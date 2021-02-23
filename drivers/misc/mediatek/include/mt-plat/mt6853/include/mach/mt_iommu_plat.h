@@ -11,6 +11,9 @@
  * See http://www.gnu.org/licenses/gpl-2.0.html for more details.
  */
 
+#if defined CONFIG_MACH_MT6877
+#include "../../../mt6877/include/mach/mt_iommu_plat.h"
+#else
 #ifndef __MT_IOMMU_PLAT_H__
 #define __MT_IOMMU_PLAT_H__
 
@@ -810,4 +813,5 @@ struct mau_config_info *get_mau_info(int m4u_id)
 		return NULL;
 }
 
+#endif
 #endif
