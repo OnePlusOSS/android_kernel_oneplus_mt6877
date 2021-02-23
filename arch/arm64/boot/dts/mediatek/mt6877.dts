@@ -2512,7 +2512,7 @@
 		compatible = "mediatek,dfd";
 		mediatek,enabled = <1>;
 		mediatek,chain_length = <0xbe2b>;
-		mediatek,rg_dfd_timeout = <0xa0>;
+		mediatek,rg_dfd_timeout = <0xc8>;
 	};
 
 	dfd_cache: dfd_cache {
