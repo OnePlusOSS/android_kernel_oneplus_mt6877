@@ -362,7 +362,7 @@ static void mt6315_S6_lp_initial_setting(void)
 	mt6315_vdig18_hw_op_set(MT6315_SLAVE_ID_6, 1);
 #elif defined(CONFIG_MACH_MT6877)
 	mt6315_vdig18_hw_op_set(MT6315_SLAVE_ID_6, 1);
-	mt6315_lp_set(MT6315_SLAVE_ID_6, 4, MT6315_SRCLKEN0, 1, 1, HW_LP);
+	mt6315_lp_set(MT6315_SLAVE_ID_6, 4, MT6315_SRCLKEN0, 1, 1, HW_OFF);
 #endif
 #endif
 }
