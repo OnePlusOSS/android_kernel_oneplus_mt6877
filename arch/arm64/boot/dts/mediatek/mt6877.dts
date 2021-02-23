@@ -3125,6 +3125,7 @@
 					"mediatek,mt6877-mipi-tx";
 		reg = <0 0x11e50000 0 0x1000>;
 		clocks = <&clk26m>;
+		#clock-cells = <0>;
 		#phy-cells = <0>;
 		clock-output-names = "mipi_tx0_pll";
 	};
@@ -3136,7 +3137,7 @@
 		interrupts = <GIC_SPI 313 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&mmsys_config_clk CLK_MM_DSI0>,
 			<&mmsys_config_clk CLK_MM_DSI0_DSI_CK_DOMAIN>,
-			<&clk26m>;
+			<&mipi_tx_config0>;
 		clock-names = "engine", "digital", "hs";
 		phys = <&mipi_tx_config0>;
 		phy-names = "dphy";
