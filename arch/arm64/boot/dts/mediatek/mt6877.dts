@@ -2054,7 +2054,9 @@
 			<&infracfg_ao_clk CLK_IFRAO_UFS>,
 			<&infracfg_ao_clk CLK_IFRAO_UNIPRO_SYSCLK>,
 			<&infracfg_ao_clk CLK_IFRAO_UFS_MP_SAP_BCLK>,
-			<&infracfg_ao_clk CLK_IFRAO_AES_UFSFDE>;
+			<&infracfg_ao_clk CLK_IFRAO_AES_UFSFDE>,
+			<&infracfg_ao_clk CLK_IFRAO_RG_AES_CK_0P_CK>,
+			<&topckgen_clk CLK_TOP_UFS_MBIST_SEL>;
 		clock-names =
 			"ufs-clk",
 			"ufs-unipro-clk",
