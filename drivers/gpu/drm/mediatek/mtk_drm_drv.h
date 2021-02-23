@@ -34,7 +34,6 @@
  */
 #if defined(CONFIG_MACH_MT6877)
 #define MTK_DRM_BRINGUP_STAGE
-#define DRM_BYPASS_PQ
 #endif
 
 #if 0
