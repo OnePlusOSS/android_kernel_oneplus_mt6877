@@ -12,7 +12,7 @@
 #ifndef _DTS_IOMMU_PORT_MT6853_H_
 #define _DTS_IOMMU_PORT_MT6853_H_
 
-#if IS_ENABLED(CONFIG_MACH_MT6877)
+#if defined CONFIG_MACH_MT6877
 #include "mt6877-larb-port.h"
 #else
 
