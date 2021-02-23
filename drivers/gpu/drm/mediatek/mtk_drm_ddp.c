@@ -2831,6 +2831,10 @@ static char *ddp_get_mutex_module0_name_mt6877(unsigned int bit)
 		return "disp_wdma0";
 	case 16:
 		return "disp_pwm0";
+	case 17:
+		return "disp_ovl1_2l";
+	case 18:
+		return "disp_ufbc_wdma0";
 	default:
 		return "mutex-unknown";
 	}
