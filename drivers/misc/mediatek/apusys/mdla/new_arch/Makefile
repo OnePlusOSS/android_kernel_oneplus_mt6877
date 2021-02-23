@@ -11,9 +11,12 @@
 # GNU General Public License for more details.
 #
 
-PWR_PLAT=$(MTK_PLATFORM)
 ifeq ($(CONFIG_MACH_MT6893),y)
 PWR_PLAT=mt6885
+else ifeq ($(CONFIG_MACH_MT6877),y)
+PWR_PLAT=mt6877
+else
+PWR_PLAT=$(MTK_PLATFORM)
 endif
 
 # ------------------------------------------------------------------------------
