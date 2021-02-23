@@ -176,7 +176,7 @@ static int mtk_edma_sub_probe(struct platform_device *pdev)
 
 	edma_sub->plat_drv = of_device_get_match_data(&pdev->dev);
 	spin_lock_init(&edma_sub->reg_lock);
-	edma_sub->dbg_portID = 0;
+	edma_sub->dbg_portID = 5;
 
 	if (edma_sub->plat_drv == NULL) {
 		dev_notice(dev, "cannot get plat_drv\n");
