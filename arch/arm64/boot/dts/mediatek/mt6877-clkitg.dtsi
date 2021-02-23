@@ -368,8 +368,6 @@
 			<&camsys_main_clk CLK_CAM_M_CAMSV1>,
 			<&camsys_main_clk CLK_CAM_M_CAMSV2>,
 			<&camsys_main_clk CLK_CAM_M_CAMSV3>,
-			<&camsys_main_clk CLK_CAM_M_CCU0>,
-			<&camsys_main_clk CLK_CAM_M_CCU1>,
 			<&camsys_main_clk CLK_CAM_M_MRAW0>,
 			<&camsys_main_clk CLK_CAM_M_RESERVED2>,
 			<&camsys_main_clk CLK_CAM_M_FAKE_ENG>,
