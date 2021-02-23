@@ -3641,8 +3641,8 @@
 		clocks = <&mmsys_config_clk CLK_MM_DISP_OVL1_2L>;
 		mediatek,larb = <&smi_larb1>;
 		mediatek,smi-id = <1>;
-		iommus = <&iommu0 M4U_PORT_L1_OVL_2L_RDMA0>,
-			 <&iommu0 M4U_PORT_L1_OVL_2L_RDMA0_HDR>;
+		iommus = <&iommu0 M4U_PORT_L1_OVL_2L_RDMA1>,
+			 <&iommu0 M4U_PORT_L1_OVL_2L_RDMA1_HDR>;
 	};
 
 	disp_ufbc_wdma@14020000 {
