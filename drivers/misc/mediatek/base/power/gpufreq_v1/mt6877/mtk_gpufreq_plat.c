@@ -48,7 +48,7 @@
 #include "mtk_thermal.h"
 #endif
 #ifdef CONFIG_MTK_FREQ_HOPPING
-#include "mtk_freqhopping_drv.h"
+#include "mtk_freqhopping.h"
 #endif
 #if MT_GPUFREQ_KICKER_PBM_READY
 #include "mtk_pbm.h"
@@ -2737,7 +2737,7 @@ static void __mt_gpufreq_clock_switch(unsigned int freq_new)
 		 */
 		if (freq_new > curr_freq) {
 			/* 1. change PCW (by hopping) */
-			hopping = mt_dfs_general_pll(MFGPLL_FH_PLL, pcw);
+			hopping = mt_dfs_general_pll(FH_GPU_PLL0, pcw);
 			if (hopping != 0)
 				gpufreq_pr_info("@%s: hopping failing: %d\n",
 						__func__, hopping);
@@ -2755,7 +2755,7 @@ static void __mt_gpufreq_clock_switch(unsigned int freq_new)
 			/* 2. wait 20us for MFGPLL Stable */
 			udelay(20);
 			/* 3. change PCW (by hopping) */
-			hopping = mt_dfs_general_pll(MFGPLL_FH_PLL, pcw);
+			hopping = mt_dfs_general_pll(FH_GPU_PLL0, pcw);
 			if (hopping != 0)
 				gpufreq_pr_info("@%s: hopping failing: %d\n",
 						__func__, hopping);
@@ -2764,7 +2764,7 @@ static void __mt_gpufreq_clock_switch(unsigned int freq_new)
 	} else {
 #ifdef CONFIG_MTK_FREQ_HOPPING
 		/* change PCW (by hopping) */
-		hopping = mt_dfs_general_pll(MFGPLL_FH_PLL, pcw);
+		hopping = mt_dfs_general_pll(FH_GPU_PLL0, pcw);
 		if (hopping != 0)
 			gpufreq_pr_info("@%s: hopping failing: %d\n",
 					__func__, hopping);
