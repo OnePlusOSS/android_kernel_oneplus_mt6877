@@ -843,6 +843,7 @@
 	apxgpt@10008000 {
 		compatible = "mediatek,apxgpt";
 		reg = <0 0x10008000 0 0x1000>;
+		mediatek,kick_off = <0xb4>;
 	};
 
 	sej@1000a000 {
