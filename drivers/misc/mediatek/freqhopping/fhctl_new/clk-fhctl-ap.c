@@ -514,8 +514,6 @@ static int ap_hopping_v1(void *priv_data, char *domain_name, int fh_id,
 
 	mutex_lock(lock);
 
-	FHDBG("id<%d>\n", fh_id);
-
 	domain = d->domain;
 	regs = &domain->regs[fh_id];
 	data = &domain->data[fh_id];
