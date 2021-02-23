@@ -721,6 +721,8 @@ static s32 channel_disp_hrt_cnt[MAX_COMM_NUM][MAX_CH_COUNT] = {};
 
 #define MULTIPLY_BW_THRESH_HIGH(value) ((value)*1/2)
 #define MULTIPLY_BW_THRESHOLD_LOW(value) ((value)*2/5)
+#define MULTIPLY_RATIO(value) ((value)*100)
+#define DIVIDE_RATIO(value) ((value)/100)
 static s32 current_hrt_bw;
 static u32 camera_max_bw;
 static s32 get_cam_hrt_bw(void)
@@ -751,11 +753,16 @@ static bool is_camera_larb(u32 master_id)
 
 static s32 get_total_used_hrt_bw(void)
 {
+	s32 cam_hrt_bw;
+	s32 disp_hrt_bw;
+	s32 md_hrt_bw;
+
 	/* HRT Write BW should multiply a weight */
-	s32 cam_hrt_bw = dram_write_weight(get_cam_hrt_bw());
-	s32 disp_hrt_bw =
-		larb_req[SMI_PMQOS_LARB_DEC(PORT_VIRTUAL_DISP)].total_hrt_data;
-	s32 md_hrt_bw =
+	cam_hrt_bw = dram_write_weight(MULTIPLY_RATIO(get_cam_hrt_bw())/cam_occ_ratio());
+	disp_hrt_bw =
+		MULTIPLY_RATIO(larb_req[SMI_PMQOS_LARB_DEC(PORT_VIRTUAL_DISP)].total_hrt_data)
+		/disp_occ_ratio();
+	md_hrt_bw =
 		larb_req[SMI_PMQOS_LARB_DEC(PORT_VIRTUAL_MD)].total_hrt_data;
 	return (cam_hrt_bw + disp_hrt_bw + md_hrt_bw);
 }
@@ -767,7 +774,7 @@ static s32 get_io_width(void)
 	s32 ddr_type = mtk_dramc_get_ddr_type();
 
 	if (ddr_type == TYPE_LPDDR4 || ddr_type == TYPE_LPDDR4X
-	    || ddr_type == TYPE_LPDDR4P)
+	    || ddr_type == TYPE_LPDDR4P || ddr_type == TYPE_LPDDR5)
 		io_width = 2;
 	else
 		io_width = 4;
@@ -1444,7 +1451,8 @@ s32 mm_hrt_get_available_hrt_bw(u32 master_id)
 {
 	s32 total_used_hrt_bw = get_total_used_hrt_bw();
 	s32 src_hrt_bw = larb_req[SMI_PMQOS_LARB_DEC(master_id)].total_hrt_data;
-	s32 cam_bw;
+	s32 cam_occ_bw;
+	s32 cam_occ_max_bw;
 	s32 result;
 
 	if (skip_smi_config)
@@ -1452,23 +1460,30 @@ s32 mm_hrt_get_available_hrt_bw(u32 master_id)
 	if (total_hrt_bw == UNINITIALIZED_VALUE)
 		return UNINITIALIZED_VALUE;
 
+	cam_occ_bw = dram_write_weight(MULTIPLY_RATIO(get_cam_hrt_bw())/cam_occ_ratio());
 	if (is_camera_larb(master_id))
-		src_hrt_bw = dram_write_weight(get_cam_hrt_bw());
+		src_hrt_bw = cam_occ_bw;
+	else
+		src_hrt_bw = MULTIPLY_RATIO(src_hrt_bw)/disp_occ_ratio();
 
 	result = total_hrt_bw - total_used_hrt_bw + src_hrt_bw;
 
 	if (SMI_PMQOS_LARB_DEC(master_id) ==
 			SMI_PMQOS_LARB_DEC(PORT_VIRTUAL_DISP)) {
 		/* Consider worst camera bw if camera is on */
-		if (camera_max_bw > 0) {
-			cam_bw = dram_write_weight(get_cam_hrt_bw());
-			result = result + cam_bw - camera_max_bw;
-		}
+		cam_occ_max_bw = MULTIPLY_RATIO(camera_max_bw)/cam_occ_ratio();
+		if (cam_occ_max_bw > 0)
+			result = result + cam_occ_bw - cam_occ_max_bw;
 
 		if (disp_bw_ceiling > 0 && !wait_next_max_cam_bw_set
 			&& disp_bw_ceiling < result)
 			result = disp_bw_ceiling;
 	}
+
+	if (is_camera_larb(master_id))
+		result = DIVIDE_RATIO(result * cam_occ_ratio());
+	else
+		result = DIVIDE_RATIO(result * disp_occ_ratio());
 	return ((result < 0)?0:result);
 }
 EXPORT_SYMBOL_GPL(mm_hrt_get_available_hrt_bw);
@@ -1580,7 +1595,7 @@ static s32 get_total_hrt_bw(void)
 	s32 ch_num = mtk_emicen_get_ch_cnt();
 	s32 io_width = get_io_width();
 
-	result = MULTIPLY_BW_THRESH_HIGH(max_freq * ch_num * io_width);
+	result = DIVIDE_RATIO(max_freq * ch_num * io_width * emi_occ_ratio());
 #elif defined(USE_MTK_DRAMC)
 	s32 max_freq = dram_steps_freq(0);
 	s32 ch_num = get_emi_ch_num();
