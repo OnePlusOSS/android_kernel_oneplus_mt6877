@@ -3180,6 +3180,7 @@
 		iommus = <&iommu0 M4U_PORT_L0_DISP_POSTMASK0>,
 			 <&iommu0 M4U_PORT_L0_OVL_RDMA0_HDR>,
 			 <&iommu0 M4U_PORT_L0_OVL_RDMA0>,
+			 <&iommu0 M4U_PORT_L0_DISP_UFBC_WDMA0>,
 			 <&iommu0 M4U_PORT_L0_DISP_FAKE0>;
 	};
 
@@ -3189,8 +3190,9 @@
 		iommus = <&iommu0 M4U_PORT_L1_OVL_2L_RDMA0_HDR>,
 			 <&iommu0 M4U_PORT_L1_OVL_2L_RDMA0>,
 			 <&iommu0 M4U_PORT_L1_DISP_RDMA0>,
-			 <&iommu0 M4U_PORT_L1_DISP_WDMA0>,
-			 <&iommu0 M4U_PORT_L1_DISP_FAKE1>;
+			 <&iommu0 M4U_PORT_L1_DISP_FAKE1>,
+			 <&iommu0 M4U_PORT_L1_OVL_2L_RDMA1_HDR>,
+			 <&iommu0 M4U_PORT_L1_OVL_2L_RDMA1>;
 	};
 
 	pseudo_m4u-larb2 {
@@ -3216,8 +3218,8 @@
 			<&iommu0 M4U_PORT_L4_VDEC_VLD_EXT>,
 			<&iommu0 M4U_PORT_L4_VDEC_VLD2_EXT>,
 			<&iommu0 M4U_PORT_L4_VDEC_AVC_MV_EXT>,
-			<&iommu0 M4U_PORT_L4_VDEC_RG_CTRL_DMA_EXT>,
-			<&iommu0 M4U_PORT_L4_VDEC_UFO_ENC_EXT>;
+			<&iommu0 M4U_PORT_L4_VDEC_UFO_ENC_EXT>,
+			<&iommu0 M4U_PORT_L4_VDEC_RG_CTRL_DMA_EXT>;
 	};
 
 	pseudo_m4u-larb7 {
@@ -3226,16 +3228,18 @@
 		iommus = <&iommu0 M4U_PORT_L7_VENC_RCPU>,
 			<&iommu0 M4U_PORT_L7_VENC_REC>,
 			<&iommu0 M4U_PORT_L7_VENC_BSDMA>,
+			<&iommu0 M4U_PORT_L7_VENC_SUB_W_LUMA>,
 			<&iommu0 M4U_PORT_L7_VENC_SV_COMV>,
 			<&iommu0 M4U_PORT_L7_VENC_RD_COMV>,
-			<&iommu0 M4U_PORT_L7_VENC_CUR_LUMA>,
-			<&iommu0 M4U_PORT_L7_VENC_CUR_CHROMA>,
-			<&iommu0 M4U_PORT_L7_VENC_REF_LUMA>,
-			<&iommu0 M4U_PORT_L7_VENC_REF_CHROMA>,
 			<&iommu0 M4U_PORT_L7_JPGENC_Y_RDMA>,
 			<&iommu0 M4U_PORT_L7_JPGENC_C_RDMA>,
 			<&iommu0 M4U_PORT_L7_JPGENC_Q_TABLE>,
-			<&iommu0 M4U_PORT_L7_JPGENC_BSDMA>;
+			<&iommu0 M4U_PORT_L7_JPGENC_BSDMA>,
+			<&iommu0 M4U_PORT_L7_VENC_SUB_R_LUMA>,
+			<&iommu0 M4U_PORT_L7_VENC_CUR_LUMA>,
+			<&iommu0 M4U_PORT_L7_VENC_CUR_CHROMA>,
+			<&iommu0 M4U_PORT_L7_VENC_REF_LUMA>,
+			<&iommu0 M4U_PORT_L7_VENC_REF_CHROMA>;
 	};
 
 	pseudo_m4u-larb9 {
@@ -3314,15 +3318,18 @@
 		iommus = <&iommu0 M4U_PORT_L13_CAM_MRAWI>,
 			<&iommu0 M4U_PORT_L13_CAM_MRAWO0>,
 			<&iommu0 M4U_PORT_L13_CAM_MRAWO1>,
-			<&iommu0 M4U_PORT_L13_CAM_RESERVE1>,
-			<&iommu0 M4U_PORT_L13_CAM_RESERVE2>,
-			<&iommu0 M4U_PORT_L13_CAM_RESERVE3>,
+			<&iommu0 M4U_PORT_L13_CAM_CAMSV1>,
+			<&iommu0 M4U_PORT_L13_CAM_CAMSV2>,
+			<&iommu0 M4U_PORT_L13_CAM_CAMSV3>,
 			<&iommu0 M4U_PORT_L13_CAM_CAMSV4>,
 			<&iommu0 M4U_PORT_L13_CAM_CAMSV5>,
 			<&iommu0 M4U_PORT_L13_CAM_CAMSV6>,
 			<&iommu0 M4U_PORT_L13_CAM_CCUI>,
 			<&iommu0 M4U_PORT_L13_CAM_CCUO>,
-			<&iommu0 M4U_PORT_L13_CAM_FAKE>;
+			<&iommu0 M4U_PORT_L13_CAM_FAKE>,
+			<&iommu0 M4U_PORT_L13_CAM_PADI0>,
+			<&iommu0 M4U_PORT_L13_CAM_PADI1>,
+			<&iommu0 M4U_PORT_L13_CAM_PDAO>;
 	};
 
 	pseudo_m4u-larb14 {
@@ -3333,7 +3340,11 @@
 			<&iommu0 M4U_PORT_L14_CAM_RESERVE3>,
 			<&iommu0 M4U_PORT_L14_CAM_RESERVE4>,
 			<&iommu0 M4U_PORT_L14_CAM_CCUI>,
-			<&iommu0 M4U_PORT_L14_CAM_CCUO>;
+			<&iommu0 M4U_PORT_L14_CAM_CCUO>,
+			<&iommu0 M4U_PORT_L14_CAMSV7>,
+			<&iommu0 M4U_PORT_L14_CAMSV8>,
+			<&iommu0 M4U_PORT_L14_CAMSV9>,
+			<&iommu0 M4U_PORT_L14_CAMSV10>;
 	};
 
 
@@ -3500,6 +3511,9 @@
 				<&smi_larb16 &smi_larb17 &smi_larb18>,
 				<&smi_larb19 &smi_larb20>;
 		interrupts = <GIC_SPI 316 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&mmsys_config_clk CLK_MM_SMI_IOMMU>,
+			 <&scpsys SCP_SYS_DISP>;
+		clock-names = "disp-iommu-ck", "power";
 		#iommu-cells = <1>;
 	};
 
