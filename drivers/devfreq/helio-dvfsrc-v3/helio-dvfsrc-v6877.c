@@ -37,7 +37,7 @@
 	dvfsrc_write(offset, (dvfsrc_read(offset) & ~(mask << shift)) \
 			| (val << shift))
 
-
+#ifdef	CONFIG_MTK_DVFSRC_MT6877_PRETEST
 static struct reg_config dvfsrc_init_configs[][128] = {
 	{
 		{ DVFSRC_HRT_REQ_UNIT,       0x0000001E },
@@ -141,6 +141,104 @@ static struct reg_config dvfsrc_init_configs[][128] = {
 		{ -1, 0 },
 	},
 };
+#else
+static struct reg_config dvfsrc_init_configs[][128] = {
+	{
+		{ DVFSRC_HRT_REQ_UNIT,       0x0000001E },
+		{ DVFSRC_DEBOUNCE_TIME,      0x00001965 },
+		{ DVFSRC_TIMEOUT_NEXTREQ,    0x0000001E },
+
+		{ DVFSRC_DDR_QOS0,	     0x00000019 },
+		{ DVFSRC_DDR_QOS1,	     0x00000026 },
+		{ DVFSRC_DDR_QOS2,	     0x00000033 },
+		{ DVFSRC_DDR_QOS3,	     0x0000003B },
+		{ DVFSRC_DDR_QOS4,	     0x00000055 },
+		{ DVFSRC_DDR_QOS5,	     0x00000077 },
+		{ DVFSRC_DDR_QOS6,	     0x00000088 },
+
+		{ DVFSRC_LEVEL_LABEL_0_1,	0x60647074 },
+		{ DVFSRC_LEVEL_LABEL_2_3,	0x50546063 },
+		{ DVFSRC_LEVEL_LABEL_4_5,	0x50525053 },
+		{ DVFSRC_LEVEL_LABEL_6_7,	0x40434044 },
+		{ DVFSRC_LEVEL_LABEL_8_9,	0x40414042 },
+		{ DVFSRC_LEVEL_LABEL_10_11,	0x30333034 },
+		{ DVFSRC_LEVEL_LABEL_12_13,	0x30313032 },
+		{ DVFSRC_LEVEL_LABEL_14_15,	0x20243030 },
+		{ DVFSRC_LEVEL_LABEL_16_17,	0x20222023 },
+		{ DVFSRC_LEVEL_LABEL_18_19,	0x20202021 },
+		{ DVFSRC_LEVEL_LABEL_20_21,	0x10131014 },
+		{ DVFSRC_LEVEL_LABEL_22_23,	0x10111012 },
+		{ DVFSRC_LEVEL_LABEL_24_25,	0x00041010 },
+		{ DVFSRC_LEVEL_LABEL_26_27,	0x00020003 },
+		{ DVFSRC_LEVEL_LABEL_28_29,	0x00000001 },
+
+		{ DVFSRC_MD_LATENCY_IMPROVE, 0x00000040 },
+		{ DVFSRC_HRT_BW_BASE,        0x00000004 },
+		{ DVSFRC_HRT_REQ_MD_URG,     0x001A51A5 },
+		{ DVFSRC_HRT_REQ_MD_BW_0,    0x00300C03 },
+		{ DVFSRC_HRT_REQ_MD_BW_1,    0x00300C03 },
+		{ DVFSRC_HRT_REQ_MD_BW_2,    0x00300C00 },
+		{ DVFSRC_HRT_REQ_MD_BW_3,    0x00601003 },
+		{ DVFSRC_HRT_REQ_MD_BW_4,    0x00902007 },
+		{ DVFSRC_HRT_REQ_MD_BW_5,    0x0160440F },
+		{ DVFSRC_HRT_REQ_MD_BW_6,    0x0000001E },
+		{ DVFSRC_HRT_REQ_MD_BW_7,    0x0000003A },
+		{ DVFSRC_HRT_REQ_MD_BW_8,    0x00000000 },
+		{ DVFSRC_HRT_REQ_MD_BW_9,    0x00000000 },
+		{ DVFSRC_HRT_REQ_MD_BW_10,   0x00069400 },
+		{ DVFSRC_HRT1_REQ_MD_BW_0,   0x08020080 },
+		{ DVFSRC_HRT1_REQ_MD_BW_1,   0x08020080 },
+		{ DVFSRC_HRT1_REQ_MD_BW_2,   0x08020000 },
+		{ DVFSRC_HRT1_REQ_MD_BW_3,   0x08020080 },
+		{ DVFSRC_HRT1_REQ_MD_BW_4,   0x08020080 },
+		{ DVFSRC_HRT1_REQ_MD_BW_5,   0x08020080 },
+		{ DVFSRC_HRT1_REQ_MD_BW_6,   0x00000080 },
+		{ DVFSRC_HRT1_REQ_MD_BW_7,   0x00000098 },
+		{ DVFSRC_HRT1_REQ_MD_BW_8,   0x00000000 },
+		{ DVFSRC_HRT1_REQ_MD_BW_9,   0x00000000 },
+		{ DVFSRC_HRT1_REQ_MD_BW_10,  0x00069400 },
+		{ DVFSRC_95MD_SCEN_BW0_T,    0x40444440 },
+		{ DVFSRC_95MD_SCEN_BW1_T,    0x44444444 },
+		{ DVFSRC_95MD_SCEN_BW2_T,    0x00400444 },
+		{ DVFSRC_95MD_SCEN_BW3_T,    0x60000000 },
+		{ DVFSRC_95MD_SCEN_BW0,      0x20222220 },
+		{ DVFSRC_95MD_SCEN_BW1,      0x22222222},
+		{ DVFSRC_95MD_SCEN_BW2,      0x00200222 },
+		{ DVFSRC_95MD_SCEN_BW3,      0x60000000 },
+		{ DVFSRC_95MD_SCEN_BW4,      0x00000006 },
+		{ DVFSRC_RSRV_5,             0x00000001 },
+		{ DVFSRC_DDR_REQUEST,        0x00004321 },
+		{ DVFSRC_DDR_REQUEST3,       0x00000765 },
+		{ DVFSRC_DDR_ADD_REQUEST,    0x76543210 },
+		{ DVFSRC_HRT_REQUEST,        0x77654321 },
+		{ DVFSRC_DDR_REQUEST5,	     0x54321000 },
+		{ DVFSRC_DDR_REQUEST7,       0x76000000 },
+		{ DVFSRC_EMI_MON_DEBOUNCE_TIME,   0x4C2D0000 },
+		{ DVFSRC_DDR_REQUEST6,       0x76543210 },
+		{ DVFSRC_VCORE_USER_REQ,     0x00010A29 },
+		{ DVFSRC_HRT_HIGH_3,	     0x31533153 },
+		{ DVFSRC_HRT_HIGH_2,	     0x28D41900 },
+		{ DVFSRC_HRT_HIGH_1,	     0x117E0F00 },
+		{ DVFSRC_HRT_HIGH,	     0x0B400780 },
+		{ DVFSRC_HRT_LOW_3,	     0x31523152 },
+		{ DVFSRC_HRT_LOW_2,	     0x28D318FF },
+		{ DVFSRC_HRT_LOW_1,	     0x117D0EFF },
+		{ DVFSRC_HRT_LOW,	     0x0B3F077F },
+		{ DVFSRC_BASIC_CONTROL_3,    0x00000006 },
+		{ DVFSRC_INT_EN,             0x00000002 },
+		{ DVFSRC_QOS_EN,             0x0000407C },
+		{ DVFSRC_CURRENT_FORCE,      0x00000001 },
+		{ DVFSRC_BASIC_CONTROL,      0x67B8444B },
+		{ DVFSRC_BASIC_CONTROL,      0x67B8054B },
+		{ DVFSRC_CURRENT_FORCE,      0x00000000 },
+		{ -1, 0 },
+	},
+	/* NULL */
+	{
+		{ -1, 0 },
+	},
+};
+#endif
 
 static ssize_t dvfsrc_vcore_settle_time_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -246,19 +344,19 @@ static u32 dvfsrc_calc_hrt_opp(int data)
 		return DDR_OPP_0;
 
 #else
-	if (data < 0x04B0)
+	if (data < 0x780)
 		return DDR_OPP_7;
-	else if (data < 0x0708)
+	else if (data < 0xB40)
 		return DDR_OPP_6;
-	else if (data < 0x0B80)
+	else if (data < 0xF00)
 		return DDR_OPP_5;
-	else if (data < 0x0D69)
+	else if (data < 0x117E)
 		return DDR_OPP_4;
-	else if (data < 0x132B)
+	else if (data < 0x1900)
 		return DDR_OPP_3;
-	else if (data < 0x1B3D)
+	else if (data < 0x28D4)
 		return DDR_OPP_2;
-	else if (data < 0x20DC)
+	else if (data < 0x3153)
 		return DDR_OPP_1;
 	else
 		return DDR_OPP_0;
@@ -479,6 +577,8 @@ void get_opp_info(char *p)
 	p += sprintf(p, "%-10s: %-8u uv  (PMIC: 0x%x)\n",
 			"Vcore", vcore_uv, vcore_uv_to_pmic(vcore_uv));
 	p += sprintf(p, "%-10s: %-8u khz\n", "DDR", ddr_khz);
+	p += sprintf(p, "%6s: 0x%08x\n", "INFO1", get_devinfo_with_index(210));
+	p += sprintf(p, "%6s: 0x%08x\n", "V_MODE", dvfsrc_read(DVFSRC_RSRV_4));
 }
 
 
@@ -504,6 +604,7 @@ static char *met_src_name[SRC_MAX] = {
 	"VCORE__SCP",
 	"VCORE__HIFI",
 	"VCORE__PCIE",
+	"VCORE__DPAMIF",
 	"SCP_REQ",
 	"PMQOS_TATOL",
 	"PMQOS_BW0",
@@ -606,6 +707,10 @@ static void vcorefs_get_src_vcore_req(void)
 
 	sw_req = dvfsrc_read(DVFSRC_SW_REQ3);
 	met_vcorefs_src[VCORE_SW_REQ3_PMQOS_IDX] =
+		(sw_req >> VCORE_SW_AP_SHIFT) & VCORE_SW_AP_MASK;
+
+	sw_req = dvfsrc_read(DVFSRC_SW_REQ7);
+	met_vcorefs_src[VCORE_DPAMIF_IDX] =
 		(sw_req >> VCORE_SW_AP_SHIFT) & VCORE_SW_AP_MASK;
 
 	if (scp_en) {
