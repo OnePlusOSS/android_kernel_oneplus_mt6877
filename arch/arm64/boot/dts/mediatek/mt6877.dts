@@ -2318,15 +2318,15 @@
 	scp_dvfs {
 		compatible = "mediatek,scp_dvfs";
 		clocks =
-			<&topckgen CLK_TOP_SCP_SEL>,
-			<&topckgen CLK_TOP_TCK_26M_MX9>,
-			<&topckgen CLK_TOP_UNIVPLL_D4>,
-			<&topckgen CLK_TOP_ADSPPLL>,
-			<&topckgen CLK_TOP_MAINPLL_D6>,
-			<&topckgen CLK_TOP_UNIVPLL_D6>,
-			<&topckgen CLK_TOP_MAINPLL_D4_D2>,
-			<&topckgen CLK_TOP_APLL1>,
-			<&topckgen CLK_TOP_MAINPLL_D7>;
+			<&topckgen_clk CLK_TOP_SCP_SEL>,
+			<&topckgen_clk CLK_TOP_TCK_26M_MX9>,
+			<&topckgen_clk CLK_TOP_UNIVPLL_D4>,
+			<&topckgen_clk CLK_TOP_ADSPPLL>,
+			<&topckgen_clk CLK_TOP_MAINPLL_D6>,
+			<&topckgen_clk CLK_TOP_UNIVPLL_D6>,
+			<&topckgen_clk CLK_TOP_MAINPLL_D4_D2>,
+			<&topckgen_clk CLK_TOP_APLL1>,
+			<&topckgen_clk CLK_TOP_MAINPLL_D7>;
 
 		clock-names =
 			"clk_mux",
