@@ -6135,7 +6135,7 @@
 		label = "lcd-backlight";
 		trans-bits = <11>;
 		led-bits = <8>;
-		default-state = "full";
+		default-state = "half";
 		status = "okay";
 	};
 };
