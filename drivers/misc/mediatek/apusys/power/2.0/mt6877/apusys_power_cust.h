@@ -29,7 +29,7 @@
 #define APUPWR_TASK_DEBOUNCE
 #define APUPWR_TAG_TP
 
-#define BYPASS_POWER_OFF	(1)	// 1: bypass power off (return directly)
+#define BYPASS_POWER_OFF	(0)	// 1: bypass power off (return directly)
 #define BYPASS_POWER_CTL	(0)	// 1: bypass power on/off feature
 #define BYPASS_DVFS_CTL		(0)	// 1: bypass set DVFS opp feature
 #define DEFAULT_POWER_ON	(0)	// 1: default power on in power probe
