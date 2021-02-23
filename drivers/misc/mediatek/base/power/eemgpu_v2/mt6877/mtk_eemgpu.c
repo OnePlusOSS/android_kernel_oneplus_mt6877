@@ -141,7 +141,7 @@ static unsigned int informEEMisReady;
 unsigned int gpu_vb_volt;
 unsigned int gpu_vb_turn_pt;
 unsigned int gpu_opp0_t_volt[4] = {
-	85000, 82500, 80000, 77500
+	75000, 75000, 75000, 75000
 };
 #endif
 
@@ -195,6 +195,10 @@ static int get_devinfo(void)
 	val[8] = get_devinfo_with_index(DEVINFO_IDX_8);
 	val[9] = get_devinfo_with_index(DEVINFO_IDX_9);
 	val[10] = get_devinfo_with_index(DEVINFO_IDX_10);
+	val[11] = get_devinfo_with_index(DEVINFO_IDX_11);
+	val[12] = get_devinfo_with_index(DEVINFO_IDX_12);
+	val[13] = get_devinfo_with_index(DEVINFO_IDX_13);
+	val[14] = get_devinfo_with_index(DEVINFO_IDX_14);
 
 #if EEMG_FAKE_EFUSE
 	/* for verification */
@@ -209,6 +213,10 @@ static int get_devinfo(void)
 	val[8] = DEVINFO_8;
 	val[9] = DEVINFO_9;
 	val[10] = DEVINFO_10;
+	val[11] = DEVINFO_11;
+	val[12] = DEVINFO_12;
+	val[13] = DEVINFO_13;
+	val[14] = DEVINFO_14;
 #endif
 
 	for (i = 0; i < NR_HW_RES_FOR_BANK; i++)
@@ -241,7 +249,7 @@ static int get_devinfo(void)
 			gpu_vb_volt, efuse_val);
 
 #endif
-	if (val[9] == 0 && val[10] == 0) {
+	if (val[8] == 0 && val[9] == 0) {
 		ret = 1;
 		safeEfuse = 1;
 		eemg_error("No EFUSE (val[9]=0), use safe efuse\n");
@@ -266,6 +274,10 @@ static int get_devinfo(void)
 		val[8] = DEVINFO_8;
 		val[9] = DEVINFO_9;
 		val[10] = DEVINFO_10;
+		val[11] = DEVINFO_11;
+		val[12] = DEVINFO_12;
+		val[13] = DEVINFO_13;
+		val[14] = DEVINFO_14;
 	}
 
 
@@ -1458,9 +1470,12 @@ static void eemg_init_ctrl(struct eemg_ctrl *ctrl)
 
 static unsigned int eemg_vmin_init(void)
 {
-	int vmin_idx = (get_devinfo_with_index(209) >> 9) & 3;
-
-	return vmin_idx == 0x2 ? 0x20 : vmin_idx == 0x1 ? 0x24 : 0x1C;
+/*
+ *	int vmin_idx = (get_devinfo_with_index(209) >> 9) & 3;
+ *
+ *	return vmin_idx == 0x2 ? 0x20 : vmin_idx == 0x1 ? 0x24 : 0x1C;
+ */
+	return 0x14;
 }
 
 static void eemg_init_det(struct eemg_det *det, struct eemg_devinfo *devinfo)
@@ -1489,14 +1504,14 @@ static void eemg_init_det(struct eemg_det *det, struct eemg_devinfo *devinfo)
 			det->DVTFIXED = DVTFIXED_VAL_GL;
 		} else {
 #endif
-			det->MDES	= devinfo->GPU_MDES;
-			det->BDES	= devinfo->GPU_BDES;
-			det->DCMDET	= devinfo->GPU_DCMDET;
-			det->DCBDET	= devinfo->GPU_DCBDET;
-			det->EEMINITEN	= devinfo->GPU_INITEN;
-			det->EEMMONEN	= devinfo->GPU_MONEN;
-			det->MTDES	= devinfo->GPU_MTDES;
-			det->SPEC       = devinfo->GPU_SPEC;
+			det->MDES	= devinfo->GPU_HI_MDES;
+			det->BDES	= devinfo->GPU_HI_BDES;
+			det->DCMDET	= devinfo->GPU_HI_DCMDET;
+			det->DCBDET	= devinfo->GPU_HI_DCBDET;
+			det->EEMINITEN	= devinfo->GPU_HI_INITEN;
+			det->EEMMONEN	= devinfo->GPU_HI_MONEN;
+			det->MTDES	= devinfo->GPU_HI_MTDES;
+			det->SPEC       = devinfo->GPU_HI_SPEC;
 			det->VMAX		= VMAX_VAL_GPU;
 			det->max_freq_khz = GPU_FREQ_BASE;
 #if ENABLE_LOO_G
@@ -3046,7 +3061,6 @@ static int eemg_cur_volt_proc_show(struct seq_file *m, void *v)
 
 	if (det->features != 0) {
 		for (i = 0; i < det->num_freq_tbl; i++)
-#if 0
 			seq_printf(m, "[%d],eem = [0x%x], signoff_volt = [0x%x], pmic = [0x%x], volt = [%d], freq = [%u]\n",
 			i,
 			det->volt_tbl[i],
@@ -3054,7 +3068,6 @@ static int eemg_cur_volt_proc_show(struct seq_file *m, void *v)
 			det->volt_tbl_pmic[i],
 			det->ops->pmic_2_volt_gpu(det, det->volt_tbl_pmic[i]),
 			mt_gpufreq_get_freq_by_real_idx(mt_gpufreq_get_ori_opp_idx(i)));
-#endif
 		seq_printf(m, "policy:%d, isTempInv:%d\n",
 		det->volt_policy, det->isTempInv);
 	}

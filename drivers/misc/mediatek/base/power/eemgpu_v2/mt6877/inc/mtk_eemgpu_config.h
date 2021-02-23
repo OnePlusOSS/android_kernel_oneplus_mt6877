@@ -15,13 +15,13 @@
 
 #include "mtk_eemgpu_prj_config.h"
 
-#define EEMG_NOT_READY		(1)
+#define EEMG_NOT_READY		(0)
 #define LOG_INTERVAL		(2LL * NSEC_PER_SEC)
 #define SUPPORT_DCONFIG		(1)
 #define ENABLE_HT_FT		(1)
 #define ENABLE_MINIHQA		(0)
 
-#define NR_HW_RES_FOR_BANK	(11) /* real eem banks for efuse */
+#define NR_HW_RES_FOR_BANK	(15) /* real eem banks for efuse */
 #define EEMG_INIT01_FLAG	(0x01) /* 0x01=> [0]:GPU */
 #define EEMG_CORNER_FLAG	(0x30) /* 0x30=> [5]:VPU, [4]:MDLA */
 
@@ -54,21 +54,21 @@
 
 #define VBOOT_VAL		(0x38) /* volt domain: 0.75v */
 
-#define VMAX_VAL_GPU	(0x48) /* eem domain: 0.85v*/
-#define VMIN_VAL_GPU    (0x18) /* eem domain: 0.55v*/
-#define VCO_VAL_GPU     (0x10) /* eem domain: 0.5v*/
+#define VMAX_VAL_GPU	(0x38) /* eem domain: 0.75v*/
+#define VMIN_VAL_GPU    (0x14) /* eem domain: 0.52v*/
+#define VCO_VAL_GPU     (0x18) /* eem domain: 0.55v*/
 
 /* different for GPU_L */
-#define VMAX_VAL_GL     (0x48) /* eem domain: 0.85v*/
-#define VMIN_VAL_GL     (0x18) /* eem domain: 0.55v*/
-#define VCO_VAL_GL      (0x10) /* eem domain: 0.5v*/
+#define VMAX_VAL_GL     (0x38) /* eem domain: 0.75v*/
+#define VMIN_VAL_GL     (0x14) /* eem domain: 0.52v*/
+#define VCO_VAL_GL      (0x18) /* eem domain: 0.55v*/
 #define DVTFIXED_VAL_GL		(0x01)
-#define DVTFIXED_VAL_GPU	(0x05)
+#define DVTFIXED_VAL_GPU	(0x06)
 
 /* different for GPU_H */
-#define VMAX_VAL_GH     (0x48) /* eem domain: 0.85v*/
-#define VMIN_VAL_GH     (0x18) /* eem domain: 0.55v*/
-#define VCO_VAL_GH      (0x10) /* eem domain: 0.5v*/
+#define VMAX_VAL_GH     (0x38) /* eem domain: 0.75v*/
+#define VMIN_VAL_GH     (0x14) /* eem domain: 0.52v*/
+#define VCO_VAL_GH      (0x18) /* eem domain: 0.55v*/
 
 /* check temperature upper/lower bound */
 #define LOW_TEMP_OFF_DEFAULT	(0)
@@ -111,6 +111,10 @@
 #define DEVINFO_IDX_8 58
 #define DEVINFO_IDX_9 59
 #define DEVINFO_IDX_10 60
+#define DEVINFO_IDX_11 61
+#define DEVINFO_IDX_12 62
+#define DEVINFO_IDX_13 63
+#define DEVINFO_IDX_14 64
 
 
 #if defined(CMD_LOAD)
@@ -177,17 +181,21 @@
 #else
 
 /* MC99 Safe EFUSE */
-#define DEVINFO_0 0x0
-#define DEVINFO_1 0xFF98248D
-#define DEVINFO_2 0x859F249F
-#define DEVINFO_3 0x27BD2486
-#define DEVINFO_4 0xB59D2497
-#define DEVINFO_5 0x3CBE2481
-#define DEVINFO_6 0xB6922494
-#define DEVINFO_7 0xBFFFBFFF
-#define DEVINFO_8 0xBFFF70C0
-#define DEVINFO_9 0x399F243B	/* GPU efuse */
-#define DEVINFO_10 0x4E66244D	/* GPU efuse */
+#define DEVINFO_0 0x00000000
+#define DEVINFO_1 0xE7932489
+#define DEVINFO_2 0x00BB248D
+#define DEVINFO_3 0xA79C28FD
+#define DEVINFO_4 0x27A5249D
+#define DEVINFO_5 0xA79C28FD
+#define DEVINFO_6 0x3CA6249C
+#define DEVINFO_7 0xA19C28F3
+#define DEVINFO_8 0x399F243B
+#define DEVINFO_9 0x4E66244D	/* GPU efuse */
+#define DEVINFO_10 0xBFFFBFFF	/* GPU efuse */
+#define DEVINFO_11 0xBFFFFFFF
+#define DEVINFO_12 0xBFFFBFFF
+#define DEVINFO_13 0xBFFFBFFF
+#define DEVINFO_14 0x70C070C0
 
 #endif
 

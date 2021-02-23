@@ -225,15 +225,6 @@ struct eemg_devinfo {
 	unsigned int CCI_MDES:8;
 
 	/* M_HW_RES8 */
-	unsigned int GPU_MTDES:8;
-	unsigned int GPU_INITEN:1;
-	unsigned int GPU_MONEN:1;
-	unsigned int GPU_DVFS_LOW:3;
-	unsigned int GPU_SPEC:3;
-	unsigned int GPU_BDES:8;
-	unsigned int GPU_MDES:8;
-
-	/* M_HW_RES9 */
 	unsigned int GPU_HI_MTDES:8;
 	unsigned int GPU_HI_INITEN:1;
 	unsigned int GPU_HI_MONEN:1;
@@ -242,7 +233,7 @@ struct eemg_devinfo {
 	unsigned int GPU_HI_BDES:8;
 	unsigned int GPU_HI_MDES:8;
 
-	/* M_HW_RES10 */
+	/* M_HW_RES9 */
 	unsigned int GPU_LO_MTDES:8;
 	unsigned int GPU_LO_INITEN:1;
 	unsigned int GPU_LO_MONEN:1;
@@ -251,38 +242,34 @@ struct eemg_devinfo {
 	unsigned int GPU_LO_BDES:8;
 	unsigned int GPU_LO_MDES:8;
 
+	/* M_HW_RES10 */
+	unsigned int GPU_MTDES:8;
+	unsigned int GPU_INITEN:1;
+	unsigned int GPU_MONEN:1;
+	unsigned int GPU_DVFS_LOW:3;
+	unsigned int GPU_SPEC:3;
+	unsigned int GPU_BDES:8;
+	unsigned int GPU_MDES:8;
+
 	/* M_HW_RES11 */
-	unsigned int MD_VMODEM:32;
-
-	/* M_HW_RES12 */
-	unsigned int MD_VNR:32;
-
-	/* M_HW_RES13 */
 	unsigned int CPU_B_HI_DCBDET:8;
 	unsigned int CPU_B_HI_DCMDET:8;
 	unsigned int CPU_B_DCBDET:8;
 	unsigned int CPU_B_DCMDET:8;
 
-	/* M_HW_RES14 */
+	/* M_HW_RES12 */
 	unsigned int CPU_L_DCBDET:8;
 	unsigned int CPU_L_DCMDET:8;
 	unsigned int CPU_B_LO_DCBDET:8;
 	unsigned int CPU_B_LO_DCMDET:8;
 
-	/* M_HW_RES15 */
+	/* M_HW_RES13 */
 	unsigned int CPU_L_LO_DCBDET:8;
 	unsigned int CPU_L_LO_DCMDET:8;
 	unsigned int CPU_L_HI_DCBDET:8;
 	unsigned int CPU_L_HI_DCMDET:8;
 
-	/* M_HW_RES16 */
-	unsigned int GPU_DCBDET:8;
-	unsigned int GPU_DCMDET:8;
-	unsigned int CCI_DCBDET:8;
-	unsigned int CCI_DCMDET:8;
-
-
-	/* M_HW_RES17 */
+	/* M_HW_RES14 */
 	unsigned int GPU_LO_DCBDET:8;
 	unsigned int GPU_LO_DCMDET:8;
 	unsigned int GPU_HI_DCBDET:8;
