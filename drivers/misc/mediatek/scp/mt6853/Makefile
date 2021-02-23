@@ -4,7 +4,10 @@ SCP_VERSION_PATH := ../$(SCP_VERSION)
 obj-y += $(SCP_VERSION_PATH)/
 obj-y += scp_feature_table.o
 obj-y += scp_awake.o
+ifeq ($(CONFIG_MACH_MT6877),y)
+else
 obj-y += scp_dvfs.o
+endif
 
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/include/mt-plat/$(CONFIG_MTK_PLATFORM)/include/mach
