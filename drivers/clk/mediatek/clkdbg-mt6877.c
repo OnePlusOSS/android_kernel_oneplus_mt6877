@@ -73,6 +73,7 @@ struct pvd_msk {
 static struct pvd_msk pvd_pwr_mask[] = {
 	{"adspsys", PWR_STA, 0x00400000},
 	{"audiosys", PWR_STA, 0x00200000},
+	{"gpu_pll_ctrl", XPU_PWR_STA, 0x0000003F},
 	{"mfgcfg", XPU_PWR_STA, 0x0000003F},
 	{"dispsys", PWR_STA, 0x00040000},
 	{"imgsys1", PWR_STA, 0x00000200},
