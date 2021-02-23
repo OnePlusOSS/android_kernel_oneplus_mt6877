@@ -612,38 +612,49 @@ static void msdc_dump_clock_sts_core(char **buff, unsigned long *size,
 {
 	char buffer[512];
 	char *buf_ptr = buffer;
+	void __iomem *base = host->base, *base_top = host->base_top;
 
 	if (topckgen_base && infracfg_ao_base) {
 		buf_ptr += sprintf(buf_ptr,
-			"MSDC0 HCLK_MUX[0x%p][25:24]=%d, pdn=%d\n",
+			"MSDC0 HCLK_MUX[0x%p][17:16]=%d, pdn=%d\n",
 			topckgen_base + 0x070,
 			/* mux at bits 25~24 */
-			(MSDC_READ32(topckgen_base + 0x070) >> 24) & 3,
+			(MSDC_READ32(topckgen_base + 0x070) >> 16) & 3,
 			/* pdn at bit 31 */
-			(MSDC_READ32(topckgen_base + 0x070) >> 31) & 1);
+			(MSDC_READ32(topckgen_base + 0x070) >> 23) & 1);
 		buf_ptr += sprintf(buf_ptr,
-			"MSDC0 CLK_MUX[%p][2:0]=%d, pdn=%d, CLK_CG[%p]bit 2,6=%d,%d\n",
-			topckgen_base + 0x080,
+			"MSDC0 CLK_MUX[%p][26:24]=%d, pdn=%d, CLK_CG[%p]bit 2,6=%d,%d\n",
+			topckgen_base + 0x070,
 			/* mux at bits 2~0 */
-			(MSDC_READ32(topckgen_base + 0x080) >> 0) & 7,
+			(MSDC_READ32(topckgen_base + 0x070) >> 24) & 7,
 			/* pdn at bit 7 */
-			(MSDC_READ32(topckgen_base + 0x080) >> 7) & 1,
-			infracfg_ao_base + 0x094,
+			(MSDC_READ32(topckgen_base + 0x070) >> 31) & 1,
+			infracfg_ao_base + 0x94,
 			/* cg at bit 2,6 */
-			(MSDC_READ32(infracfg_ao_base + 0x094) >> 2) & 1,
-			(MSDC_READ32(infracfg_ao_base + 0x094) >> 6) & 1);
+			(MSDC_READ32(infracfg_ao_base + 0x94) >> 2) & 1,
+			(MSDC_READ32(infracfg_ao_base + 0x94) >> 6) & 1);
 		buf_ptr += sprintf(buf_ptr,
-			"MSDC1 CLK_MUX[%p][10:8]=%d, pdn=%d, CLK_CG[%p]bit 4,16=%d,%d\n",
+			"MSDC1 CLK_MUX[%p][2:0]=%d, pdn=%d, CLK_CG[%p]bit 2,7=%d,%d\n",
 			topckgen_base + 0x080,
 			/* mux at bits 10~8 */
-			(MSDC_READ32(topckgen_base + 0x080) >> 8) & 7,
+			(MSDC_READ32(topckgen_base + 0x080) >> 2) & 7,
 			/* pdn at bit 15 */
-			(MSDC_READ32(topckgen_base + 0x080) >> 15) & 1,
+			(MSDC_READ32(topckgen_base + 0x080) >> 7) & 1,
 			infracfg_ao_base + 0x094,
 			/* cg at bit 4,16 */
 			(MSDC_READ32(infracfg_ao_base + 0x094) >> 4) & 1,
 			(MSDC_READ32(infracfg_ao_base + 0x094) >> 16) & 1);
-
+		if (host->id == 0) {
+			buf_ptr += sprintf(buf_ptr,
+				"NEW RX CLK_MUX[%p][10:8]=%d, pdn=%d, CLK_CG[%p] cg=%d\n",
+				topckgen_base + 0x180,
+				/* mux at bits 10~8 */
+				(MSDC_READ32(topckgen_base + 0x180) >> 8) & 3,
+				/* pdn at bit 15 */
+				(MSDC_READ32(topckgen_base + 0x180) >> 15) & 1,
+				MSDC_NEW_RX_CFG,
+				MSDC_READ32(MSDC_NEW_RX_CFG));
+		}
 		*buf_ptr = '\0';
 		SPREAD_PRINTF(buff, size, m, "%s", buffer);
 	}
@@ -1605,6 +1616,7 @@ u16 msdc_offsets[] = {
 	OFFSET_SDC_CSTS_EN,
 	OFFSET_SDC_DCRC_STS,
 	OFFSET_SDC_ADV_CFG0,
+	OFFSET_MSDC_NEW_RX_CFG,
 	OFFSET_EMMC_CFG0,
 	OFFSET_EMMC_CFG1,
 	OFFSET_EMMC_STS,

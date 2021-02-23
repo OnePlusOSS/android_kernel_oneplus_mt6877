@@ -273,6 +273,7 @@
 #define SDC_CSTS_EN                     REG_ADDR(SDC_CSTS_EN)
 #define SDC_DCRC_STS                    REG_ADDR(SDC_DCRC_STS)
 #define SDC_ADV_CFG0                    REG_ADDR(SDC_ADV_CFG0)
+#define MSDC_NEW_RX_CFG                 REG_ADDR(MSDC_NEW_RX_CFG)
 
 /* emmc register*/
 #define EMMC_CFG0                       REG_ADDR(EMMC_CFG0)
