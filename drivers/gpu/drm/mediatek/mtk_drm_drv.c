@@ -1186,7 +1186,7 @@ static const struct mtk_addon_scenario_data mt6853_addon_ext[ADDON_SCN_NR] = {
 };
 
 static const enum mtk_ddp_comp_id mt6877_mtk_ddp_main[] = {
-#ifndef MTK_DRM_BRINGUP_STAGE
+#if 0
 	DDP_COMPONENT_OVL0_2L,
 #endif
 	DDP_COMPONENT_OVL0, DDP_COMPONENT_RDMA0,
@@ -1757,6 +1757,7 @@ static const struct mtk_mmsys_driver_data mt6877_mmsys_driver_data = {
 	.mmsys_id = MMSYS_MT6877,
 	.mode_tb = mt6877_mode_tb,
 	.sodi_config = mt6877_mtk_sodi_config,
+	.bypass_infra_ddr_control = true,
 };
 
 static const struct mtk_mmsys_driver_data mt6833_mmsys_driver_data = {
@@ -2891,7 +2892,7 @@ static int mtk_drm_bind(struct device *dev)
 	crtc = list_first_entry(&(drm)->mode_config.crtc_list, typeof(*crtc),
 				head);
 	mtk_drm_assert_layer_init(crtc);
-#ifdef MTK_DRM_BRINGUP_STAGE
+#if 0
 	pan_display_test(1, 32);
 	mtk_drm_crtc_analysis(crtc);
 	mtk_drm_crtc_dump(crtc);

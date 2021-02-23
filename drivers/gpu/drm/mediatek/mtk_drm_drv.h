@@ -34,9 +34,10 @@
  */
 #if defined(CONFIG_MACH_MT6877)
 #define MTK_DRM_BRINGUP_STAGE
+#define DRM_BYPASS_PQ
 #endif
 
-#ifdef MTK_DRM_BRINGUP_STAGE
+#if 0
 #define DRM_BYPASS_PQ
 #else
 #define MTK_DRM_ESD_SUPPORT
@@ -47,11 +48,13 @@
 #define CONFIG_MTK_DISPLAY_M4U
 #endif
 
+#ifndef CONFIG_MACH_MT6877
 #define MTK_FILL_MIPI_IMPEDANCE
+#endif
 
 #if (defined(CONFIG_MACH_MT6885) || defined(CONFIG_MACH_MT6873)\
 	|| defined(CONFIG_MACH_MT6893) ||\
-	defined(CONFIG_MACH_MT6853) || defined(CONFIG_MACH_MT6877) || \
+	defined(CONFIG_MACH_MT6853) || \
 	defined(CONFIG_MACH_MT6833)) &&\
 	defined(CONFIG_MTK_SEC_VIDEO_PATH_SUPPORT)
 #define MTK_DRM_DELAY_PRESENT_FENCE
