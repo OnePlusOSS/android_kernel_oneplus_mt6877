@@ -1525,6 +1525,10 @@
 		interrupts = <GIC_SPI 238 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
+	goodix_fp: fingerprint {
+		compatible = "mediatek,goodix-fp";
+	};
+
 	accdet: accdet {
 		compatible = "mediatek,pmic-accdet";
 	};
