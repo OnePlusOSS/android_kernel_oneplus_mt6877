@@ -4688,6 +4688,12 @@
 #endif
 	};
 
+	apusys_devapc@19064000 {
+		compatible = "mediatek,mt6877-apusys_devapc";
+		reg = <0 0x19064000 0 0x1000>;
+		interrupts = <GIC_SPI 494 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
 	apusys_mnoc@1906e000 {
 		compatible = "mediatek,apusys_mnoc";
 		reg = <0 0x1906e000 0 0x2000>,	/* mnoc reg  */
