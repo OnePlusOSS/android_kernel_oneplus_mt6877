@@ -3696,7 +3696,7 @@
 		cell-index = <1>;
 		compatible = "mediatek,iommu_v0";
 		reg = <0 0x19010000 0 0x1000>;
-		interrupts = <GIC_SPI 395 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 481 IRQ_TYPE_LEVEL_HIGH>;
 		clocks = <&scpsys SCP_SYS_APU>;
 		clock-names = "power";
 		#iommu-cells = <1>;
@@ -3706,28 +3706,28 @@
 		cell-index = <1>;
 		compatible = "mediatek,bank1_m4u1";
 		reg = <0 0x19011000 0 0x1000>;
-		interrupts = <GIC_SPI 396 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 482 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
 	iommu1_bank2: m4u@19012000 {
 		cell-index = <1>;
 		compatible = "mediatek,bank2_m4u1";
 		reg = <0 0x19012000 0 0x1000>;
-		interrupts = <GIC_SPI 397 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 483 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
 	iommu1_bank3: m4u@19013000 {
 		cell-index = <1>;
 		compatible = "mediatek,bank3_m4u1";
 		reg = <0 0x19013000 0 0x1000>;
-		interrupts = <GIC_SPI 398 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 484 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
 	iommu1_sec: m4u@19014000 {
 		cell-index = <1>;
 		compatible = "mediatek,sec_m4u1";
 		reg = <0 0x19014000 0 0x1000>;
-		interrupts = <GIC_SPI 399 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 485 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
 	reserved@1401d000 {
