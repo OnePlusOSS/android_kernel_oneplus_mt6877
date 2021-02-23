@@ -20,6 +20,7 @@
 		regulator-name = "rt5133-gpio1";
 		regulator-min-microvolt = <1800000>;
 		regulator-max-microvolt = <1800000>;
+		vin-supply = <&rt5133_ldo1>;
 		enable-active-high;
 		gpio = <&rt5133 0 0x0>;
 	};
@@ -29,6 +30,7 @@
 		regulator-name = "rt5133-gpio2";
 		regulator-min-microvolt = <1800000>;
 		regulator-max-microvolt = <1800000>;
+		vin-supply = <&rt5133_ldo1>;
 		enable-active-high;
 		gpio = <&rt5133 1 0x0>;
 	};
@@ -38,6 +40,7 @@
 		regulator-name = "rt5133-gpio3";
 		regulator-min-microvolt = <1800000>;
 		regulator-max-microvolt = <1800000>;
+		vin-supply = <&rt5133_ldo1>;
 		enable-active-high;
 		gpio = <&rt5133 2 0x0>;
 	};
