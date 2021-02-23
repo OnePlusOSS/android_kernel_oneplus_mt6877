@@ -4671,7 +4671,7 @@
 		reg-names = "apusys_rpc",
 			    "apusys_pcu",
 			    "apusys_vcore";
-		vvpu-supply = <&mt_pmic_vproc2_buck_reg>;
+		vvpu-supply = <&mt_pmic_vproc1_buck_reg>;
 		vsram_apu-supply = <&mt_pmic_vsram_others_ldo_reg>;
 		vcore-supply = <&mt_pmic_vgpu11_buck_reg>;
 		clocks = <&scpsys SCP_SYS_APU>,
@@ -4684,12 +4684,6 @@
 			      "clk_apupll_npupll",
 			      "clk_apupll_apupll1",
 			      "clk_apupll_apupll2";
-	};
-
-	apusys_pll: syscon@190f3000 {
-		compatible = "mediatek,mt6877-apusys_pll", "syscon";
-		reg = <0 0x190f3000 0 0x1000>;
-		#clock-cells = <1>;
 	};
 
 	apu_acc: syscon@190f4000 {
