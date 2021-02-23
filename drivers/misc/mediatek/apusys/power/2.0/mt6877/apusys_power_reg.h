@@ -261,6 +261,6 @@ extern void *g_APU_APMIXED_BASE;
 /**************************************************
  * Vol Binning and Raising
  **************************************************/
-#define EFUSE_BIN	209   //(PTPOD26)
-#define EFUSE_RAISE	134   //(FAB_INFO4)
+#define EFUSE_BIN	183   //(PTPOD28)
+#define EFUSE_RAISE	183   //(PTPOD28)
 

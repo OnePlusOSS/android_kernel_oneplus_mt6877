@@ -28,7 +28,7 @@
 #endif
 
 /* length of buffer to save freq/volt of each buck_domain */
-#define INFO_LENGTH		15
+#define INFO_LENGTH		18
 
 /**
  * add_separte() - Add separater when showing freq/volt info
@@ -58,7 +58,7 @@ void apu_power_dump_opp_table(struct seq_file *s)
 	seq_printf(s, info);
 	for (bd = 0 ; bd < APUSYS_BUCK_DOMAIN_NUM; bd++) {
 		line_size += snprintf(info, INFO_LENGTH,
-			 "%13s|", buck_domain_str[bd]);
+			 "%16s|", buck_domain_str[bd]);
 		seq_printf(s, info);
 		memset(info, 0, sizeof(info));
 	}
@@ -73,9 +73,9 @@ void apu_power_dump_opp_table(struct seq_file *s)
 		seq_printf(s, "|%3d|", opp_num);
 		for (bd = 0 ; bd < APUSYS_BUCK_DOMAIN_NUM; bd++) {
 			memset(info, 0, sizeof(info));
-			snprintf(info, INFO_LENGTH, "%3dMhz(%3dmv)|",
+			snprintf(info, INFO_LENGTH, "%3dMhz(%6dmv)|",
 				apusys_opps.opps[opp_num][bd].freq / 1000,
-				apusys_opps.opps[opp_num][bd].voltage / 1000);
+				apusys_opps.opps[opp_num][bd].voltage);
 				seq_printf(s, info);
 		}
 		add_separte(s, separate);

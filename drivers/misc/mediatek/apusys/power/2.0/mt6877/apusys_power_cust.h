@@ -44,6 +44,7 @@
 #define TIME_PROFILING		(0)
 #define APUSYS_SETTLE_TIME_TEST (0)
 #define SUPPORT_VCORE_TO_IPUIF	(0)
+#define BINNING_UT		(0)	// DO NOT COMMIT!
 
 #define APUSYS_MAX_NUM_OPPS		(7)
 #define APUSYS_PATH_USER_NUM		(4)   // num of DVFS_XXX_PATH

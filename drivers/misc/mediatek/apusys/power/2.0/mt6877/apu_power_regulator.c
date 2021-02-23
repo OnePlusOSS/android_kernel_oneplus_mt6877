@@ -380,20 +380,20 @@ int config_normal_regulator(enum DVFS_BUCK buck, enum DVFS_VOLTAGE voltage_mV)
 	 */
 #if VOLTAGE_RAISE_UP
 	vpu_efuse_raise =
-		GET_BITS_VAL(1:0, get_devinfo_with_index(EFUSE_RAISE));
+		GET_BITS_VAL(20:21, get_devinfo_with_index(EFUSE_BIN));
 	LOG_DBG("Raise bin: vpu_efuse=%d, efuse: 0x%x\n",
-		vpu_efuse_raise, get_devinfo_with_index(EFUSE_RAISE));
-	/* raising up Vvpu LV from 575mv to 600mv */
+		vpu_efuse_raise, get_devinfo_with_index(EFUSE_BIN));
+	/* raising up Vvpu LV from 575mv to 625mv */
 	if (vpu_efuse_raise == 1 &&
 		buck == VPU_BUCK &&
 		voltage_mV == DVFS_VOLT_00_575000_V)
-		voltage_mV += 25000;
+		voltage_mV += 50000;
 
-	/* raising up Vvpu LV from 575mv to 625mv */
+	/* raising up Vvpu LV from 575mv to 600mv */
 	if (vpu_efuse_raise == 2 &&
 		buck == VPU_BUCK &&
 		voltage_mV == DVFS_VOLT_00_575000_V)
-		voltage_mV += 50000;
+		voltage_mV += 25000;
 #endif
 
 	if (buck >= 0) /* bypass the case of SRAM_BUCK = -1 */

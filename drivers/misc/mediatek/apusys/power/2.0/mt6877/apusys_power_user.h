@@ -32,13 +32,13 @@
  * Aging table focuss on freq, but every time DVFS policy
  * will change apusys_opps.next_buck_volt as 575MV.
  *
- * Suppsely user takes opp 5, the smallest one, apusys_final_volt_check
+ * Suppsely user takes opp 6, the smallest one, apusys_final_volt_check
  * will use MAX(apusys_opps.next_buck_volt[buck_index],
 		apusys_opps.user_path_volt[user_index][path_index])
  * and that will never let aging voltage working.
  *
- * That is why default 525mv minus MG_VOLT_06250 first.
- * (the precondition is VPU/MDLA aging voltage on 525mv are the same)
+ * That is why default 575mv minus MG_VOLT_06250 first.
+ * (the precondition is VPU/MDLA aging voltage on 575mv are the same)
  */
 #ifdef AGING_MARGIN
 #define MARGIN_VOLT_8	(MG_VOLT_06250)
@@ -93,6 +93,7 @@ enum DVFS_VOLTAGE {
 	DVFS_VOLT_00_550000_V = 550000 - MARGIN_VOLT_9,
 	DVFS_VOLT_00_575000_V = 575000 - MARGIN_VOLT_8,
 	DVFS_VOLT_00_600000_V = 600000 - MARGIN_VOLT_7,
+	DVFS_VOLT_00_612500_V = 612500 - MARGIN_VOLT_7,
 	DVFS_VOLT_00_625000_V = 625000 - MARGIN_VOLT_7,
 	DVFS_VOLT_00_650000_V = 650000 - MARGIN_VOLT_6,
 	DVFS_VOLT_00_700000_V = 700000 - MARGIN_VOLT_5,
