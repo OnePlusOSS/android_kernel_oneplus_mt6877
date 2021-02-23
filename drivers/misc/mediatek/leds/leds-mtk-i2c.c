@@ -155,8 +155,6 @@ void mtk_leds_init_power(void)
 	/*BL enable*/
 	lcm_i2c_write_bytes(BACKLIGHT_CONFIG_1, 0x60);
 	lcm_i2c_write_bytes(BACKLIGHT_CONFIG_2, 0x9D);
-	lcm_i2c_write_bytes(BACKLIGHT_BRIGHTNESS_LSB, 0x04);
-	lcm_i2c_write_bytes(BACKLIGHT_BRIGHTNESS_MSB, 0xAA);
 	lcm_i2c_write_bytes(BACKLIGHT_AUTO_FREQ_LOW, 0x00);
 	lcm_i2c_write_bytes(BACKLIGHT_AUTO_FREQ_HIGH, 0x00);
 	lcm_i2c_write_bytes(DISPLAY_BIAS_CONFIG_2, 0x11);
