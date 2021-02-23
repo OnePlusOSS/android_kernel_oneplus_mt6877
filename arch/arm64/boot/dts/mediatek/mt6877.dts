@@ -247,8 +247,16 @@
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
-		suspend-method = "system";
+		suspend-method = "s2idle";
 		cpupm-method = "mcu";
+
+		irq-remain = <&edge_keypad &edge_mdwdt>,
+				<&level_vpu_core0 &level_vpu_core1>,
+				<&level_mtk_mdla0 &level_edma0>,
+				<&level_mali0 &level_mali1>,
+				<&level_mali2 &level_mali3 &level_mali4>,
+				<&level_i2c0>,
+				<&level_btif_tx &level_btif_rx &level_bt>;
 
 		resource-ctrl = <&bus26m &infra &syspll>,
 				<&dram_s0 &dram_s1>;
@@ -263,6 +271,69 @@
 		lpm_sysram: lpm_sysram@0011b500 {
 			compatible = "mediatek,lpm-sysram";
 			reg = <0 0x0011b500 0 0x300>;
+		};
+
+		irq-remain-list {
+			edge_keypad: edge_keypad {
+				target = <&keypad>;
+				value = <1 0 0 0x4>;
+			};
+			edge_mdwdt: edge_mdwdt {
+				target = <&mddriver>;
+				value = <1 0 0x80000000 0x02000000>;
+			};
+			level_vpu_core0: level_vpu_core0 {
+				target = <&vpu_core0>;
+				value = <0 0 0 0>;
+			};
+			level_vpu_core1: level_vpu_core1 {
+				target = <&vpu_core1>;
+				value = <0 0 0 0>;
+			};
+			level_mtk_mdla0: level_mtk_mdla0 {
+				target = <&mtk_mdla>;
+				value = <0 0 0 0>;
+			};
+			level_edma0: level_edma0 {
+				target = <&edma0>;
+				value = <0 0 0 0>;
+			};
+			level_mali0: level_mali0 {
+				target = <&mali>;
+				value = <0 0 0 0>;
+			};
+			level_mali1: level_mali1 {
+				target = <&mali>;
+				value = <0 1 0 0>;
+			};
+			level_mali2: level_mali2 {
+				target = <&mali>;
+				value = <0 2 0 0>;
+			};
+			level_mali3: level_mali3 {
+				target = <&mali>;
+				value = <0 3 0 0>;
+			};
+			level_mali4: level_mali4 {
+				target = <&mali>;
+				value = <0 4 0 0>;
+			};
+			level_i2c0: level_i2c0 {
+				target = <&i2c0>;
+				value = <0 0 0 0>;
+			};
+			level_btif_tx: level_btif_tx {
+				target = <&btif>;
+				value = <0 1 0 0>;
+			};
+			level_btif_rx: level_btif_rx {
+				target = <&btif>;
+				value = <0 2 0 0>;
+			};
+			level_bt: level_bt {
+				target = <&bt>;
+				value = <0 0 0 0>;
+			};
 		};
 
 		resource-ctrl-list {
@@ -854,7 +925,7 @@
 		mediatek,cali-efuse-index = <113>;
 	};
 
-	btif@1100c000 {
+	btif: btif@1100c000 {
 		compatible = "mediatek,btif";
 		reg = <0 0x1100c000 0 0x100>, /*btif base*/
 			<0 0x10221200 0 0x80>,/*btif tx dma base*/
@@ -5722,7 +5793,7 @@
 		lreBitEn = <240>;
 	};
 
-	bt@18000000 {
+	bt: bt@18000000 {
 		compatible = "mediatek,bt";
 			/* conn_infra_rgu */
 		reg = <0 0x18000000 0 0x1000>,
