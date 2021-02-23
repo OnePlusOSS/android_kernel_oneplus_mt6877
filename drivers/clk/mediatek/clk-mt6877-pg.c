@@ -34,10 +34,10 @@
 #include <dt-bindings/clock/mt6877-clk.h>
 
 #define MT_CCF_DEBUG		1
-#define MT_CCF_BRINGUP		0
+#define MT_CCF_BRINGUP		1
 #define CONTROL_LIMIT		1
 #define CHECK_PWR_ST		1
-/* #define IGNORE_MTCMOS_CHECK */
+#define IGNORE_MTCMOS_CHECK
 
 #define LP_CLK			1
 #define NORMAL_CLK		0
