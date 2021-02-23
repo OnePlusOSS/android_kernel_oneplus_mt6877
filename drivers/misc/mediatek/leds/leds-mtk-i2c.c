@@ -98,7 +98,7 @@ static struct mtk_led_data *getLedData(char *name)
 	int i = 0;
 	struct mtk_leds_info *leds = i2c_get_clientdata(_lcm_i2c_client);
 
-	if (leds)
+	if (!leds)
 		return NULL;
 
 	while (i < leds->nums) {
@@ -150,10 +150,30 @@ EXPORT_SYMBOL_GPL(lcm_i2c_write_bytes);
 #define BACKLIGHT_OPTION_1		0x10
 #define BACKLIGHT_OPTION_2		0x11
 
+static int mtk_leds_restore_brightness(char *name)
+{
+	struct mtk_led_data *led_dat;
+	int level_h, level_l;
+
+	led_dat = getLedData(name);
+
+	if (!led_dat)
+		return -EINVAL;
+	pr_info("%s recovery brightness %d", name, led_dat->hw_level);
+
+	level_h = (led_dat->hw_level & 0x7F8) >> 3;
+	level_l = led_dat->hw_level & 0x7;
+
+	lcm_i2c_write_bytes(BACKLIGHT_BRIGHTNESS_LSB, level_l);
+	lcm_i2c_write_bytes(BACKLIGHT_BRIGHTNESS_MSB, level_h);
+	udelay(200);
+	return 0;
+}
+
 void mtk_leds_init_power(void)
 {
 	/*BL enable*/
-	lcm_i2c_write_bytes(BACKLIGHT_CONFIG_1, 0x60);
+	lcm_i2c_write_bytes(BACKLIGHT_CONFIG_1, 0x68);
 	lcm_i2c_write_bytes(BACKLIGHT_CONFIG_2, 0x9D);
 	lcm_i2c_write_bytes(BACKLIGHT_AUTO_FREQ_LOW, 0x00);
 	lcm_i2c_write_bytes(BACKLIGHT_AUTO_FREQ_HIGH, 0x00);
@@ -168,7 +188,8 @@ void mtk_leds_init_power(void)
 	/*bias enable*/
 	lcm_i2c_write_bytes(DISPLAY_BIAS_CONFIG_1, 0x9e);
 	lcm_i2c_write_bytes(BACKLIGHT_ENABLE, 0x13);
-
+	/*brightness set*/
+	mtk_leds_restore_brightness("lcd-backlight");
 }
 EXPORT_SYMBOL_GPL(mtk_leds_init_power);
 
@@ -188,7 +209,7 @@ int setMaxBrightness(char *name, int percent, bool enable)
 	int max_l = 0, limit_l = 0, cur_l = 0;
 
 	led_dat = getLedData(name);
-	if (led_dat)
+	if (!led_dat)
 		return -EINVAL;
 
 	max_l = (1 << led_dat->conf.trans_bits) - 1;
@@ -225,6 +246,8 @@ int mt_leds_brightness_set(char *name, int level)
 	struct mtk_led_data *led_dat;
 
 	led_dat = getLedData(name);
+	if (!led_dat)
+		return -EINVAL;
 
 	led_level_i2c_set(led_dat, level);
 	led_dat->last_level = level;
