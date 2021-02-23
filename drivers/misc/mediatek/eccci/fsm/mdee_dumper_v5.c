@@ -873,7 +873,6 @@ static struct md_ee_ops mdee_ops_v5 = {
 };
 
 #if (MD_GENERATION >= 6297)
-#ifndef MTK_EMI_MPU_DISABLE
 static void mdee_dumper_v5_emimpu_callback(
 		unsigned int emi_id,
 		struct reg_info_t *dump,
@@ -918,7 +917,13 @@ static void mdee_dumper_v5_emimpu_callback(
 	}
 }
 #endif
-#endif
+
+int __weak mtk_emimpu_md_handling_register(void (*md_handling_func)
+	(unsigned int emi_id, struct reg_info_t *dump, unsigned int leng))
+{
+	CCCI_ERROR_LOG(-1, FSM, "[%s] is not supported!\n", __func__);
+	return -1;
+}
 
 int mdee_dumper_v5_alloc(struct ccci_fsm_ee *mdee)
 {
@@ -926,13 +931,11 @@ int mdee_dumper_v5_alloc(struct ccci_fsm_ee *mdee)
 	int md_id = mdee->md_id;
 
 #if (MD_GENERATION >= 6297)
-#ifndef MTK_EMI_MPU_DISABLE
 	if (mtk_emimpu_md_handling_register(
 			&mdee_dumper_v5_emimpu_callback))
 		CCCI_ERROR_LOG(md_id, FSM,
 			"%s: mtk_emimpu_md_handling_register fail\n",
 			__func__);
-#endif
 #endif
 	/* Allocate port_proxy obj and set all member zero */
 	dumper = kzalloc(sizeof(struct mdee_dumper_v5), GFP_KERNEL);

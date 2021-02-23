@@ -120,7 +120,6 @@ struct pg_callbacks md1_subsys_handle = {
 	.debug_dump = md1_subsys_debug_dump,
 };
 
-#ifndef CCCI_DISABLE_DEVAPC_VIO_CALLBACK
 /*devapc_violation_triggered*/
 static enum devapc_cb_status devapc_dump_adv_cb(uint32_t vio_addr)
 {
@@ -153,14 +152,17 @@ static struct devapc_vio_callbacks devapc_test_handle = {
 	.id = INFRA_SUBSYS_MD,
 	.debug_dump_adv = devapc_dump_adv_cb,
 };
-#endif
+
+void __weak register_devapc_vio_callback(
+		struct devapc_vio_callbacks *viocb)
+{
+	CCCI_ERROR_LOG(-1, TAG, "[%s] is not supported!\n", __func__);
+}
 
 void ccci_md_devapc_register_cb(void)
 {
 	/*register handle function*/
-#ifndef CCCI_DISABLE_DEVAPC_VIO_CALLBACK
 	register_devapc_vio_callback(&devapc_test_handle);
-#endif
 }
 
 void ccci_md_dump_in_interrupt(char *user_info)
@@ -523,53 +525,35 @@ void md_cd_lock_modem_clock_src(int locked)
 
 void md_cd_dump_md_bootup_status(struct ccci_modem *md)
 {
-	struct md_sys1_info *md_info = (struct md_sys1_info *)md->private_data;
-	struct md_pll_reg *md_reg = md_info->md_pll_base;
+	struct arm_smccc_res res;
 
-	/*To avoid AP/MD interface delay,
-	 * dump 3 times, and buy-in the 3rd dump value.
-	 */
+	arm_smccc_smc(MTK_SIP_KERNEL_CCCI_CONTROL,
+		MD_POWER_CONFIG, MD_BOOT_STATUS,
+		0, 0, 0, 0, 0, &res);
 
-	ccci_write32(md_reg->md_boot_stats_select, 0, 2);
-	ccci_read32(md_reg->md_boot_stats, 0);	/* dummy read */
-	ccci_read32(md_reg->md_boot_stats, 0);	/* dummy read */
 	CCCI_NOTICE_LOG(md->index, TAG,
-		"md_boot_stats0:0x%X\n",
-		ccci_read32(md_reg->md_boot_stats, 0));
+		"[%s] AP: boot_ret=%lu, boot_status_0=%lX, boot_status_1=%lX\n",
+		__func__, res.a0, res.a1, res.a2);
 
-	ccci_write32(md_reg->md_boot_stats_select, 0, 3);
-	ccci_read32(md_reg->md_boot_stats, 0);	/* dummy read */
-	ccci_read32(md_reg->md_boot_stats, 0);	/* dummy read */
-	CCCI_NOTICE_LOG(md->index, TAG,
-		"md_boot_stats1:0x%X\n",
-		ccci_read32(md_reg->md_boot_stats, 0));
 }
 
 void md_cd_get_md_bootup_status(
 	struct ccci_modem *md, unsigned int *buff, int length)
 {
-	struct md_sys1_info *md_info = (struct md_sys1_info *)md->private_data;
-	struct md_pll_reg *md_reg = md_info->md_pll_base;
+	struct arm_smccc_res res;
 
-	CCCI_NOTICE_LOG(md->index, TAG, "md_boot_stats len %d\n", length);
+	arm_smccc_smc(MTK_SIP_KERNEL_CCCI_CONTROL,
+		MD_POWER_CONFIG, MD_BOOT_STATUS,
+		0, 0, 0, 0, 0, &res);
 
-	if (length < 2 || buff == NULL) {
-		md_cd_dump_md_bootup_status(md);
-		return;
+	if (buff && (length >= 2)) {
+		buff[0] = (unsigned int)res.a1;
+		buff[1] = (unsigned int)res.a2;
 	}
 
-	ccci_write32(md_reg->md_boot_stats_select, 0, 2);
-	ccci_read32(md_reg->md_boot_stats, 0);	/* dummy read */
-	ccci_read32(md_reg->md_boot_stats, 0);	/* dummy read */
-	buff[0] = ccci_read32(md_reg->md_boot_stats, 0);
-
-	ccci_write32(md_reg->md_boot_stats_select, 0, 3);
-	ccci_read32(md_reg->md_boot_stats, 0);	/* dummy read */
-	ccci_read32(md_reg->md_boot_stats, 0);	/* dummy read */
-	buff[1] = ccci_read32(md_reg->md_boot_stats, 0);
 	CCCI_NOTICE_LOG(md->index, TAG,
-		"md_boot_stats0 / 1:0x%X / 0x%X\n", buff[0], buff[1]);
-
+		"boot_ret=%lu; md_boot_stats0 / 1:0x%lX / 0x%lX\n",
+		res.a0, res.a1, res.a2);
 }
 
 static int dump_emi_last_bm(struct ccci_modem *md)
