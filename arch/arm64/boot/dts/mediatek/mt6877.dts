@@ -4834,7 +4834,7 @@
 		kernel-lib = <0x7de00000 0x00500000 0xffffffff>;
 		work-buf = <0x0 0x12000 0xffffffff>;
 #ifdef CONFIG_MTK_IOMMU_V2
-		//iommus = <&iommu1 M4U_PORT_L21_APU_FAKE_CODE>;
+		iommus = <&iommu1 M4U_PORT_L21_APU_FAKE_CODE>;
 #endif
 	};
 
@@ -4851,7 +4851,7 @@
 		kernel-lib = <0x7e700000 0x00500000 0xffffffff>;
 		work-buf = <0x0 0x12000 0xffffffff>;
 #ifdef CONFIG_MTK_IOMMU_V2
-		//iommus = <&iommu1 M4U_PORT_L21_APU_FAKE_CODE>;
+		iommus = <&iommu1 M4U_PORT_L21_APU_FAKE_CODE>;
 #endif
 	};
 
