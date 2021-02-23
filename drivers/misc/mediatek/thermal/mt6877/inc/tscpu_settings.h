@@ -131,8 +131,8 @@
 #define THERMAL_MDLA_SUPPORT
 #endif
 
-/* EARA_Thermal power budget allocation support */
-#define EARA_THERMAL_SUPPORT
+/* EARA_Thermal power budget allocation support*/
+//#define EARA_THERMAL_SUPPORT
 
 #define TS_FILL(n) {#n, n}
 /*#define TS_LEN_ARRAY(name) (sizeof(name)/sizeof(name[0]))*/
