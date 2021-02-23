@@ -119,6 +119,8 @@ static int mcupm_hopping_v1(void *priv_data, char *domain_name, int fh_id,
 
 	mutex_lock(lock);
 
+	FHDBG("id=%d\n", fh_id);
+
 	memset(&ipi_data, 0, sizeof(struct fhctl_ipi_data));
 	ipi_data.cmd = FH_DCTL_CMD_GENERAL_DFS;
 	ipi_data.u.args[0] = fh_id;
@@ -337,22 +339,34 @@ static struct fh_operation mcupm_ops_v1 = {
 struct hdlr_data_v1 hdlr_data_6853 = {
 	.reg_tr = (void __iomem *)(0xC8 + 0x4),
 };
+struct hdlr_data_v1 hdlr_data_6877 = {
+	.reg_tr = (void __iomem *)(0x90), //MEMPL Up/Down Limit
+};
 static struct fh_hdlr mcupm_hdlr_6853 = {
 	.ops = &mcupm_ops_v1,
 	.data = &hdlr_data_6853,
+};
+static struct fh_hdlr mcupm_hdlr_6877 = {
+	.ops = &mcupm_ops_v1,
+	.data = &hdlr_data_6877,
 };
 static struct match mt6853_match = {
 	.name = "mediatek,mt6853-fhctl",
 	.hdlr = &mcupm_hdlr_6853,
 	.init = &mcupm_init_v1,
 };
+static struct match mt6877_match = {
+	.name = "mediatek,mt6877-fhctl",
+	.hdlr = &mcupm_hdlr_6877,
+	.init = &mcupm_init_v1,
+};
 static struct match *matches[] = {
+	&mt6877_match,
 	&mt6853_match,
 	NULL,
 };
 
-int fhctl_mcupm_init(struct platform_device *pdev,
-		struct pll_dts *array)
+int fhctl_mcupm_init(struct pll_dts *array)
 {
 	int i;
 	int num_pll;
