@@ -83,7 +83,7 @@
 #define FM_APLL1_CKDIV_CK			2
 #define FM_APLL2_CKDIV_CK			3
 #define FM_APPLLGP_MON_FM_CK			4
-#define FM_ARMPLL_BL_CK				7
+#define FM_ARMPLL_BL_CKDIV_CK			7
 #define FM_ARMPLL_LL_CKDIV_CK			9
 #define FM_USBPLL_CKDIV_CK			10
 #define FM_CCIPLL_CKDIV_CK			11
@@ -99,9 +99,9 @@
 #define FM_DSI0_MPPLL_TST_CK			21
 #define FM_MAINPLL_CKDIV_CK			24
 #define FM_MDPLL_FS26M_GUIDE			25
-#define FM_MPLL_CKDIV_CK			27
+#define FM_MMPLL_CKDIV_CK			27
 #define FM_MMPLL_D3_CK				28
-#define FM_MMPLL_CKDIV_CK			29
+#define FM_MPLL_CKDIV_CK			29
 #define FM_MSDCPLL_CKDIV_CK			30
 #define FM_RCLRPLL_DIV4_CK			31
 #define FM_RPHYPLL_DIV4_CK			33

@@ -47,6 +47,7 @@ enum FMETER_TYPE {
 	ABIST,
 	CKGEN,
 	ABIST_2,
+	SUBSYS,
 };
 
 struct fmeter_clk {
@@ -55,6 +56,7 @@ struct fmeter_clk {
 	const char *name;
 	u32 ofs;
 	u32 pdn;
+	u32 grp;
 };
 
 struct clkchk_op {

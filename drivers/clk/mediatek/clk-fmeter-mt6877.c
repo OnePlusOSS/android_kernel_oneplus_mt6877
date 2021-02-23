@@ -20,6 +20,10 @@
 #include "clk-fmeter.h"
 #include "clkchk.h"
 
+static DEFINE_SPINLOCK(pdn_lock);
+#define pdn_lock(flags)   spin_lock_irqsave(&pdn_lock, flags)
+#define pdn_unlock(flags) spin_unlock_irqrestore(&pdn_lock, flags)
+
 static DEFINE_SPINLOCK(meter_lock);
 #define fmeter_lock(flags)   spin_lock_irqsave(&meter_lock, flags)
 #define fmeter_unlock(flags) spin_unlock_irqrestore(&meter_lock, flags)
@@ -38,6 +42,8 @@ static DEFINE_SPINLOCK(subsys_meter_lock);
 #define clk_writel(addr, val)	\
 	do { writel(val, addr); wmb(); } while (0) /* sync write */
 
+#define FMCLK3(_t, _i, _n, _o, _g) { .type = _t, \
+		.id = _i, .name = _n, .ofs = _o, .grp = _g}
 #define FMCLK2(_t, _i, _n, _o, _p) { .type = _t, \
 		.id = _i, .name = _n, .ofs = _o, .pdn = _p}
 #define FMCLK(_t, _i, _n) { .type = _t, .id = _i, .name = _n}
@@ -106,14 +112,14 @@ static const struct fmeter_clk fclks[] = {
 	FMCLK2(CKGEN, FM_SPMI_M_MST_CK, "fm_spmi_m_mst_ck", 0x0100, 15),
 	FMCLK2(CKGEN, FM_DVFSRC_CK, "fm_dvfsrc_ck", 0x0100, 23),
 	/* ABIST Part */
-	FMCLK(ABIST, FM_ADSPPLL_CKDIV_CK, "fm_adsppll_ckdiv_ck"),
-	FMCLK(ABIST, FM_APLL1_CKDIV_CK, "fm_apll1_ckdiv_ck"),
-	FMCLK(ABIST, FM_APLL2_CKDIV_CK, "fm_apll2_ckdiv_ck"),
+	FMCLK3(ABIST, FM_ADSPPLL_CKDIV_CK, "fm_adsppll_ckdiv_ck", 0x0384, 1),
+	FMCLK3(ABIST, FM_APLL1_CKDIV_CK, "fm_apll1_ckdiv_ck", 0x032c, 1),
+	FMCLK3(ABIST, FM_APLL2_CKDIV_CK, "fm_apll2_ckdiv_ck", 0x0340, 1),
 	FMCLK(ABIST, FM_APPLLGP_MON_FM_CK, "fm_appllgp_mon_fm_ck"),
-	FMCLK(ABIST, FM_ARMPLL_BL_CK, "fm_armpll_bl_ck"),
-	FMCLK(ABIST, FM_ARMPLL_LL_CKDIV_CK, "fm_armpll_ll_ckdiv_ck"),
-	FMCLK(ABIST, FM_USBPLL_CKDIV_CK, "fm_usbpll_ckdiv_ck"),
-	FMCLK(ABIST, FM_CCIPLL_CKDIV_CK, "fm_ccipll_ckdiv_ck"),
+	FMCLK3(ABIST, FM_ARMPLL_BL_CKDIV_CK, "fm_armpll_bl_ckdiv_ck", 0x021c, 1),
+	FMCLK3(ABIST, FM_ARMPLL_LL_CKDIV_CK, "fm_armpll_ll_ckdiv_ck", 0x020c, 1),
+	FMCLK3(ABIST, FM_USBPLL_CKDIV_CK, "fm_usbpll_ckdiv_ck", 0x031C, 2),
+	FMCLK3(ABIST, FM_CCIPLL_CKDIV_CK, "fm_ccipll_ckdiv_ck", 0x023c, 1),
 	FMCLK(ABIST, FM_CSI0A_CDPHY_DELAYCAL_CK, "fm_csi0a_cdphy_delaycal_ck"),
 	FMCLK(ABIST, FM_CSI0B_CDPHY_DELAYCAL_CK, "fm_csi0b_cdphy_delaycal_ck"),
 	FMCLK(ABIST, FM_CSI1A_DPHY_DELAYCAL_CK, "fm_csi1a_dphy_delaycal_ck"),
@@ -124,19 +130,18 @@ static const struct fmeter_clk fclks[] = {
 	FMCLK(ABIST, FM_CSI3B_DPHY_DELAYCAL_CK, "fm_csi3b_dphy_delaycal_ck"),
 	FMCLK(ABIST, FM_DSI0_LNTC_DSICLK, "fm_dsi0_lntc_dsiclk"),
 	FMCLK(ABIST, FM_DSI0_MPPLL_TST_CK, "fm_dsi0_mppll_tst_ck"),
-	FMCLK(ABIST, FM_MAINPLL_CKDIV_CK, "fm_mainpll_ckdiv_ck"),
+	FMCLK3(ABIST, FM_MAINPLL_CKDIV_CK, "fm_mainpll_ckdiv_ck", 0x0354, 1),
 	FMCLK(ABIST, FM_MDPLL_FS26M_GUIDE, "fm_mdpll_fs26m_guide"),
-	FMCLK(ABIST, FM_MPLL_CKDIV_CK, "fm_mpll_ckdiv_ck"),
+	FMCLK3(ABIST, FM_MMPLL_CKDIV_CK, "fm_mmpll_ckdiv_ck", 0x03A4, 1),
 	FMCLK(ABIST, FM_MMPLL_D3_CK, "fm_mmpll_d3_ck"),
-	FMCLK(ABIST, FM_MMPLL_CKDIV_CK, "fm_mmpll_ckdiv_ck"),
-	FMCLK(ABIST, FM_MSDCPLL_CKDIV_CK, "fm_msdcpll_ckdiv_ck"),
+	FMCLK3(ABIST, FM_MPLL_CKDIV_CK, "fm_mpll_ckdiv_ck", 0x0394, 1),
+	FMCLK3(ABIST, FM_MSDCPLL_CKDIV_CK, "fm_msdcpll_ckdiv_ck", 0x0364, 1),
 	FMCLK(ABIST, FM_RCLRPLL_DIV4_CK, "fm_rclrpll_div4_ck"),
 	FMCLK(ABIST, FM_RPHYPLL_DIV4_CK, "fm_rphypll_div4_ck"),
-	FMCLK(ABIST, FM_EMI_CKDIV_CK, "fm_emi_ckdiv_ck"),
-	FMCLK(ABIST, FM_TVDPLL_CKDIV_CK, "fm_tvdpll_ckdiv_ck"),
+	FMCLK3(ABIST, FM_TVDPLL_CKDIV_CK, "fm_tvdpll_ckdiv_ck", 0x024c, 1),
 	FMCLK(ABIST, FM_ULPOSC2_CK, "fm_ulposc2_ck"),
 	FMCLK(ABIST, FM_ULPOSC_CK, "fm_ulposc_ck"),
-	FMCLK(ABIST, FM_UNIVPLL_CKDIV_CK, "fm_univpll_ckdiv_ck"),
+	FMCLK3(ABIST, FM_UNIVPLL_CKDIV_CK, "fm_univpll_ckdiv_ck", 0x030c, 2),
 	FMCLK(ABIST, FM_USB20_192M_OPP_CK, "fm_usb20_192m_opp_ck"),
 	FMCLK(ABIST, FM_UFS_MP_CLK2FREQ, "fm_ufs_mp_clk2freq"),
 	FMCLK(ABIST, FM_WBG_DIG_BPLL_CK, "fm_wbg_dig_bpll_ck"),
@@ -168,9 +173,9 @@ static const struct fmeter_clk fclks[] = {
 	FMCLK(ABIST_2, FM_APLL_I2S7_M_CK, "fm_apll_i2s7_m_ck"),
 	FMCLK(ABIST_2, FM_APLL_I2S8_M_CK, "fm_apll_i2s8_m_ck"),
 	FMCLK(ABIST_2, FM_APLL_I2S9_M_CK, "fm_apll_i2s9_m_ck"),
-	FMCLK(ABIST_2, FM_MEM_SUB_CK, "fm_mem_sub_ck"),
-	FMCLK(ABIST_2, FM_AES_MSDCFDE_CK, "fm_aes_msdcfde_ck"),
-	FMCLK(ABIST_2, FM_DSI_OCC_CK, "fm_dsi_occ_ck"),
+	FMCLK2(ABIST_2, FM_MEM_SUB_CK, "fm_mem_sub_ck", 0x0100, 31),
+	FMCLK2(ABIST_2, FM_AES_MSDCFDE_CK, "fm_aes_msdcfde_ck", 0x0110, 7),
+	FMCLK2(ABIST_2, FM_DSI_OCC_CK, "fm_dsi_occ_ck", 0x0110, 23),
 	FMCLK(ABIST_2, FM_UFS_MBIST_CK, "fm_ufs_mbist_ck"),
 	FMCLK(ABIST_2, FM_AP2CONN_HOST_CK, "fm_ap2conn_host_ck"),
 	FMCLK(ABIST_2, FM_MSDC_NEW_RX_CK, "fm_msdc_new_rx_ck"),
@@ -205,22 +210,15 @@ static const struct fmeter_clk fclks[] = {
 	FMCLK(ABIST_2, FM_ALVTS_TO_PLLGP_MON_L6, "fm_alvts_to_pllgp_mon_l6"),
 	FMCLK(ABIST_2, FM_ALVTS_TO_PLLGP_MON_L7, "fm_alvts_to_pllgp_mon_l7"),
 	FMCLK(ABIST_2, FM_ALVTS_TO_PLLGP_MON_L8, "fm_alvts_to_pllgp_mon_l8"),
+	FMCLK2(SUBSYS, FM_MFGPLL1, "fm_mfgpll1", 0xEF8, 0),
+	FMCLK2(SUBSYS, FM_MFGPLL2, "fm_mfgpll2", 0xEF8, 0),
+	FMCLK2(SUBSYS, FM_MFGPLL3, "fm_mfgpll3", 0xEF8, 0),
+	FMCLK2(SUBSYS, FM_MFGPLL4, "fm_mfgpll4", 0xEF8, 0),
+	FMCLK(SUBSYS, FM_APUPLL, "fm_apupll"),
+	FMCLK(SUBSYS, FM_APUPLL1, "fm_apupll1"),
+	FMCLK(SUBSYS, FM_APUPLL2, "fm_apupll2"),
+	FMCLK(SUBSYS, FM_NPUPLL, "fm_npupll"),
 	{},
-};
-
-const int abist_clkdiv_array[] = {
-    /* 00     */	0,
-    /* 01 - 10 */	1, 1, 1, 0, 1, 1, 2,
-    /* 11 - 15 */	1, 0, 0, 0, 0,
-    /* 16 - 20 */	0, 0, 0, 0, 0,
-    /* 21 - 25 */	0, 1, 0,
-    /* 26 - 30 */	0, 0, 1, 1,
-    /* 31 - 35 */	0, 0, 1, 1,
-    /* 36 - 45 */	0, 0, 2, 0, 0, 0, 0, 0, 0,
-    /* 46 - 50 */	0, 0, 0,
-    /* 51 - 55 */	0, 0, 0, 0, 0,
-    /* 56 - 60 */	0, 0,
-    /* 61 - 63 */	0, 0, 0,
 };
 
 #define _CKGEN(x)			(topck_base + (x))
@@ -239,29 +237,79 @@ static void __iomem *topck_base;
 static void __iomem *apmixed_base;
 static void __iomem *gpu_pll_ctrl_base;
 static void __iomem *apu_pll_ctrl_base;
+static void __iomem *spm_base;
 
 const struct fmeter_clk *get_fmeter_clks(void)
 {
 	return fclks;
 }
 
-static unsigned int check_mux_pdn(unsigned int ID)
+static unsigned int check_pdn(void __iomem *base,
+		unsigned int type, unsigned int ID)
 {
 	int i;
 
-	if ((ID > 0) && (ID < 64)) {
-		for (i = 0; i < ARRAY_SIZE(fclks) - 1; i++)
-			if (fclks[i].id == ID)
-				break;
-		if (i >= ARRAY_SIZE(fclks) - 1)
-			return 1;
-		if ((clk_readl(topck_base + fclks[i].ofs)
-				& BIT(fclks[i].pdn)))
-			return 1;
-		else
-			return 0;
-	} else
+	for (i = 0; i < ARRAY_SIZE(fclks) - 1; i++)
+		if (fclks[i].type == type && fclks[i].id == ID)
+			break;
+
+	if (i >= ARRAY_SIZE(fclks) - 1)
 		return 1;
+
+	if (!fclks[i].ofs)
+		return 0;
+
+	if (type == SUBSYS && (clk_readl(base + fclks[i].ofs)
+			& BIT(fclks[i].pdn)) == 0)
+		return 1;
+	else if (type != SUBSYS && (clk_readl(base + fclks[i].ofs)
+			& BIT(fclks[i].pdn)) == 1)
+		return 1;
+	else
+		return 0;
+}
+
+static unsigned int get_clk_div(unsigned int type, unsigned int ID)
+{
+	unsigned int clk_div = 1;
+	int i;
+
+	if ((ID <= 0) || (ID >= 64))
+		return clk_div;
+
+	for (i = 0; i < ARRAY_SIZE(fclks) - 1; i++)
+		if (fclks[i].type == type && fclks[i].id == ID)
+			break;
+
+	if (i >= ARRAY_SIZE(fclks) - 1)
+		return clk_div;
+
+	if (fclks[i].grp == 1)
+		clk_div = (clk_readl(AP_PLLGP1_CON0) >> 24) & 0xF;
+	else if (fclks[i].grp == 2)
+		clk_div = (clk_readl(AP_PLLGP1_CON0) >> 28) & 0xF;
+
+	return clk_div;
+}
+
+static unsigned int get_post_div(unsigned int type, unsigned int ID)
+{
+	unsigned int post_div = 1;
+	int i;
+
+	if ((ID <= 0) || (ID >= 64))
+		return post_div;
+
+	for (i = 0; i < ARRAY_SIZE(fclks) - 1; i++) {
+		if (fclks[i].type == type && fclks[i].id == ID
+				&& fclks[i].grp == 1) {
+			post_div =  clk_readl(apmixed_base + fclks[i].ofs);
+			post_div = 1 << ((post_div >> 24) & 0x7);
+			break;
+		}
+	}
+
+	return post_div;
 }
 
 unsigned int mt_get_ckgen_freq(unsigned int ID)
@@ -270,10 +318,13 @@ unsigned int mt_get_ckgen_freq(unsigned int ID)
 	unsigned int temp, clk_dbg_cfg, clk_misc_cfg_0, clk26cali_1 = 0;
 	unsigned long flags;
 
-	if (check_mux_pdn(ID)) {
+	pdn_lock(flags);
+	if (check_pdn(topck_base, CKGEN, ID)) {
 		pr_notice("ID-%d: MUX PDN, return 0.\n", ID);
+		pdn_unlock(flags);
 		return 0;
 	}
+	pdn_unlock(flags);
 
 	fmeter_lock(flags);
 	while (clk_readl(CLK26CALI_0) & 0x1000) {
@@ -333,9 +384,10 @@ unsigned int mt_get_ckgen_freq(unsigned int ID)
 	/*print("ckgen meter[%d] = %d Khz\n", ID, output);*/
 	if (i > 30)
 		return 0;
-	if ((output * 4) < 25000) {
-		pr_notice("%s: CLK_DBG_CFG = 0x%x, CLK_MISC_CFG_0 = 0x%x, CLK26CALI_0 = 0x%x, CLK26CALI_1 = 0x%x\n",
+	if ((output * 4) < 1000) {
+		pr_notice("%s(%d): CLK_DBG_CFG = 0x%x, CLK_MISC_CFG_0 = 0x%x, CLK26CALI_0 = 0x%x, CLK26CALI_1 = 0x%x\n",
 			__func__,
+			ID,
 			clk_readl(CLK_DBG_CFG),
 			clk_readl(CLK_MISC_CFG_0),
 			clk_readl(CLK26CALI_0),
@@ -349,7 +401,7 @@ unsigned int mt_get_abist_freq(unsigned int ID)
 {
 	int output = 0, i = 0;
 	unsigned long flags;
-	unsigned int temp, clk_dbg_cfg, clk_misc_cfg_0, clk26cali_1 = 0, clk_div;
+	unsigned int temp, clk_dbg_cfg, clk_misc_cfg_0, clk26cali_1 = 0, clk_div, post_div;
 
 	fmeter_lock(flags);
 	while (clk_readl(CLK26CALI_0) & 0x1000) {
@@ -397,14 +449,10 @@ unsigned int mt_get_abist_freq(unsigned int ID)
 	}
 	temp = clk_readl(CLK26CALI_1) & 0xFFFF;
 
-	if (abist_clkdiv_array[ID] == 1)
-		clk_div = (clk_readl(AP_PLLGP1_CON0) & (0xF << 24)) >> 24;
-	else if (abist_clkdiv_array[ID] == 2)
-		clk_div = (clk_readl(AP_PLLGP1_CON0) & (0xF << 27)) >> 27;
-	else
-		clk_div = 1;
+	clk_div = get_clk_div(ABIST, ID);
+	post_div = get_post_div(ABIST, ID);
 
-	output = (temp * 26000) / 1024 * clk_div;
+	output = (temp * 26000) / 1024 * clk_div / post_div;
 
 	clk_writel(CLK_DBG_CFG, clk_dbg_cfg);
 	clk_writel(CLK_MISC_CFG_0, clk_misc_cfg_0);
@@ -415,14 +463,14 @@ unsigned int mt_get_abist_freq(unsigned int ID)
 
 	if (i > 30)
 		return 0;
-	if ((output * 4) < 25000) {
+	if ((output * 4) < 1000) {
 		pr_notice("%s: CLK_DBG_CFG = 0x%x, CLK_MISC_CFG_0 = 0x%x, CLK26CALI_0 = 0x%x, CLK26CALI_1 = 0x%x\n",
 			__func__,
 			clk_readl(CLK_DBG_CFG),
 			clk_readl(CLK_MISC_CFG_0),
 			clk_readl(CLK26CALI_0),
 			clk_readl(CLK26CALI_1));
-		pr_notice("clk_div = 0x%x\n", clk_div);
+		pr_notice("clk_div = 0x%x, post_div = 0x%x\n", clk_div, post_div);
 	}
 	return (output * 4);
 }
@@ -432,6 +480,14 @@ unsigned int mt_get_abist2_freq(unsigned int ID)
 	int output = 0, i = 0;
 	unsigned long flags;
 	unsigned int temp, clk_dbg_cfg, clk_misc_cfg_0, clk26cali_1 = 0;
+
+	pdn_lock(flags);
+	if (check_pdn(topck_base, ABIST_2, ID)) {
+		pr_notice("ID-%d: MUX PDN, return 0.\n", ID);
+		pdn_unlock(flags);
+		return 0;
+	}
+	pdn_unlock(flags);
 
 	fmeter_lock(flags);
 	while (clk_readl(CLK26CALI_0) & 0x1000) {
@@ -499,42 +555,51 @@ unsigned int mt_get_subsys_freq(unsigned int ID)
 	int output = 0, i = 0;
 	unsigned int temp, pll4h_fqmtr_con0, pll4h_fqmtr_con1;
 	unsigned long flags;
-	void __iomem *con0, *con1;
+	void __iomem *base, *con0, *con1;
 	unsigned int sys = FM_SYS(ID);
 	unsigned int id = FM_ID(ID);
 
+	pdn_lock(flags);
+	if (check_pdn(spm_base, SUBSYS, ID)) {
+		pr_notice("ID-%d: PDN, return 0.\n", ID);
+		pdn_unlock(flags);
+		return 0;
+	}
+	pdn_unlock(flags);
+
 	subsys_fmeter_lock(flags);
+
 	if (sys == FM_GPU_PLL_CTRL) {
+		base = gpu_pll_ctrl_base;
 		con0 = _GPU_PLL_CTRL(PLL4H_FQMTR_CON0_OFS);
 		con1 = _GPU_PLL_CTRL(PLL4H_FQMTR_CON1_OFS);
 	} else if (sys == FM_APU_PLL_CTRL) {
+		base = apu_pll_ctrl_base;
 		con0 = _APU_PLL_CTRL(PLL4H_FQMTR_CON0_OFS);
 		con1 = _APU_PLL_CTRL(PLL4H_FQMTR_CON1_OFS);
 	} else {
 		pr_notice("id: %d not available\n", ID);
+		subsys_fmeter_unlock(flags);
 		return 0;
 	}
-
-	pll4h_fqmtr_con0 = clk_readl(con0);
-	pll4h_fqmtr_con1 = clk_readl(con1);
 
 	/* PLL4H_FQMTR_CON1[15]: rst 1 -> 0 */
 	clk_writel(con0, clk_readl(con0) & 0xFFFF7FFF);
 	/* PLL4H_FQMTR_CON1[15]: rst 0 -> 1 */
-	clk_writel(con0, clk_readl(con0) | 0x000080000);
+	clk_writel(con0, clk_readl(con0) | 0x8000);
 
 	/* sel fqmtr_cksel */
 	clk_writel(con0, (clk_readl(con0) & 0x00FFFFF8) | (id << 0));
 	/* set ckgen_load_cnt to 1024 */
-	clk_writel(con1, (clk_readl(con1) & 0xFC00FFFF) | 0x3FF);
+	clk_writel(con1, (clk_readl(con1) & 0xFC00FFFF) | (0x3FF << 16));
 
 	/* sel fqmtr_cksel and set ckgen_k1 to 0(DIV4) */
 	clk_writel(con0, (clk_readl(con0) & 0x00FFFFFF) | (3 << 24));
 
 	/* fqmtr_en set to 1, fqmtr_exc set to 0, fqmtr_start set to 0 */
-	clk_writel(con0, clk_readl(con0) | 0x00001000 & 0xFFFFFEEF);
+	clk_writel(con0, (clk_readl(con0) & 0xFFFF8007) | 0x1000);
 	/*fqmtr_start set to 1 */
-	clk_writel(con0, clk_readl(con0) | 0x00000010);
+	clk_writel(con0, clk_readl(con0) | 0x10);
 
 	/* wait frequency meter finish */
 	while (clk_readl(con0) & 0x10) {
@@ -550,10 +615,11 @@ unsigned int mt_get_subsys_freq(unsigned int ID)
 	temp = clk_readl(con1) & 0xFFFF;
 	output = ((temp * 26000)) / 1024; // Khz
 
-	clk_writel(con0, pll4h_fqmtr_con0);
+	clk_writel(con0, 0x8000);
 
-	subsys_fmeter_lock(flags);
-
+	subsys_fmeter_unlock(flags);
+	pr_notice("[%d(%d %d)]con0: 0x%x, con1: 0x%x\n",
+				ID, sys, id, clk_readl(con0), clk_readl(con1));
 	return output * 4;
 }
 
@@ -604,6 +670,18 @@ static int __init clk_fmeter_mt6877_init(void)
 		apu_pll_ctrl_base = of_iomap(node, 0);
 		if (!apu_pll_ctrl_base) {
 			pr_err("%s() can't find iomem for apu_pll_ctrl\n",
+					__func__);
+			return -1;
+		}
+	} else
+		goto ERR;
+
+	node = of_find_compatible_node(NULL, NULL,
+		"mediatek,mt6877-scpsys");
+	if (node) {
+		spm_base = of_iomap(node, 1);
+		if (!spm_base) {
+			pr_err("%s() can't find iomem for spm\n",
 					__func__);
 			return -1;
 		}

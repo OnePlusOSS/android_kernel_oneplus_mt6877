@@ -47,6 +47,8 @@ static u32 fmeter_freq_op(const struct fmeter_clk *fclk)
 		return mt_get_abist2_freq(fclk->id);
 	else if (fclk->type == CKGEN)
 		return mt_get_ckgen_freq(fclk->id);
+	else if (fclk->type == SUBSYS)
+		return mt_get_subsys_freq(fclk->id);
 	return 0;
 }
 
@@ -69,16 +71,16 @@ struct pvd_msk {
 };
 
 static struct pvd_msk pvd_pwr_mask[] = {
-	{"audio", PWR_STA, 0x00200000},
+	{"audiosys", PWR_STA, 0x00200000},
 	{"mfgcfg", XPU_PWR_STA, 0x0000003F},
-	{"mmsys_config", PWR_STA, 0x00040000},
+	{"dispsys", PWR_STA, 0x00040000},
 	{"imgsys1", PWR_STA, 0x00000200},
 	{"imgsys2", PWR_STA, 0x00000400},
-	{"vdec_gcon", PWR_STA, 0x00001000},
-	{"venc_gcon", PWR_STA, 0x00004000},
+	{"vdecsys", PWR_STA, 0x00001000},
+	{"vencsys", PWR_STA, 0x00004000},
 	{"apu_conn2", OTHER_PWR_STA, 0x00000020},
 	{"apu_conn1", OTHER_PWR_STA, 0x00000020},
-	{"apusys_vcore", OTHER_PWR_STA, 0x00000020},
+	{"apu_vcore", OTHER_PWR_STA, 0x00000020},
 	{"apu0", OTHER_PWR_STA, 0x00000020},
 	{"apu1", OTHER_PWR_STA, 0x00000020},
 	{"apu_mdla0", OTHER_PWR_STA, 0x00000020},
@@ -86,7 +88,7 @@ static struct pvd_msk pvd_pwr_mask[] = {
 	{"camsys_rawa", PWR_STA, 0x01000000},
 	{"camsys_rawb", PWR_STA, 0x02000000},
 	{"ipesys", PWR_STA, 0x00000800},
-	{"mdpsys_config", PWR_STA, 0x00040000},
+	{"mdpsys", PWR_STA, 0x00040000},
 	{},
 };
 
