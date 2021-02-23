@@ -636,6 +636,7 @@
 #define SDC_ADV_CFG0_SDIO_IRQ_ENHANCE_EN (0x1  << 19) /* RW */
 #define SDC_ADV_CFG0_SDC_RX_ENH_EN      (0x1  << 20) /* RW */
 #define SDC_ADV_CFG0_TX_PIPE_EN         (0x1 << 30)
+#define SDC_ADV_CFG0_TX_PIPE_EN_2       (0x1 << 31)
 
 /* MSDC_NEW_RX_CFG mask  */
 #define MSDC_NEW_RX_PATH_SEL            (0x1 << 0)
@@ -1075,6 +1076,7 @@
 #define OFFSET_TOP_EMMC50_PAD_DAT5_TUNE (0x24)
 #define OFFSET_TOP_EMMC50_PAD_DAT6_TUNE (0x28)
 #define OFFSET_TOP_EMMC50_PAD_DAT7_TUNE (0x2c)
+#define OFFSET_TOP_TEST_LOOP            (0x30)
 
 #define EMMC_TOP_CONTROL                REG_ADDR_TOP(EMMC_TOP_CONTROL)
 #define EMMC_TOP_CMD                    REG_ADDR_TOP(EMMC_TOP_CMD)
@@ -1088,7 +1090,7 @@
 #define TOP_EMMC50_PAD_DAT5_TUNE        REG_ADDR_TOP(TOP_EMMC50_PAD_DAT5_TUNE)
 #define TOP_EMMC50_PAD_DAT6_TUNE        REG_ADDR_TOP(TOP_EMMC50_PAD_DAT6_TUNE)
 #define TOP_EMMC50_PAD_DAT7_TUNE        REG_ADDR_TOP(TOP_EMMC50_PAD_DAT7_TUNE)
-
+#define TOP_TEST_LOOP                   REG_ADDR_TOP(TOP_TEST_LOOP)
 
 /* EMMC_TOP_CONTROL mask */
 #define PAD_RXDLY_SEL           (0x1 << 0)      /* RW */
@@ -1162,6 +1164,11 @@
 #define DAT7_RD_DLY2            (0x1F << 0)     /* RW */
 #define DAT7_RD_DLY1            (0x1F << 5)     /* RW */
 #define PAD_DAT7_TX_DLY         (0x1F << 10)    /* RW */
+
+/* TOP_TEST_LOOP mask */
+#define TEST_LOOP_LATCH_MUX0     (0x1 << 0)
+#define TEST_LOOP_LATCH_MUX1     (0x1 << 1)
+#define TEST_LOOP_EN_SEL_CLK     (0x1 << 20)
 
 #endif /* end of _MSDC_REG_H_ */
 
