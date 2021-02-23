@@ -223,7 +223,7 @@ int mt6877_fe_trigger(struct snd_pcm_substream *substream, int cmd,
 			}
 		}
 #if defined(CONFIG_SND_SOC_MTK_AUDIO_DSP) || defined(CONFIG_MTK_VOW_BARGE_IN_SUPPORT)
-#if defined(CONFIG_MTK_AUDIODSP_SUPPORT)
+#if defined(CONFIG_SND_SOC_MTK_AUDIO_DSP)
 	/* only when adsp enable using hw semaphore to set memif */
 		dsp_reset = mtk_audio_get_adsp_reset_status();
 		if (runtime->stop_threshold == ~(0U) && is_adsp_system_running() &&
