@@ -1918,7 +1918,7 @@
 	eemgpu_fsm: eemgpu_fsm@1100b000 {
 		compatible = "mediatek,eemgpu_fsm";
 		reg = <0 0x1100b000 0 0x1000>;
-		interrupts = <GIC_SPI 167 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 211 IRQ_TYPE_LEVEL_HIGH>;
 		eemg-status = <1>;
 		eemg-initmon-gpu = <0xf>;
 		eemg-clamp-gpu = <0>;
