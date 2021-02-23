@@ -76,7 +76,7 @@ static int clk_mt6877_msdc0_probe(struct platform_device *pdev)
 
 static const struct of_device_id of_match_clk_mt6877_msdc[] = {
 	{
-		.compatible = "mediatek,mt6877-msdc0",
+		.compatible = "mediatek,mt6877-msdc0sys",
 		.data = clk_mt6877_msdc0_probe,
 	}, {
 		/* sentinel */

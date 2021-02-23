@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 MediaTek Inc.
+ * Copyright (c) 2021 MediaTek Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -124,7 +124,7 @@ static int clk_mt6877_vde2_probe(struct platform_device *pdev)
 
 static const struct of_device_id of_match_clk_mt6877_vde[] = {
 	{
-		.compatible = "mediatek,mt6877-vdec_gcon",
+		.compatible = "mediatek,mt6877-vdecsys",
 		.data = clk_mt6877_vde2_probe,
 	}, {
 		/* sentinel */
