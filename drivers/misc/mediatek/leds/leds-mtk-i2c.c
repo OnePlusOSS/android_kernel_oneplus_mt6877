@@ -139,13 +139,7 @@ EXPORT_SYMBOL_GPL(lcm_i2c_write_bytes);
 #define BACKLIGHT_AUTO_FREQ_LOW		0x06
 #define BACKLIGHT_AUTO_FREQ_HIGH	0x07
 #define BACKLIGHT_ENABLE		0x08
-#define DISPLAY_BIAS_CONFIG_1		0x09
-#define DISPLAY_BIAS_CONFIG_2		0x0A
-#define DISPLAY_BIAS_CONFIG_3		0x0B
 
-#define LCM_BIAS			0x0C
-#define VPOS_BIAS			0x0D
-#define NEG_BIAS			0x0E
 #define FLAGS				0x0F
 #define BACKLIGHT_OPTION_1		0x10
 #define BACKLIGHT_OPTION_2		0x11
@@ -177,17 +171,10 @@ void mtk_leds_init_power(void)
 	lcm_i2c_write_bytes(BACKLIGHT_CONFIG_2, 0x9D);
 	lcm_i2c_write_bytes(BACKLIGHT_AUTO_FREQ_LOW, 0x00);
 	lcm_i2c_write_bytes(BACKLIGHT_AUTO_FREQ_HIGH, 0x00);
-	lcm_i2c_write_bytes(DISPLAY_BIAS_CONFIG_2, 0x11);
-	lcm_i2c_write_bytes(DISPLAY_BIAS_CONFIG_3, 0x00);
 	lcm_i2c_write_bytes(BACKLIGHT_OPTION_1, 0x06);
 	lcm_i2c_write_bytes(BACKLIGHT_OPTION_2, 0xB7);
-	/*set bias to 5.4v*/
-	lcm_i2c_write_bytes(LCM_BIAS, 0x24);
-	lcm_i2c_write_bytes(VPOS_BIAS, 0x1c);
-	lcm_i2c_write_bytes(NEG_BIAS, 0x1c);
 	/*bias enable*/
-	lcm_i2c_write_bytes(DISPLAY_BIAS_CONFIG_1, 0x9e);
-	lcm_i2c_write_bytes(BACKLIGHT_ENABLE, 0x13);
+	lcm_i2c_write_bytes(BACKLIGHT_ENABLE, 0x15);
 	/*brightness set*/
 	mtk_leds_restore_brightness("lcd-backlight");
 }
