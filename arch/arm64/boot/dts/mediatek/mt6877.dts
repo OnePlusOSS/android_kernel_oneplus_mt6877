@@ -460,6 +460,11 @@
 		compatible = "simple-bus";
 	};
 
+	qos@0011bb00 {
+		compatible = "mediatek,qos-2.0";
+		reg = <0 0x0011bb00 0 0x100>;
+	};
+
 	clocks {
 		clk32k: clk32k {
 			compatible = "fixed-clock";
