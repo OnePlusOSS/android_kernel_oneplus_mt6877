@@ -56,3 +56,5 @@ else ifeq ($(CONFIG_MACH_MT6877),y)
 	ccflags-y += -DSHADER_PWR_CTL_WA
 endif
 
+# Set default policy always_on
+#ccflags-y += -DMTK_POWER_POLICY_AO

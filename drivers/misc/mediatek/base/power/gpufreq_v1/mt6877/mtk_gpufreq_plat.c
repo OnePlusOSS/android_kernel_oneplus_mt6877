@@ -309,12 +309,18 @@ void mt_gpufreq_wdt_reset(void)
 void mt_gpufreq_dump_infra_status(void)
 {
 	unsigned int start, offset, val;
-
 	gpufreq_pr_info("[GPU_DFD] ====\n");
-	gpufreq_pr_info("[GPU_DFD] freq=%d vgpu=%d vsram_gpu=%d\n",
+	gpufreq_pr_info("[GPU_DFD] mfgpll=%d freq=%d vgpu=%d vsram_gpu=%d\n",
+			mt_get_subsys_freq(FM_MFGPLL1),
 			g_cur_opp_freq,
 			g_cur_opp_vgpu,
 			g_cur_opp_vsram_gpu);
+
+	// 0x10000000
+	if (g_topckgen_base) {
+		gpufreq_pr_info("[GPU_DFD] mux =0x%08X\n",
+			readl(g_topckgen_base + 0x120));
+	}
 
 	// 0x1020E000
 	if (g_infracfg_base) {
@@ -2016,7 +2022,8 @@ static int mt_gpufreq_var_dump_proc_show(struct seq_file *m, void *v)
 			g_cur_opp_freq,
 			g_cur_opp_vgpu,
 			g_cur_opp_vsram_gpu);
-	seq_printf(m, "freq: %d, vgpu: %d, vsram_gpu: %d\n",
+	seq_printf(m, "(real) freq: %d, freq: %d, vgpu: %d, vsram_gpu: %d\n",
+			mt_get_subsys_freq(FM_MFGPLL1),
 			__mt_gpufreq_get_cur_freq(),
 			__mt_gpufreq_get_cur_vgpu(),
 			__mt_gpufreq_get_cur_vsram_gpu());
@@ -2552,8 +2559,9 @@ static void __mt_gpufreq_set(
 	gpu_dvfs_oppidx_footprint(idx_new);
 
 	gpufreq_pr_logbuf(
-		"end idx: %d -> %d, freq: %d, vgpu: %d, vsram_gpu: %d\n",
+		"end idx: %d -> %d, clk: %d, freq: %d, vgpu: %d, vsram_gpu: %d\n",
 		idx_old, idx_new,
+		mt_get_subsys_freq(FM_MFGPLL1),
 		__mt_gpufreq_get_cur_freq(),
 		__mt_gpufreq_get_cur_vgpu(),
 		__mt_gpufreq_get_cur_vsram_gpu());
@@ -3175,7 +3183,7 @@ static void __mt_gpufreq_init_table(void)
 
 	/* determine max_opp/num/segment_table... by segment  */
 	if (segment_id == MT6877_SEGMENT)
-		g_segment_max_opp_idx = 11;
+		g_segment_max_opp_idx = 0;
 	else
 		g_segment_max_opp_idx = 0;
 
@@ -3678,8 +3686,9 @@ static void __mt_gpufreq_dump_bringup_status(void)
 	gpufreq_pr_info("@%s: [MUX] =0x%08X\n",
 			__func__,
 			readl(g_topckgen_base + 0x120));
-	gpufreq_pr_info("@%s: [MFGPLL] FREQ=%d\n",
+	gpufreq_pr_info("@%s: [MFGPLL] FMETER=%d FREQ=%d\n",
 			__func__,
+			mt_get_subsys_freq(FM_MFGPLL1),
 			__mt_gpufreq_get_cur_freq());
 }
 
@@ -3756,7 +3765,9 @@ static int __init __mt_gpufreq_init(void)
 {
 	int ret = 0;
 	if (mt_gpufreq_bringup()) {
+#if MT_GPUFREQ_SHADER_PWR_CTL_WA
 		spin_lock_init(&mt_gpufreq_clksrc_parking_lock);
+#endif
 		__mt_gpufreq_dump_bringup_status();
 		gpufreq_pr_info("@%s: skip driver init when bringup\n",
 				__func__);

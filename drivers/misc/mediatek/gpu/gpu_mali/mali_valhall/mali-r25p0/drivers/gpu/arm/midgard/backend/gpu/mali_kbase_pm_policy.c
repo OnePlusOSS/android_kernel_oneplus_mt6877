@@ -37,7 +37,7 @@ static const struct kbase_pm_policy *const all_policy_list[] = {
 	&kbase_pm_always_on_demand_policy_ops,
 #endif
 #else				/* CONFIG_MALI_NO_MALI */
-#ifdef CONFIG_MACH_MT6877
+#ifdef MTK_POWER_POLICY_AO
 	&kbase_pm_always_on_policy_ops,
 #else
 	&kbase_pm_coarse_demand_policy_ops,
@@ -45,7 +45,7 @@ static const struct kbase_pm_policy *const all_policy_list[] = {
 #if !MALI_CUSTOMER_RELEASE
 	&kbase_pm_always_on_demand_policy_ops,
 #endif
-#ifdef CONFIG_MACH_MT6877
+#ifdef MTK_POWER_POLICY_AO
 	&kbase_pm_coarse_demand_policy_ops
 #else
 	&kbase_pm_always_on_policy_ops

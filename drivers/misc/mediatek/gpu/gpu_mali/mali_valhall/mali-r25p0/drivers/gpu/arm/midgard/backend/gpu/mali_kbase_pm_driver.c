@@ -49,6 +49,7 @@
 #include <linux/of.h>
 
 #ifdef SHADER_PWR_CTL_WA
+#include <linux/delay.h>
 #include <platform/mtk_platform_common.h>
 #endif
 
@@ -267,8 +268,11 @@ static void kbase_pm_invoke(struct kbase_device *kbdev,
 	u32 hi = (cores >> 32) & 0xFFFFFFFF;
 
 #ifdef SHADER_PWR_CTL_WA
+	u64 shaders_trans = 0;
+	u64 shaders_ready = 0;
 	int clksrc = 0;
 	unsigned long flags;
+	int delay_count = 0;
 #endif
 
 	lockdep_assert_held(&kbdev->hwaccess_lock);
@@ -353,6 +357,19 @@ static void kbase_pm_invoke(struct kbase_device *kbdev,
 #ifdef SHADER_PWR_CTL_WA
 	if (core_type == KBASE_PM_CORE_SHADER &&
 		(action == ACTION_PWRON || action == ACTION_PWROFF)) {
+
+		/* Wait for shader transition done */
+		do {
+			udelay(10);
+			delay_count++;
+			dev_dbg(kbdev->dev, "delay_count: %d\n", delay_count);
+
+			shaders_trans = kbase_pm_get_trans_cores(kbdev, KBASE_PM_CORE_SHADER);
+			shaders_ready = kbase_pm_get_ready_cores(kbdev, KBASE_PM_CORE_SHADER);
+
+			shaders_trans &= ~shaders_ready;
+		} while (shaders_trans);
+
 		clksrc = 0;  /* CLOCK_MAIN: 1150MHz */
 		mtk_set_mt_gpufreq_clock_parking(clksrc);
 		mtk_set_mt_gpufreq_clock_parking_unlock(&flags);
