@@ -3199,6 +3199,14 @@ static void __mt_gpufreq_init_table(void)
 			g_max_opp_idx_num,
 			g_segment_min_opp_idx);
 
+#if defined(AGING_LOAD)
+	gpufreq_pr_info("@%s: AGING load\n", __func__);
+	g_aging_enable = 1;
+#endif
+
+	if (g_aging_enable)
+		mt_gpufreq_apply_aging(true);
+
 	mutex_lock(&mt_gpufreq_lock);
 	mt_gpufreq_cal_sb_opp_index();
 	mutex_unlock(&mt_gpufreq_lock);
@@ -3706,9 +3714,6 @@ static int __mt_gpufreq_pdrv_probe(struct platform_device *pdev)
 	/* init opp table */
 	__mt_gpufreq_init_table();
 
-	if (g_aging_enable)
-		mt_gpufreq_apply_aging(true);
-
 #if MT_GPUFREQ_DFD_ENABLE
 	__mt_gpufreq_dbgtop_pwr_on(true);
 #endif
@@ -3722,11 +3727,6 @@ static int __mt_gpufreq_pdrv_probe(struct platform_device *pdev)
 	__mt_gpufreq_init_volt_by_freq();
 
 	__mt_gpufreq_init_power();
-
-#if defined(AGING_LOAD)
-	gpufreq_pr_info("@%s: AGING load\n", __func__);
-	g_aging_enable = 1;
-#endif
 
 #if MT_GPUFREQ_DFD_DEBUG
 	// for debug only. simulate gpu dfd trigger state
