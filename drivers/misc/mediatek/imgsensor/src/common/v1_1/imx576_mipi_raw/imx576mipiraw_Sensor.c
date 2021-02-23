@@ -300,6 +300,9 @@ static int write_cmos_sensor_8(kal_uint16 addr, kal_uint8 para)
 	return iWriteRegI2C(pusendcmd, 3, imgsensor.i2c_write_id);
 }
 
+#if defined(CONFIG_MACH_MT6877)
+
+#else
 static kal_uint16 imx576_seq_write_cmos_sensor(kal_uint16 addr,
 					       kal_uint16 *para,
 					       kal_uint32 len)
@@ -341,6 +344,7 @@ static kal_uint16 imx576_seq_write_cmos_sensor(kal_uint16 addr,
 
 	return 0;
 }
+#endif
 
 static kal_uint16 imx576_table_write_cmos_sensor(kal_uint16 *para,
 						 kal_uint32 len)
@@ -2365,6 +2369,9 @@ static void hdr_write_tri_gain(kal_uint16 lgain, kal_uint16 mg, kal_uint16 sg)
 static void imx576_set_lsc_reg_setting(
 		kal_uint8 index, kal_uint16 *regDa, MUINT32 regNum)
 {
+#if defined(CONFIG_MACH_MT6877)
+	LOG_INF(" no support this function now\n");
+#else
 	#if LSC_DEBUG
 	int i;
 	#endif
@@ -2413,7 +2420,7 @@ static void imx576_set_lsc_reg_setting(
 	#endif
 	write_cmos_sensor_8(0x0B00, 0x00); /*lsc disable*/
 
-
+#endif
 }
 
 static void set_imx576_ATR(
