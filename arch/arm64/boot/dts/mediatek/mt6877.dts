@@ -209,7 +209,7 @@
 		#address-cells = <2>;
 		#size-cells = <2>;
 		ranges;
-		suspend-method = "disable";
+		suspend-method = "system";
 		cpupm-method = "mcu";
 
 		resource-ctrl = <&bus26m &infra &syspll>,
