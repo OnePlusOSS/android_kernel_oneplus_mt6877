@@ -29,7 +29,7 @@
 #define APUPWR_TASK_DEBOUNCE
 #define APUPWR_TAG_TP
 
-#define BYPASS_POWER_OFF	(0)	// 1: bypass power off (return directly)
+#define BYPASS_POWER_OFF	(1)	// 1: bypass power off (return directly)
 #define BYPASS_POWER_CTL	(0)	// 1: bypass power on/off feature
 #define BYPASS_DVFS_CTL		(0)	// 1: bypass set DVFS opp feature
 #define DEFAULT_POWER_ON	(0)	// 1: default power on in power probe
@@ -45,14 +45,23 @@
 #define APUSYS_SETTLE_TIME_TEST (0)
 #define SUPPORT_VCORE_TO_IPUIF	(0)
 
-#define APUSYS_MAX_NUM_OPPS		(5)
+#define APUSYS_MAX_NUM_OPPS		(7)
 #define APUSYS_PATH_USER_NUM		(4)   // num of DVFS_XXX_PATH
 #define APUSYS_DVFS_CONSTRAINT_NUM	(1)
 #define APUSYS_VPU_NUM			(2)
 #define APUSYS_MDLA_NUM			(1)
+#define APUSYS_PARKOUT_OPP		(APUSYS_MAX_NUM_OPPS)
+
+#ifdef APUSYS_PARKOUT_OPP
+#define APUSYS_DEFAULT_OPP		(APUSYS_PARKOUT_OPP)
+#else
 #define APUSYS_DEFAULT_OPP		(APUSYS_MAX_NUM_OPPS - 1)
+#endif
 
 #define VOLTAGE_CHECKER		(0)
+/* PLL&ACC freq meter support */
+#define FMETER_CHK		         (1)
+
 /*
  * CCF_SET_RATE == 1
  * --> use CCF frame work to set (A/N)PUPLL but no hopping
@@ -73,7 +82,7 @@
 
 #define VCORE_SHUTDOWN_VOLT	DVFS_VOLT_00_550000_V
 /* per de's request, take vvpu shutdown voltage as 550mv */
-#define VVPU_SHUTDOWN_VOLT	DVFS_VOLT_00_550000_V
+#define VVPU_SHUTDOWN_VOLT	DVFS_VOLT_00_525000_V
 #define VMDLA_SHUTDOWN_VOLT	DVFS_VOLT_NOT_SUPPORT
 #define VSRAM_SHUTDOWN_VOLT	DVFS_VOLT_00_750000_V
 
@@ -180,12 +189,21 @@ extern bool buck_shared[APUSYS_BUCK_NUM]
 extern struct apusys_dvfs_constraint dvfs_constraint_table
 					[APUSYS_DVFS_CONSTRAINT_NUM];
 extern enum DVFS_VOLTAGE vcore_opp_mapping[];
+#ifdef APUSYS_PARKOUT_OPP
+extern struct apusys_dvfs_steps dvfs_table_0[APUSYS_MAX_NUM_OPPS + 1]
+						[APUSYS_BUCK_DOMAIN_NUM];
+extern struct apusys_dvfs_steps dvfs_table_1[APUSYS_MAX_NUM_OPPS + 1]
+						[APUSYS_BUCK_DOMAIN_NUM];
+extern struct apusys_dvfs_steps dvfs_table_2[APUSYS_MAX_NUM_OPPS + 1]
+						[APUSYS_BUCK_DOMAIN_NUM];
+#else
 extern struct apusys_dvfs_steps dvfs_table_0[APUSYS_MAX_NUM_OPPS]
 						[APUSYS_BUCK_DOMAIN_NUM];
 extern struct apusys_dvfs_steps dvfs_table_1[APUSYS_MAX_NUM_OPPS]
 						[APUSYS_BUCK_DOMAIN_NUM];
 extern struct apusys_dvfs_steps dvfs_table_2[APUSYS_MAX_NUM_OPPS]
 						[APUSYS_BUCK_DOMAIN_NUM];
+#endif
 
 extern struct apusys_aging_steps aging_tbl[APUSYS_MAX_NUM_OPPS]
 						[V_VCORE];

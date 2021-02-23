@@ -318,6 +318,8 @@ static void hw_init_setting(void)
 {
 	uint32_t regValue = 0;
 
+	acc_init();
+
 	/*
 	 * set memory type to PD or sleep group
 	 * sw_type register for each memory group, set to PD mode default
@@ -443,6 +445,7 @@ static int init_power_resource(void *param)
 		goto out;
 	hw_init_setting();
 
+#if !BYPASS_POWER_OFF
 	disable_apu_conn_clksrc();
 
 	ret = buck_control(VPU0, 3); // buck on
@@ -453,6 +456,13 @@ static int init_power_resource(void *param)
 	ret = buck_control(VPU0, 0); // buck off
 	if (ret)
 		goto out;
+#else
+	ret = buck_control(VPU0, 3); // buck on
+	if (ret)
+		goto out;
+
+	recording_power_fail_state();
+#endif
 
 out:
 	return ret;

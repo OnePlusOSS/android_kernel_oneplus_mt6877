@@ -124,16 +124,24 @@ int apu_power_dump_curr_status(struct seq_file *s, int oneline_str)
 	}
 
 	seq_printf(s,
-		"|curr| vpu0| vpu1| mdla0| conn| iommu|\n");
+		"|curr|  vpu0 |  vpu1 | mdla0 |  conn | iommu |\n");
 
 	seq_printf(s,
-		"|freq| %03u | %03u | %03u | %03u | %03u |\n",
+		"| opp|   %u   |   %u   |   %u   |   %u   |   %u   |\n",
+		apusys_opps.cur_opp_index[V_VPU0],
+		apusys_opps.cur_opp_index[V_VPU1],
+		apusys_opps.cur_opp_index[V_MDLA0],
+		apusys_opps.cur_opp_index[V_APU_CONN],
+		apusys_opps.cur_opp_index[V_TOP_IOMMU]);
+
+	seq_printf(s,
+		"|freq|  %03u  |  %03u  |  %03u  |  %03u  |  %03u  |\n",
 		info.vpu0_freq, info.vpu1_freq,
 		info.mdla0_freq, info.conn_freq,
 		info.iommu_freq);
 
 	seq_printf(s,
-		"| clk| npupll| npupll| apupll| apupll1|apupll2|\n(unit: MHz)\n\n");
+		"| clk| npupll| npupll| apupll|apupll1|apupll2|\n(unit: MHz)\n\n");
 
 	seq_printf(s,
 		"npupll:%u(MHz), apupll:%u(MHz), apupll1:%u(MHz), apupll2:%u(MHz)\n\n",

@@ -216,6 +216,13 @@ extern void *g_APU_APMIXED_BASE;
 #define BIT_SEL_PARK_SRC_OUT	(12)
 #define BIT_INVEN_OUT		(15)
 
+#define D_FM_LOOP_REF_OFFSET    (16)  //addr offset
+#define D_FM_CLK_EN		(0)
+#define D_FM_FUN_EN		(1)
+#define D_FM_FM_DONE		(4)
+#define D_FM_FM_OVERFLOW		(5)
+#define D_FM_DEV_MAX		(15)
+
 /**************************************************
  * device related register
  *************************************************/
