@@ -1779,6 +1779,120 @@
 		reg = <0 0x10227000 0 0x1000>;
 	};
 
+
+	dvfsp: dvfsp@0011bc00 {
+		compatible = "mediatek,mt6877-dvfsp";
+		reg = <0 0x0011bc00 0 0x1400>,
+		      <0 0x0011bc00 0 0x1400>;
+		state = <1>;
+		imax_state = <2>;
+		change_flag = <0>;
+		little-rise-time = <1000>;
+		little-down-time = <750>;
+		big-rise-time = <1000>;
+		big-down-time = <750>;
+		L-table = <2000 144 1 1
+			   1903 139 1 1
+			   1800 132 1 1
+			   1703 127 1 1
+			   1600 120 1 1
+			   1503 119 2 1
+			   1407 117 2 1
+			   1310 116 2 1
+			   1260 115 2 1
+			   1150 113 2 1
+			   1053 111 2 1
+			   980 110 2 1
+			   900 109 2 1
+			   740 106 4 1
+			   650 104 4 1
+			   500 104 4 1 >;
+
+		B-table = <2600 168 1 1
+			   2400 160 1 1
+			   2275 152 1 1
+			   2150 144 1 1
+			   2000 137 1 1
+			   1900 132 1 1
+			   1800 127 1 1
+			   1660 120 1 1
+			   1540 119 2 1
+			   1430 117 2 1
+			   1300 115 2 1
+			   1140 112 2 1
+			   1040 111 2 1
+			   910 109 2 1
+			   740 106 4 1
+			   650 104 4 1 >;
+
+		CCI-table = <1700 144 1 1
+			   1621 139 1 1
+			   1542 134 2 1
+			   1440 127 2 1
+			   1350 120 2 1
+			   1271 119 2 1
+			   1120 116 2 1
+			   1041 115 2 1
+			   962 113 2 1
+			   900 112 2 1
+			   840 111 2 1
+			   740 109 4 1
+			   661 107 4 1
+			   600 106 4 1
+			   560 105 4 1
+			   520 104 4 1 >;
+
+	};
+
+	mt_cpufreq: mt_cpufreq {
+		compatible = "mediatek,mt-cpufreq";
+		proc1-supply = <&mt6315_6_vbuck1>;
+		proc2-supply = <&mt6315_6_vbuck3>;
+		sram_proc1-supply = <&mt_pmic_vsram_proc1_ldo_reg>;
+		sram_proc2-supply = <&mt_pmic_vsram_proc2_ldo_reg>;
+	};
+
+	mcucfg1: mcucfg1@0c530000 {
+		compatible = "mediatek,mcucfg-dvfs";
+		reg = <0 0x0c530000 0 0x10000>;
+	};
+
+	eem_fsm: eem_fsm@11278000 {
+		compatible = "mediatek,eem_fsm";
+		reg = <0 0x11278000 0 0x1000>;
+		interrupts = <GIC_SPI 168 IRQ_TYPE_LEVEL_HIGH>;
+		eem-status = <1>;
+		sn-status = <1>;
+		eem-initmon-little = <0xff>;
+		eem-initmon-big = <0xff>;
+		eem-initmon-cci = <0xff>;
+		eem-initmon-gpu = <0xff>;
+		eem-clamp-little = <0>;
+		eem-clamp-big = <0>;
+		eem-clamp-cci = <0>;
+		eem-clamp-gpu = <0>;
+		eem-offset-little = <0xff>;
+		eem-offset-big = <0xff>;
+		eem-offset-cci = <0xff>;
+		eem-offset-gpu = <0xff>;
+		proc1-supply = <&mt6315_6_vbuck1>;
+		proc2-supply = <&mt6315_6_vbuck3>;
+	};
+
+	eemgpu_fsm: eemgpu_fsm@1100b000 {
+		compatible = "mediatek,eemgpu_fsm";
+		reg = <0 0x1100b000 0 0x1000>;
+		interrupts = <GIC_SPI 167 IRQ_TYPE_LEVEL_HIGH>;
+		eemg-status = <1>;
+		eemg-initmon-gpu = <0xf>;
+		eemg-clamp-gpu = <0>;
+		eemg-offset-gpu = <0xff>;
+	};
+
+	upower: upower {
+		compatible = "mediatek,mt6833-upower";
+	};
+
 	cpumssv: cpumssv {
 		compatible = "mediatek,cpumssv";
 		state = <0>;
