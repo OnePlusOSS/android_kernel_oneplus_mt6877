@@ -4408,6 +4408,11 @@
 		#clock-cells = <1>;
 	};
 
+	ipesys_config: ipesys_config@1b000000 {
+		compatible = "mediatek,ipesys_config", "syscon";
+		reg = <0 0x1b000000 0 0x1000>;
+	};
+
 	fdvt@1b001000 {
 		compatible = "mediatek,fdvt";
 		reg = <0 0x1b001000 0 0x1000>;
