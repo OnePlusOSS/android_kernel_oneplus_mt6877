@@ -50,14 +50,14 @@ static const int const mt6877_sgen_mode_idx[] = {
 	18, 19, 20, 21,
 	22, 23, 24, 25,
 	26, 27, 28, 29,
-	32, 33, 34, 35,
-	36, 37, 38, 39,
-	40, 41, 42, 43,
-	44, 45, 46, 47,
-	49, 50, 52, 53,
-	54, 55, 56, 57,
-	58, 59, 60, 57,
-	61, 62, -1, -1,
+	64, 65, 66, 67,
+	68, 69, 70, 71,
+	72, 73, 74, 75,
+	76, 77, 78, 79,
+	81, 82, 84, 85,
+	86, 87, 88, 89,
+	90, 91, 92, -1,
+	93, 94, -1, -1,
 	-1,
 };
 
@@ -306,7 +306,7 @@ static int mt6877_afe_debug_set(struct snd_kcontrol *kcontrol,
 	unsigned int value, i;
 
 	for (i = 0; i <= AFE_MAX_REGISTER; i = i + 4) {
-		if (mt6877_reg_str[i / 4])
+		if (!mt6877_reg_str[i / 4])
 			continue;
 
 		regmap_read(afe->regmap, i, &value);

@@ -1201,8 +1201,8 @@ enum {
 
 /* AFE_SINEGEN_CON2 */
 #define INNER_LOOP_BACK_MODE_SFT                       0
-#define INNER_LOOP_BACK_MODE_MASK                      0x3f
-#define INNER_LOOP_BACK_MODE_MASK_SFT                  (0x3f << 0)
+#define INNER_LOOP_BACK_MODE_MASK                      0x7f
+#define INNER_LOOP_BACK_MODE_MASK_SFT                  (0x7f << 0)
 
 /* AFE_HD_ENGEN_ENABLE */
 #define AFE_24M_ON_SFT                                 1

@@ -3537,7 +3537,7 @@ static ssize_t mt6877_debugfs_read(struct file *file, char __user *buf,
 
 	/* read afe registers */
 	for (i = 0; i <= AFE_MAX_REGISTER; i = i + 4) {
-		if (mt6877_reg_str[i / 4])
+		if (!mt6877_reg_str[i / 4])
 			continue;
 
 		regmap_read(afe->regmap, i, &value);
