@@ -2561,6 +2561,7 @@
 	gpu_pll_ctrl_clk: syscon@13fa0000 {
 		compatible = "mediatek,mt6877-gpu_pll_ctrl", "syscon";
 		reg = <0 0x13fa0000 0 0x1000>;
+		pwr-regmap = <&scpsys>;
 		#clock-cells = <1>;
 	};
 
