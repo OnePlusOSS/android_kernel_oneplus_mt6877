@@ -3500,6 +3500,24 @@
 		iommus = <&iommu0 M4U_PORT_L0_DISP_FAKE0>;
 	};
 
+	pseudo_m4u-vpu-code {
+		compatible = "mediatek,mt-pseudo_m4u-port";
+		mediatek,larbid = <APU_PSEUDO_LARBID_CODE>;
+		iommus = <&iommu1 M4U_PORT_L21_APU_FAKE_CODE>;
+	};
+
+	pseudo_m4u-vpu-data {
+		compatible = "mediatek,mt-pseudo_m4u-port";
+		mediatek,larbid = <APU_PSEUDO_LARBID_DATA>;
+		iommus = <&iommu1 M4U_PORT_L21_APU_FAKE_DATA>;
+	};
+
+	pseudo_m4u-vpu-vlm {
+		compatible = "mediatek,mt-pseudo_m4u-port";
+		mediatek,larbid = <APU_PSEUDO_LARBID_VLM>;
+		iommus = <&iommu1 M4U_PORT_L21_APU_FAKE_VLM>;
+	};
+
 	iommu0: m4u@14016000 {
 		cell-index = <0>;
 		compatible = "mediatek,iommu_v0";
@@ -3542,6 +3560,44 @@
 		compatible = "mediatek,sec_m4u0";
 		reg = <0 0x1401a000 0 0x1000>;
 		interrupts = <GIC_SPI 320 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
+	iommu1: m4u@19010000  {
+		cell-index = <1>;
+		compatible = "mediatek,iommu_v0";
+		reg = <0 0x19010000 0 0x1000>;
+		interrupts = <GIC_SPI 395 IRQ_TYPE_LEVEL_HIGH>;
+		clocks = <&scpsys SCP_SYS_APU>;
+		clock-names = "power";
+		#iommu-cells = <1>;
+	};
+
+	iommu1_bank1: m4u@19011000 {
+		cell-index = <1>;
+		compatible = "mediatek,bank1_m4u1";
+		reg = <0 0x19011000 0 0x1000>;
+		interrupts = <GIC_SPI 396 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
+	iommu1_bank2: m4u@19012000 {
+		cell-index = <1>;
+		compatible = "mediatek,bank2_m4u1";
+		reg = <0 0x19012000 0 0x1000>;
+		interrupts = <GIC_SPI 397 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
+	iommu1_bank3: m4u@19013000 {
+		cell-index = <1>;
+		compatible = "mediatek,bank3_m4u1";
+		reg = <0 0x19013000 0 0x1000>;
+		interrupts = <GIC_SPI 398 IRQ_TYPE_LEVEL_HIGH>;
+	};
+
+	iommu1_sec: m4u@19014000 {
+		cell-index = <1>;
+		compatible = "mediatek,sec_m4u1";
+		reg = <0 0x19014000 0 0x1000>;
+		interrupts = <GIC_SPI 399 IRQ_TYPE_LEVEL_HIGH>;
 	};
 
 	reserved@1401d000 {
