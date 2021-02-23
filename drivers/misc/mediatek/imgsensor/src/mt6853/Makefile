@@ -19,6 +19,10 @@ ifeq ($(CONFIG_MACH_MT6833),y)
 MTK_DERIVED_PLATFORM := mt6833
 endif
 
+ifeq ($(CONFIG_MACH_MT6877),y)
+MTK_DERIVED_PLATFORM := mt6877
+endif
+
 ARCH_MTK_PROJECT := $(subst ",,$(CONFIG_ARCH_MTK_PROJECT))
 IMGSENSOR_DRIVER_PATH  := $(srctree)/drivers/misc/mediatek/imgsensor/src
 MTK_DRIVER_PATH  := $(srctree)/drivers/misc/mediatek
@@ -103,6 +107,10 @@ $(info imgsensor subdir-ccflags-y = $(subdir-ccflags-y))
 
 
 ifeq ($(ARCH_MTK_PROJECT), k6853v1_64_6360_alpha)
+subdir-ccflags-y += -DNEED_LATE_INITCALL
+endif
+
+ifeq ($(CONFIG_MACH_MT6877),y)
 subdir-ccflags-y += -DNEED_LATE_INITCALL
 endif
 
