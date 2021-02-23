@@ -612,6 +612,7 @@ static struct subsys syss[] =	/* NR_SYSS */
 	[SYS_APU] = {
 			.name = __stringify(SYS_APU),
 			.sta_addr = OTHER_PWR_STA_OFS,
+			.sta_s_addr = OTHER_PWR_STA_OFS,
 			.sta_mask = APU_PWR_STA_MASK,
 			.sram_pdn_bits = 0,
 			.sram_pdn_ack_bits = 0,
@@ -4117,10 +4118,6 @@ static int sys_get_state_op(struct subsys *sys)
 		sta_s = clk_readl(spm_base + sys->sta_s_addr);
 
 		return (sta & sys->sta_mask) && (sta_s & sys->sta_mask);
-	} else if (sys->sta_addr != INV_OFS) {
-		sta = clk_readl(spm_base + sys->sta_addr);
-
-		return (sta & sys->sta_mask);
 	}
 
 	sta = clk_readl(PWR_STATUS);
