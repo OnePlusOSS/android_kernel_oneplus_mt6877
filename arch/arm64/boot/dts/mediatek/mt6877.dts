@@ -4144,15 +4144,6 @@
 		clock-names = "RSC_CLK_IPE_RSC";
 	};
 
-	ipe_smi_subcom@1b00e000 {
-		compatible = "mediatek,ipe_smi_subcom",
-				"mediatek,smi_common";
-		reg = <0 0x1b00e000 0 0x1000>;
-		clocks = <&scpsys SCP_SYS_IPE>;
-		clock-names = "scp-ipe";
-		mediatek,smi-id = <25>;
-	};
-
 	mdpsys_config_clk: syscon@1f000000 {
 		compatible = "mediatek,mt6877-mdpsys", "syscon";
 		reg = <0 0x1f000000 0 0x1000>;
