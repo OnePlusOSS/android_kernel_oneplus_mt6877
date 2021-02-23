@@ -3680,7 +3680,7 @@
 	wpe_a@15811000 {
 		compatible = "mediatek,wpe_a";
 		reg = <0 0x15811000 0 0x1000>;
-		interrupts = <GIC_SPI 399 IRQ_TYPE_LEVEL_HIGH>;
+		interrupts = <GIC_SPI 431 IRQ_TYPE_LEVEL_HIGH>;
 		clocks =
 			<&imgsys2_clk CLK_IMGSYS2_LARB9>,
 			<&imgsys2_clk CLK_IMGSYS2_WPE>,
