@@ -27,8 +27,8 @@
 #define USE_NEW_CPU_OPP
 #define USE_CM_MGR_AT_SSPM
 /* #define USE_SINGLE_CLUSTER */
-#define USE_CPU_TO_DRAM_MAP
-#define USE_CPU_TO_DRAM_MAP_NEW
+/* #define USE_CPU_TO_DRAM_MAP */
+/* #define USE_CPU_TO_DRAM_MAP_NEW */
 #define USE_BCPU_WEIGHT
 
 #define CM_MGR_EMI_OPP 6

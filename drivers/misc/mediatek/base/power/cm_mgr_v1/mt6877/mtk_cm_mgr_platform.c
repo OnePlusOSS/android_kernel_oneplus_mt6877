@@ -322,10 +322,11 @@ static int cm_mgr_check_dram_type(void)
 	int ddr_type = mtk_dramc_get_ddr_type();
 	int ddr_hz = mtk_dramc_get_steps_freq(0);
 
-	if (ddr_type == TYPE_LPDDR4X || ddr_type == TYPE_LPDDR4)
-		cm_mgr_idx = CM_MGR_LP4;
-	else
+	if (ddr_type == TYPE_LPDDR5)
 		cm_mgr_idx = CM_MGR_LP5;
+	else
+		cm_mgr_idx = CM_MGR_LP4;
+
 	pr_info("#@# %s(%d) ddr_type 0x%x, ddr_hz %d, cm_mgr_idx 0x%x\n",
 			__func__, __LINE__, ddr_type, ddr_hz, cm_mgr_idx);
 #else
@@ -847,20 +848,15 @@ void cm_mgr_perf_platform_set_force_status(int enable)
 
 int cm_mgr_register_init(void)
 {
-	struct device_node *node, *np;
+	struct device_node *node;
 	int ret;
 	const char *buf;
 
 	node = of_find_compatible_node(NULL, NULL,
 			"mediatek,mcucfg_mp0_counter");
 	if (!node)
-		pr_info("find mcucfg_mp0_counter node failed\n");
-	np = of_parse_phandle(node, "reg_mp0_counter_base", 0);
-	mcucfg_mp0_counter_base = of_iomap(np, 0);
-	if (!mcucfg_mp0_counter_base) {
-		pr_info("base mcucfg_mp0_counter_base failed\n");
-		return -1;
-	}
+		pr_info("not find mcucfg_mp0_counter node\n");
+
 
 	if (node) {
 		ret = of_property_read_string(node,
