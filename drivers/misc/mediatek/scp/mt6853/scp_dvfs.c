@@ -336,7 +336,7 @@ uint32_t scp_get_freq(void)
 }
 
 #if defined(CONFIG_MACH_MT6877) && !defined(CONFIG_FPGA_EARLY_PORTING)
-static int scp_set_pmic_vcore(unsigned int clk_freq)
+int scp_set_pmic_vcore(unsigned int clk_freq)
 {
 	int ret = 0;
 	unsigned int ret_vc = 0;
@@ -351,9 +351,9 @@ static int scp_set_pmic_vcore(unsigned int clk_freq)
 	} else if (clk_freq == CLK_OPP3) {
 		get_vcore_val = get_vcore_uv_table(VCORE_OPP_1);
 	} else {
-		return = -ENODEV;
 		pr_err("ERROR: %s: clk_freq=%d is not supported\n",
 			__func__, clk_freq);
+		return -ENODEV;
 	}
 
 	if (get_vcore_val != 0) {
@@ -1299,6 +1299,9 @@ void ulposc_cali_init(void)
 #if defined(CONFIG_MACH_MT6833)
 	node = of_find_compatible_node(NULL, NULL,
 			"mediatek,mt6833-apmixedsys");
+#elif defined(CONFIG_MACH_MT6877)
+	node = of_find_compatible_node(NULL, NULL,
+			"mediatek,mt6877-apmixedsys");
 #else
 	node = of_find_compatible_node(NULL, NULL,
 			"mediatek,mt6853-apmixedsys");
