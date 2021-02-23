@@ -42,8 +42,7 @@ static struct pm_qos_request venc_qos_req_f;
 static u64 venc_freq;
 static u32 venc_freq_step_size;
 static u64 venc_freq_steps[MAX_FREQ_STEP];
-static struct codec_history *venc_hists;
-static struct codec_job *venc_jobs;
+static u64 venc_freq_map[] = {249, 343, 458, 624};
 #endif
 
 #if ENC_EMI_BW
@@ -61,6 +60,86 @@ static struct mm_qos_request venc_ref_chroma;
 struct pm_qos_request venc_qos_req_bw;
 #endif
 
+#if 1
+/* first scenario based version, will change to loading based */
+struct temp_job {
+	int ctx_id;
+	int format;
+	int type;
+	int module;
+	int visible_width; /* temp usage only, will use kcy */
+	int visible_height; /* temp usage only, will use kcy */
+	int operation_rate;
+	long long submit;
+	int kcy;
+	struct temp_job *next;
+};
+static struct temp_job *temp_venc_jobs;
+
+struct temp_job *new_job_from_info(struct mtk_vcodec_ctx *ctx, int core_id)
+{
+	struct temp_job *new_job = kmalloc(sizeof(struct temp_job), GFP_KERNEL);
+
+	if (new_job == 0)
+		return 0;
+
+	new_job->ctx_id = ctx->id;
+	new_job->format = ctx->q_data[MTK_Q_DATA_DST].fmt->fourcc;
+	new_job->type = 1; /* temp */
+	new_job->module = core_id;
+	new_job->visible_width = ctx->q_data[MTK_Q_DATA_SRC].visible_width;
+	new_job->visible_height = ctx->q_data[MTK_Q_DATA_SRC].visible_height;
+	new_job->operation_rate = 0;
+	new_job->submit = 0; /* use now - to be filled */
+	new_job->kcy = 0; /* retrieve hw counter - to be filled */
+	new_job->next = 0;
+	return new_job;
+}
+
+void free_job(struct temp_job *job)
+{
+	if (job != 0)
+		kfree(job);
+}
+
+int add_to_tail(struct temp_job **job_list, struct temp_job *job)
+{
+	int cnt = 0;
+	struct temp_job *tail = 0;
+
+	if (job == 0)
+		return -1;
+
+	tail = *job_list;
+	if (tail == 0) {
+		*job_list = job;
+		return 1;
+	}
+
+	cnt = 1;
+	while (tail->next != 0) {
+		cnt++;
+		tail = tail->next;
+	}
+	cnt++;
+	tail->next = job;
+
+	return cnt;
+}
+
+struct temp_job *remove_from_head(struct temp_job **job_list)
+{
+	struct temp_job *head = *job_list;
+
+	if (head == 0)
+		return 0;
+
+	*job_list = head->next;
+
+	return head;
+}
+
+#endif
 void mtk_venc_init_ctx_pm(struct mtk_vcodec_ctx *ctx)
 {
 	ctx->async_mode = 0;
@@ -173,7 +252,6 @@ void mtk_vcodec_enc_clock_off(struct mtk_vcodec_ctx *ctx, int core_id)
 #endif
 }
 
-
 void mtk_prepare_venc_dvfs(void)
 {
 #if ENC_DVFS
@@ -186,6 +264,8 @@ void mtk_prepare_venc_dvfs(void)
 					&venc_freq_step_size);
 	if (ret < 0)
 		pr_debug("Failed to get venc freq steps (%d)\n", ret);
+
+	temp_venc_jobs = 0;
 #endif
 }
 
@@ -197,15 +277,8 @@ void mtk_unprepare_venc_dvfs(void)
 	freq_idx = (venc_freq_step_size == 0) ? 0 : (venc_freq_step_size - 1);
 	pm_qos_update_request(&venc_qos_req_f, venc_freq_steps[freq_idx]);
 	pm_qos_remove_request(&venc_qos_req_f);
-	free_hist(&venc_hists, 0);
+	/* free_hist(&venc_hists, 0); */
 	/* TODO: jobs error handle */
-#endif
-}
-
-void mtk_release_pmqos(struct mtk_vcodec_ctx *ctx)
-{
-#if ENC_DVFS
-	free_hist_by_handle(&ctx->id, &venc_hists);
 #endif
 }
 
@@ -239,157 +312,94 @@ void mtk_unprepare_venc_emi_bw(void)
 }
 
 
-void mtk_venc_dvfs_begin(struct mtk_vcodec_ctx *ctx)
+void mtk_venc_dvfs_begin(struct temp_job **job_list)
 {
 #if ENC_DVFS
-	int target_freq = 0;
-	u64 target_freq_64 = 0;
-	struct codec_job *venc_cur_job = 0;
+	struct temp_job *job = *job_list;
+	int area = 0;
+	int idx = 0;
 
-	mutex_lock(&ctx->dev->enc_dvfs_mutex);
-	venc_cur_job = move_job_to_head(&ctx->id, &venc_jobs);
-	if (venc_cur_job != 0) {
-		venc_cur_job->start = get_time_us();
-		target_freq = est_freq(venc_cur_job->handle, &venc_jobs,
-					venc_hists);
-		target_freq_64 = match_freq(target_freq, &venc_freq_steps[0],
-					venc_freq_step_size);
+	if (job == 0)
+		return;
 
-		if (ctx->enc_params.operationrate >= 120 &&
-			target_freq_64 > 458)
-			target_freq_64 = 458;
+	area = job->visible_width * job->visible_height;
 
-		if (target_freq > 0) {
-			venc_freq = target_freq;
-			if (venc_freq > target_freq_64)
-				venc_freq = target_freq_64;
+	if (area >= 3840 * 2160)
+		idx = 2;
+	else if (area >= 1920 * 1080)
+		if (job->operation_rate > 30)
+			idx = 2;
+		else
+			idx = 0;
+	else
+		idx = 0;
 
-			venc_cur_job->mhz = (int)target_freq_64;
-			pm_qos_update_request(&venc_qos_req_f, target_freq_64);
-		}
-	} else {
-		target_freq_64 = match_freq(DEFAULT_MHZ, &venc_freq_steps[0],
-						venc_freq_step_size);
-		pm_qos_update_request(&venc_qos_req_f, target_freq_64);
-	}
-	mutex_unlock(&ctx->dev->enc_dvfs_mutex);
+	if (job->operation_rate >= 120)
+		idx = 2;
+
+	if (job->format == V4L2_PIX_FMT_HEIF)
+		idx = 3;
+
+	venc_freq = venc_freq_map[idx];
+
+	pm_qos_update_request(&venc_qos_req_f, venc_freq);
 #endif
 }
 
-#if ENC_DVFS
-static int mtk_venc_get_exec_cnt(struct mtk_vcodec_ctx *ctx)
-{
-	return (int)((readl(ctx->dev->enc_reg_base[VENC_SYS] + 0x17C) &
-			0x7FFFFFFF) / 1000);
-}
-#endif
-
-void mtk_venc_dvfs_end(struct mtk_vcodec_ctx *ctx)
+void mtk_venc_dvfs_end(struct temp_job *job)
 {
 #if ENC_DVFS
-	int freq_idx = 0;
-	long long interval = 0;
-	struct codec_job *venc_cur_job = 0;
+	if (job == 0)
+		return;
 
-	/* venc dvfs */
-	mutex_lock(&ctx->dev->enc_dvfs_mutex);
-	venc_cur_job = venc_jobs;
-	if (venc_cur_job != 0 && (venc_cur_job->handle == &ctx->id)) {
-		venc_cur_job->end = get_time_us();
-		if (ctx->enc_params.operationrate < 120) {
-			if (ctx->enc_params.framerate_denom == 0)
-				ctx->enc_params.framerate_denom = 1;
+	venc_freq = venc_freq_map[0];
 
-			if (ctx->enc_params.operationrate == 0 &&
-				ctx->enc_params.framerate_num == 0)
-				ctx->enc_params.framerate_num =
-				ctx->enc_params.framerate_denom * 30;
-
-			if ((ctx->enc_params.operationrate == 60 ||
-				((ctx->enc_params.framerate_num /
-				ctx->enc_params.framerate_denom) >= 59 &&
-				(ctx->enc_params.framerate_num /
-				ctx->enc_params.framerate_denom) <= 60) ||
-				(ctx->q_data[MTK_Q_DATA_SRC].visible_width
-					== 3840 &&
-				ctx->q_data[MTK_Q_DATA_SRC].visible_height
-					== 2160))) {
-				/* Set allowed time for 60fps/4K recording */
-				/* Use clock cycle if single instance */
-				if (venc_hists != 0 && venc_hists->next == 0) {
-					venc_cur_job->hw_kcy =
-						mtk_venc_get_exec_cnt(ctx);
-				}
-				if (ctx->enc_params.operationrate > 0) {
-					interval = (long long)(1000 * 1000 /
-					(int)ctx->enc_params.operationrate);
-				} else {
-					interval = (long long)(1000 * 1000 /
-					(int)(ctx->enc_params.framerate_num /
-					ctx->enc_params.framerate_denom));
-				}
-				update_hist(venc_cur_job, &venc_hists,
-					interval);
-			} else {
-				update_hist(venc_cur_job, &venc_hists, 0);
-			}
-		} else {
-			/* Set allowed time for slowmotion 4 buffer pack */
-			interval = (long long)(1000 * 1000 * 4 /
-					(int)ctx->enc_params.operationrate);
-			update_hist(venc_cur_job, &venc_hists, interval);
-		}
-		venc_jobs = venc_jobs->next;
-		kfree(venc_cur_job);
-	} else {
-		/* print error log */
-		pr_debug("no job at venc_dvfs_end, reset freq only");
-	}
-
-	freq_idx = (venc_freq_step_size == 0) ? 0 : (venc_freq_step_size - 1);
-	pm_qos_update_request(&venc_qos_req_f, venc_freq_steps[freq_idx]);
-	mutex_unlock(&ctx->dev->enc_dvfs_mutex);
+	pm_qos_update_request(&venc_qos_req_f, venc_freq);
 #endif
 }
 
-void mtk_venc_emi_bw_begin(struct mtk_vcodec_ctx *ctx)
+void mtk_venc_emi_bw_begin(struct temp_job **jobs)
 {
 #if ENC_EMI_BW
-	int f_type = 1; /* TODO */
+	struct temp_job *job = 0;
+	int id = 0;
 	int boost_perc = 0;
-	int rcpu_bw = 5;
+
+	int rcpu_bw = 5 * 4 / 3;
 	int rec_bw = 0;
-	int bsdma_bw = 10;
-	int sv_comv_bw = 5;
-	int rd_comv_bw = 10;
+	int bsdma_bw = 20 * 4 / 3;
+	int sv_comv_bw = 4 * 4 / 3;
+	int rd_comv_bw = 16 * 4 / 3;
 	int cur_luma_bw = 0;
 	int cur_chroma_bw = 0;
 	int ref_luma_bw = 0;
 	int ref_chroma_bw = 0;
 
-	if (ctx->enc_params.operationrate >= 120 ||
-		ctx->q_data[MTK_Q_DATA_DST].fmt->fourcc == V4L2_PIX_FMT_H265 ||
-		(ctx->q_data[MTK_Q_DATA_SRC].visible_width == 3840 &&
-		ctx->q_data[MTK_Q_DATA_SRC].visible_height == 2160)) {
+	if (*jobs == 0)
+		return;
+
+	job = *jobs;
+	id = job->module;
+
+	if (job->operation_rate > 60)
 		boost_perc = 100;
-	} else if (ctx->enc_params.operationrate == 60) {
-		boost_perc = 30;
+
+	if (job->format == V4L2_PIX_FMT_H265 ||
+		job->format == V4L2_PIX_FMT_HEIF ||
+		(job->format == V4L2_PIX_FMT_H264 &&
+		 job->visible_width >= 2160)) {
+		boost_perc = 150;
 	}
 
-	/* Input BW scaling to venc_freq & config */
-	cur_luma_bw = STD_LUMA_BW * venc_freq * (100 + boost_perc)
-			/ STD_VENC_FREQ / 100;
-	cur_chroma_bw = STD_CHROMA_BW * venc_freq * (100 + boost_perc)
-			/ STD_VENC_FREQ / 100;
+	cur_luma_bw = STD_LUMA_BW * venc_freq * (100 + boost_perc) * 4 /
+			STD_VENC_FREQ / 100 / 3;
+	cur_chroma_bw = STD_CHROMA_BW * venc_freq * (100 + boost_perc) * 4 /
+			STD_VENC_FREQ / 100 / 3;
 
 	/* BW in venc_freq */
-	if (f_type == 0) {
-		rec_bw = cur_luma_bw + cur_chroma_bw;
-	} else {
-		rec_bw = cur_luma_bw + cur_chroma_bw;
-		ref_luma_bw = cur_luma_bw * 4;
-		ref_chroma_bw = cur_chroma_bw * 4;
-	}
+	rec_bw = cur_luma_bw + cur_chroma_bw;
+	ref_luma_bw = cur_luma_bw * 4;
+	ref_chroma_bw = cur_chroma_bw * 4;
 
 	if (1) { /* UFO */
 		ref_chroma_bw += ref_luma_bw;
@@ -419,9 +429,16 @@ void mtk_venc_emi_bw_begin(struct mtk_vcodec_ctx *ctx)
 #endif
 }
 
-void mtk_venc_emi_bw_end(struct mtk_vcodec_ctx *ctx)
+void mtk_venc_emi_bw_end(struct temp_job *job)
 {
 #if ENC_EMI_BW
+	int core_id;
+
+	if (job == 0)
+		return;
+
+	core_id = job->module;
+
 	mm_qos_set_request(&venc_rcpu, 0, 0, BW_COMP_NONE);
 	mm_qos_set_request(&venc_rec, 0, 0, BW_COMP_NONE);
 	mm_qos_set_request(&venc_bsdma, 0, 0, BW_COMP_NONE);
@@ -437,35 +454,81 @@ void mtk_venc_emi_bw_end(struct mtk_vcodec_ctx *ctx)
 
 void mtk_venc_pmqos_prelock(struct mtk_vcodec_ctx *ctx, int core_id)
 {
-#if ENC_DVFS
-	mutex_lock(&ctx->dev->enc_dvfs_mutex);
-	add_job(&ctx->id, &venc_jobs);
-	mutex_unlock(&ctx->dev->enc_dvfs_mutex);
-#endif
 }
 
 void mtk_venc_pmqos_begin_frame(struct mtk_vcodec_ctx *ctx, int core_id)
 {
-	mtk_venc_dvfs_begin(ctx);
-	mtk_venc_emi_bw_begin(ctx);
 }
 
 void mtk_venc_pmqos_end_frame(struct mtk_vcodec_ctx *ctx, int core_id)
 {
-	mtk_venc_dvfs_end(ctx);
-	mtk_venc_emi_bw_end(ctx);
 }
 
+struct temp_job *mtk_venc_queue_job(struct mtk_vcodec_ctx *ctx, int core_id,
+				int job_cnt)
+{
+	int cnt = 0;
+	struct temp_job *job = new_job_from_info(ctx, core_id);
+
+	if (job != 0)
+		cnt = add_to_tail(&temp_venc_jobs, job);
+
+	return job;
+}
+
+struct temp_job *mtk_venc_dequeue_job(struct mtk_vcodec_ctx *ctx, int core_id,
+				int job_cnt)
+{
+	struct temp_job *job = remove_from_head(&temp_venc_jobs);
+
+	if (job != 0)
+		return job;
+
+	/* print error message */
+	return 0;
+}
+
+
+/* Total job count after this one is inserted */
 void mtk_venc_pmqos_gce_flush(struct mtk_vcodec_ctx *ctx, int core_id,
-			int job_cnt)
+				int job_cnt)
 {
+	/* mutex_lock(&ctx->dev->enc_dvfs_mutex); */
+	struct temp_job *job = 0;
+	int frame_rate = 0;
 
+	job = mtk_venc_queue_job(ctx, core_id, job_cnt);
+
+	frame_rate = ctx->enc_params.operationrate;
+	if (frame_rate == 0) {
+		frame_rate = ctx->enc_params.framerate_num /
+				ctx->enc_params.framerate_denom;
+	}
+	if (job != NULL)
+		job->operation_rate = frame_rate;
+
+	if (job_cnt == 0) {
+		// Adjust dvfs immediately
+		mtk_venc_dvfs_begin(&temp_venc_jobs);
+		mtk_venc_emi_bw_begin(&temp_venc_jobs);
+	}
+	/* mutex_unlock(&ctx->dev_enc_dvfs_mutex); */
 }
 
+/* Remaining job count after this one is done */
 void mtk_venc_pmqos_gce_done(struct mtk_vcodec_ctx *ctx, int core_id,
-			int job_cnt)
+				int job_cnt)
 {
+	struct temp_job *job = mtk_venc_dequeue_job(ctx, core_id, job_cnt);
 
+	mtk_venc_dvfs_end(job);
+	mtk_venc_emi_bw_end(job);
+	free_job(job);
+
+	if (job_cnt > 1) {
+		mtk_venc_dvfs_begin(&temp_venc_jobs);
+		mtk_venc_emi_bw_begin(&temp_venc_jobs);
+	}
 }
 
 
