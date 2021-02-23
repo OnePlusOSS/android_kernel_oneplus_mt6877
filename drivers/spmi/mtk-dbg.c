@@ -1626,7 +1626,7 @@ void spmi_dump_pmif_record_reg(void)
 	for (i = 0; i < 32; i++) {
 		offset = arb->dbgregs[PMIF_MONITOR_RECORD_0_0] + i * step;
 		tmp_dat = readl(arb->base + offset);
-		chan = (tmp_dat & (0xf8 << 27)) >> 27;
+		chan = (tmp_dat & (0xf8000000)) >> 27;
 		cmd = (tmp_dat & (0x3 << 25)) >> 25;
 		is_write = (tmp_dat & (0x1 << 24)) >> 24;
 		slvid = (tmp_dat & (0xf << 20)) >> 20;
@@ -1663,7 +1663,7 @@ static void spmi_dump_pmif_record_reg_d(struct seq_file *m)
 	for (i = 0; i < 32; i++) {
 		offset = arb->dbgregs[PMIF_MONITOR_RECORD_0_0] + i * step;
 		tmp_dat = readl(arb->base + offset);
-		chan = (tmp_dat & (0xf8 << 27)) >> 27;
+		chan = (tmp_dat & (0xf8000000)) >> 27;
 		cmd = (tmp_dat & (0x3 << 25)) >> 25;
 		is_write = (tmp_dat & (0x1 << 24)) >> 24;
 		slvid = (tmp_dat & (0xf << 20)) >> 20;
