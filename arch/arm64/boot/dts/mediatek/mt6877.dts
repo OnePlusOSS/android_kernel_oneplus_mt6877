@@ -4506,7 +4506,8 @@
 	seninf_top@1a004000 {
 		compatible = "mediatek,seninf_top";
 		reg = <0 0x1a004000 0 0x1000>;
-		clocks = <&scpsys SCP_SYS_CAM>,
+		clocks =<&scpsys SCP_SYS_CSI>,
+			<&scpsys SCP_SYS_CAM>,
 			<&camsys_main_clk CLK_CAM_M_SENINF>,
 			<&topckgen_clk CLK_TOP_SENINF_SEL>,
 			<&topckgen_clk CLK_TOP_SENINF1_SEL>,
@@ -4526,7 +4527,8 @@
 			<&topckgen_clk CLK_TOP_UNIVPLL_D6_D8>,
 			<&topckgen_clk CLK_TOP_MAINPLL_D4_D2>,
 			<&topckgen_clk CLK_TOP_UNIVPLL_D5>;
-		clock-names = "SCP_SYS_CAM",
+		clock-names = "SCP_SYS_CSI",
+			"SCP_SYS_CAM",
 			"CAMSYS_SENINF_CGPDN",
 			"TOP_MUX_SENINF",
 			"TOP_MUX_SENINF1",
