@@ -366,5 +366,6 @@
 #include <k6877v1_64/cust.dtsi>
 #include "mediatek/cust_mt6877_touch_1080x2300.dtsi"
 #include "mediatek/rt5133.dtsi"
+#include "mediatek/cust_mt6877_camera.dtsi"
 /*End of this file, DO NOT ADD ANYTHING HERE*/
 

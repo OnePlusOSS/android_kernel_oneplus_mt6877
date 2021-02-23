@@ -4118,6 +4118,92 @@
 		#clock-cells = <1>;
 	};
 
+	seninf1@1a004000 {
+		compatible = "mediatek,seninf1";
+		reg = <0 0x1a004000 0 0x1000>;
+	};
+
+	seninf2@1a005000 {
+		compatible = "mediatek,seninf2";
+		reg = <0 0x1a005000 0 0x1000>;
+	};
+
+	seninf3@1a006000 {
+		compatible = "mediatek,seninf3";
+		reg = <0 0x1a006000 0 0x1000>;
+	};
+
+	seninf4@1a007000 {
+		compatible = "mediatek,seninf4";
+		reg = <0 0x1a007000 0 0x1000>;
+	};
+
+	seninf5@1a008000 {
+		compatible = "mediatek,seninf5";
+		reg = <0 0x1a008000 0 0x1000>;
+	};
+
+	seninf6@1a009000 {
+		compatible = "mediatek,seninf6";
+		reg = <0 0x1a009000 0 0x1000>;
+	};
+
+	seninf7@1a00a000 {
+		compatible = "mediatek,seninf7";
+		reg = <0 0x1a00a000 0 0x1000>;
+	};
+
+	seninf8@1a00b000 {
+		compatible = "mediatek,seninf8";
+		reg = <0 0x1a00b000 0 0x1000>;
+	};
+
+	seninf_top@1a004000 {
+		compatible = "mediatek,seninf_top";
+		reg = <0 0x1a004000 0 0x1000>;
+		clocks = <&scpsys SCP_SYS_CAM>,
+			<&camsys_main_clk CLK_CAM_M_SENINF>,
+			<&topckgen_clk CLK_TOP_SENINF_SEL>,
+			<&topckgen_clk CLK_TOP_SENINF1_SEL>,
+			<&topckgen_clk CLK_TOP_SENINF2_SEL>,
+			<&topckgen_clk CLK_TOP_SENINF3_SEL>,
+			<&topckgen_clk CLK_TOP_CAMTG_SEL>,
+			<&topckgen_clk CLK_TOP_CAMTG2_SEL>,
+			<&topckgen_clk CLK_TOP_CAMTG3_SEL>,
+			<&topckgen_clk CLK_TOP_CAMTG4_SEL>,
+			<&topckgen_clk CLK_TOP_CAMTG5_SEL>,
+			<&topckgen_clk CLK_TOP_UNIVPLL_192M_D32>,
+			<&topckgen_clk CLK_TOP_UNIVPLL_192M_D16>,
+			<&topckgen_clk CLK_TOP_F26M_CK_D2>,
+			<&topckgen_clk CLK_TOP_UNIVPLL_192M_D8>,
+			<&topckgen_clk CLK_TOP_TCK_26M_MX9>,
+			<&topckgen_clk CLK_TOP_UNIVPLL_192M_D4>,
+			<&topckgen_clk CLK_TOP_UNIVPLL_D6_D8>,
+			<&topckgen_clk CLK_TOP_MAINPLL_D4_D2>,
+			<&topckgen_clk CLK_TOP_UNIVPLL_D5>;
+		clock-names = "SCP_SYS_CAM",
+			"CAMSYS_SENINF_CGPDN",
+			"TOP_MUX_SENINF",
+			"TOP_MUX_SENINF1",
+			"TOP_MUX_SENINF2",
+			"TOP_MUX_SENINF3",
+			"TOP_MUX_CAMTG",
+			"TOP_MUX_CAMTG2",
+			"TOP_MUX_CAMTG3",
+			"TOP_MUX_CAMTG4",
+			"TOP_MUX_CAMTG5",
+			"TOP_UNIVP_192M_D32",
+			"TOP_UNIVP_192M_D16",
+			"TOP_F26M_CK_D2",
+			"TOP_UNIVP_192M_D8",
+			"TOP_CLK26M",
+			"TOP_UNIVP_192M_D4",
+			"TOP_UNIVPLL_D6_D8",
+			"TOP_UNIVP_D4_D2",
+			"TOP_MAINP_D5";
+	};
+
+
 	camsys_main_clk: syscon@1a000000 {
 		compatible = "mediatek,mt6877-camsys_main", "syscon";
 		reg = <0 0x1a000000 0 0x1000>;
