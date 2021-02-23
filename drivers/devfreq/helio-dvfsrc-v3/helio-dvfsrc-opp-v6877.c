@@ -29,6 +29,14 @@
 
 static int dvfsrc_rsrv;
 
+static const char vcore_750_bin_tst[14] = {0, 0, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10, 10};
+static const char vcore_725_bin_tst[10] = {0, 0, 0, 2, 2, 4, 4, 6, 6, 6};
+static const char vcore_550_bin_tst[10] = {0, 0, 0, 0, 0, 2, 2, 4, 4, 4};
+
+static const char vcore_750_bin_mp[14] = {0, 0, 0, 0, 2, 2, 4, 4, 6, 6, 8, 8, 10, 10};
+static const char vcore_725_bin_mp[10] = {0, 0, 0, 0, 2, 2, 4, 4, 6, 6};
+static const char vcore_550_bin_mp[10] = {0, 0, 0, 0, 0, 0, 2, 2, 4, 4};
+
 #ifndef CONFIG_MEDIATEK_DRAMC
 static int mtk_dramc_get_steps_freq(unsigned int step)
 {
@@ -36,7 +44,6 @@ static int mtk_dramc_get_steps_freq(unsigned int step)
 	return 4266;
 }
 #endif
-
 
 void dvfsrc_opp_level_mapping(void)
 {
@@ -121,11 +128,71 @@ void dvfsrc_opp_table_init(void)
 	}
 }
 
+static int get_vb_volt(int vcore_opp, int ct_test)
+{
+	unsigned int idx;
+	int ret = 0;
+	int ptpod = get_devinfo_with_index(210);
+
+	pr_info("%s: PTPOD: 0x%x\n", __func__, ptpod);
+
+	switch (vcore_opp) {
+	case VCORE_OPP_0:
+		idx = (ptpod >> 8) & 0xF;
+		if (idx > 13)
+			ret = 0;
+		else if (ct_test)
+			ret = vcore_750_bin_tst[idx];
+		else
+			ret = vcore_750_bin_mp[idx];
+		pr_info("%s: VCORE_OPP_750 bin: 0x%x, %d\n", __func__, idx, ret);
+		break;
+	case VCORE_OPP_1:
+		idx = (ptpod >> 4) & 0xF;
+		if (idx > 9)
+			ret = 0;
+		else if (ct_test)
+			ret = vcore_725_bin_tst[idx];
+		else
+			ret = vcore_725_bin_mp[idx];
+		pr_info("%s: VCORE_OPP_725 bin: 0x%x, %d\n", __func__, idx, ret);
+		break;
+	case VCORE_OPP_4:
+		idx = ptpod & 0xF;
+		if (idx > 9)
+			ret = 0;
+		else if (ct_test)
+			ret = vcore_550_bin_tst[idx];
+		else
+			ret = vcore_550_bin_mp[idx];
+		pr_info("%s: VCORE_OPP_550 bin: 0x%x, %d\n", __func__, idx, ret);
+		break;
+	default:
+		break;
+	}
+
+	return ret * 6250;
+}
+
+static int is_rising_need(void)
+{
+	int idx;
+	int ptpod = get_devinfo_with_index(210);
+
+	pr_info("%s: PTPOD: 0x%x\n", __func__, ptpod);
+	idx = ptpod & 0xF;
+	if (idx == 1 || idx == 2)
+		return idx;
+
+	return 0;
+}
+
 static int __init dvfsrc_opp_init(void)
 {
 	struct device_node *dvfsrc_node = NULL;
 	int vcore_opp_0_uv, vcore_opp_1_uv, vcore_opp_2_uv, vcore_opp_3_uv;
 	int vcore_opp_4_uv;
+	int ct_test = 0;
 	int is_vcore_ct = 0;
 	int dvfs_v_mode = 0;
 	int opp_type = 0;
@@ -150,6 +217,7 @@ static int __init dvfsrc_opp_init(void)
 		pr_info("%s: vcore_arg = %08x\n", __func__, dvfsrc_rsrv);
 		dvfs_v_mode = (dvfsrc_rsrv >> V_VMODE_SHIFT) & 0x3;
 		is_vcore_ct = (dvfsrc_rsrv >> V_CT_SHIFT) & 0x1;
+		ct_test = (dvfsrc_rsrv >> V_CT_TEST_SHIFT) & 0x1;
 		opp_type = (dvfsrc_rsrv >> V_OPP_TYPE_SHIFT) & 0x3;
 	}
 
@@ -162,6 +230,21 @@ static int __init dvfsrc_opp_init(void)
 	vcore_opp_2_uv = 650000;
 	vcore_opp_3_uv = 600000;
 	vcore_opp_4_uv = 550000;
+
+	if (is_vcore_ct) {
+		if (opp_type == 0)
+			vcore_opp_0_uv -= get_vb_volt(VCORE_OPP_1, ct_test);
+		else
+			vcore_opp_0_uv -= get_vb_volt(VCORE_OPP_0, ct_test);
+		vcore_opp_1_uv -= get_vb_volt(VCORE_OPP_1, ct_test);
+		vcore_opp_4_uv -= get_vb_volt(VCORE_OPP_4, ct_test);
+		vcore_opp_0_uv = max(vcore_opp_0_uv, vcore_opp_1_uv);
+	}
+
+	if (is_rising_need() == 2)
+		vcore_opp_4_uv = 575000;
+	else if (is_rising_need() == 1)
+		vcore_opp_4_uv = 600000;
 
 	if (dvfs_v_mode == 3) {
 		/* LV */
