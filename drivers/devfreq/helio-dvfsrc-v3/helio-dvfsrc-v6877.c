@@ -394,7 +394,11 @@ u32 dvfsrc_get_pcie_vcore_status(void)
 
 struct regulator *dvfsrc_vcore_requlator(struct device *dev)
 {
+#ifdef	CONFIG_MTK_DVFSRC_MT6877_PRETEST
 	return regulator_get(dev, "vcore");
+#else
+	return regulator_get(dev, "vgpu11");
+#endif
 }
 
 
