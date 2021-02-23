@@ -979,6 +979,8 @@ s32 mm_qos_add_request(struct plist_head *owner_list,
 	u32 larb_id, port_id;
 	struct mm_qos_request *enum_req = NULL;
 
+	if (skip_smi_config)
+		return 0;
 	larb_id = SMI_PMQOS_LARB_DEC(smi_master_id);
 	port_id = SMI_PMQOS_PORT_MASK(smi_master_id);
 	if (!req) {
@@ -1034,6 +1036,8 @@ s32 mm_qos_set_request(struct mm_qos_request *req, u32 bw_value,
 	struct mm_qos_request *enum_req = NULL;
 	bool hrt_port = false;
 
+	if (skip_smi_config)
+		return 0;
 	if (!req)
 		return -EINVAL;
 
@@ -1211,6 +1215,8 @@ void mm_qos_update_all_request(struct plist_head *owner_list)
 	struct mm_qos_request *enum_req = NULL;
 #endif
 
+	if (skip_smi_config)
+		return;
 	if (!owner_list || plist_head_empty(owner_list)) {
 		pr_notice("%s: owner_list is invalid\n", __func__);
 		return;
@@ -1404,6 +1410,8 @@ void mm_qos_update_all_request_zero(struct plist_head *owner_list)
 {
 	struct mm_qos_request *req = NULL;
 
+	if (skip_smi_config)
+		return;
 	plist_for_each_entry(req, owner_list, owner_node) {
 		mm_qos_set_request(req, 0, 0, 0);
 	}
@@ -1414,6 +1422,9 @@ EXPORT_SYMBOL_GPL(mm_qos_update_all_request_zero);
 void mm_qos_remove_all_request(struct plist_head *owner_list)
 {
 	struct mm_qos_request *temp, *req = NULL;
+
+	if (skip_smi_config)
+		return;
 
 	mutex_lock(&bw_mutex);
 	plist_for_each_entry_safe(req, temp, owner_list, owner_node) {
@@ -1436,6 +1447,8 @@ s32 mm_hrt_get_available_hrt_bw(u32 master_id)
 	s32 cam_bw;
 	s32 result;
 
+	if (skip_smi_config)
+		return UNINITIALIZED_VALUE;
 	if (total_hrt_bw == UNINITIALIZED_VALUE)
 		return UNINITIALIZED_VALUE;
 
@@ -1536,6 +1549,9 @@ void mmdvfs_set_max_camera_hrt_bw(u32 bw)
 {
 #ifdef HRT_MECHANISM
 	u32 mw_hrt_bw;
+
+	if (skip_smi_config)
+		return;
 
 	cam_scen_change = true;
 	cam_scen_start_time = jiffies;
