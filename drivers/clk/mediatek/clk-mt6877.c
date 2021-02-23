@@ -2167,11 +2167,12 @@ static const struct mtk_gate ifrao_clks[] = {
 #define PLL_CFLAGS		(0)
 #endif
 
-#define PLL(_id, _name, _reg, _en_reg, _en_mask,		\
+#define PLL_PWR(_id, _name, _reg, _en_reg, _en_mask,		\
 			_pwr_reg, _flags, _rst_bar_mask,		\
 			_pd_reg, _pd_shift, _tuner_reg,			\
 			_tuner_en_reg, _tuner_en_bit,			\
-			_pcw_reg, _pcw_shift, _pcwbits) {		\
+			_pcw_reg, _pcw_shift, _pcwbits,			\
+			_pwr_stat) {					\
 		.id = _id,						\
 		.name = _name,						\
 		.reg = _reg,						\
@@ -2191,7 +2192,20 @@ static const struct mtk_gate ifrao_clks[] = {
 		.pcw_shift = _pcw_shift,				\
 		.pcwbits = _pcwbits,					\
 		.pcwibits = MT6877_INTEGER_BITS,			\
+		.pwr_stat = _pwr_stat,					\
 	}
+
+#define PLL(_id, _name, _reg, _en_reg, _en_mask,		\
+			_pwr_reg, _flags, _rst_bar_mask,		\
+			_pd_reg, _pd_shift, _tuner_reg,			\
+			_tuner_en_reg, _tuner_en_bit,			\
+			_pcw_reg, _pcw_shift, _pcwbits)			\
+		PLL_PWR(_id, _name, _reg, _en_reg, _en_mask,		\
+			_pwr_reg, _flags, _rst_bar_mask,		\
+			_pd_reg, _pd_shift, _tuner_reg,			\
+			_tuner_en_reg, _tuner_en_bit,			\
+			_pcw_reg, _pcw_shift, _pcwbits,			\
+			NULL)
 
 #define PLL_B(_id, _name, _reg, _en_mask, _pwr_reg, _flags,		\
 			_rst_bar_mask, _pd_reg, _pd_shift,		\
@@ -2284,19 +2298,25 @@ static const struct mtk_pll_data apmixed_plls[] = {
 		USBPLL_CON1, 0, 22/*pcw*/),
 };
 
+/* get spm power status struct to register inside clk_data */
+static struct pwr_status mfg_ao_pwr_stat = GATE_PWR_STAT(0xEF8,
+		0xEFC, INV_OFS, 0x3f, 0x3f);
+
 static const struct mtk_pll_data mfg_ao_plls[] = {
-	PLL(CLK_MFG_AO_MFGPLL1, "mfg_ao_mfgpll1", MFGPLL1_CON0/*base*/,
+	PLL_PWR(CLK_MFG_AO_MFGPLL1, "mfg_ao_mfgpll1", MFGPLL1_CON0/*base*/,
 		MFGPLL1_CON0, BIT(0)/*en*/,
 		MFGPLL1_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
 		MFGPLL1_CON1, 24/*pd*/,
 		0, 0, 0/*tuner*/,
-		MFGPLL1_CON1, 0, 22/*pcw*/),
-	PLL(CLK_MFG_AO_MFGPLL4, "mfg_ao_mfgpll4", MFGPLL4_CON0/*base*/,
+		MFGPLL1_CON1, 0, 22/*pcw*/,
+		&mfg_ao_pwr_stat),
+	PLL_PWR(CLK_MFG_AO_MFGPLL4, "mfg_ao_mfgpll4", MFGPLL4_CON0/*base*/,
 		MFGPLL4_CON0, BIT(0)/*en*/,
 		MFGPLL4_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
 		MFGPLL4_CON1, 24/*pd*/,
 		0, 0, 0/*tuner*/,
-		MFGPLL4_CON1, 0, 22/*pcw*/),
+		MFGPLL4_CON1, 0, 22/*pcw*/,
+		&mfg_ao_pwr_stat),
 };
 
 static const struct mtk_pll_data apu_ao_plls[] = {
