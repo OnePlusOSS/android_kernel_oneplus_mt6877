@@ -113,9 +113,7 @@ obj-$(CONFIG_COMMON_CLK_MT6877_VDE) += clk-mt6877-vde.o
 obj-$(CONFIG_COMMON_CLK_MT6877_VEN) += clk-mt6877-ven.o
 
 ifeq ($(CONFIG_DEBUG_FS), y)
-ifeq ($(CONFIG_MTK_ENG_BUILD),y)
 obj-$(CONFIG_COMMON_CLK_MT6877) += clkdbg.o clkdbg-mt6877.o
-endif
 obj-$(CONFIG_COMMON_CLK_MT6768) +=  clkchk-mt6768.o clkdbg-mt6768.o mt6768_clkmgr.o
 obj-$(CONFIG_COMMON_CLK_MT6765) += clkdbg_mt6765.o clkchk-mt6765.o
 endif
