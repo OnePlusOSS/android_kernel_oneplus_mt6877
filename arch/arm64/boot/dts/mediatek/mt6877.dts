@@ -5116,6 +5116,98 @@
 	alsps_mtk:alsps_mtk {
 	};
 
+	ptp3: ptp3 {
+		compatible = "mediatek,ptp3";
+
+		/* brisket2 */
+		brisket2_InitPath = <0xFFFFFFFF>;
+
+		/* ctt */
+		cttBitEn = <255>;
+		cttImax_0 = <8190>;
+		cttImax_1 = <8190>;
+		cttImax_2 = <8190>;
+		cttImax_3 = <8190>;
+		cttImax_4 = <8190>;
+		cttImax_5 = <8190>;
+		cttImax_6 = <8190>;
+		cttImax_7 = <8190>;
+		cttTmax_0 = <255>;
+		cttTmax_1 = <255>;
+		cttTmax_2 = <255>;
+		cttTmax_3 = <255>;
+		cttTmax_4 = <255>;
+		cttTmax_5 = <255>;
+		cttTmax_6 = <255>;
+		cttTmax_7 = <255>;
+		cttImaxDelta_0 = <200>;
+		cttImaxDelta_1 = <200>;
+		cttImaxDelta_2 = <200>;
+		cttImaxDelta_3 = <200>;
+		cttImaxDelta_4 = <200>;
+		cttImaxDelta_5 = <200>;
+		cttImaxDelta_6 = <200>;
+		cttImaxDelta_7 = <200>;
+		cttTmaxDelta_0 = <10>;
+		cttTmaxDelta_1 = <10>;
+		cttTmaxDelta_2 = <10>;
+		cttTmaxDelta_3 = <10>;
+		cttTmaxDelta_4 = <10>;
+		cttTmaxDelta_5 = <10>;
+		cttTmaxDelta_6 = <10>;
+		cttTmaxDelta_7 = <10>;
+
+		/* drcc */
+		drcc_state = <0>;
+		drcc0_Vref = <255>;
+		drcc1_Vref = <255>;
+		drcc2_Vref = <255>;
+		drcc3_Vref = <255>;
+		drcc4_Vref = <255>;
+		drcc5_Vref = <255>;
+		drcc6_Vref = <255>;
+		drcc7_Vref = <255>;
+		drcc0_Code = <255>;
+		drcc1_Code = <255>;
+		drcc2_Code = <255>;
+		drcc3_Code = <255>;
+		drcc4_Code = <255>;
+		drcc5_Code = <255>;
+		drcc6_Code = <255>;
+		drcc7_Code = <255>;
+		drcc4_EdgeSel = <255>;
+		drcc5_EdgeSel = <255>;
+		drcc6_EdgeSel = <255>;
+		drcc7_EdgeSel = <255>;
+
+		/* pdp */
+		pdp_state = <194>;
+		pdp_state_pinctl = <0>;
+
+		/* dt */
+		dt_state = <0>;
+		dt_state_pinctl = <0>;
+
+		/* CINST */
+		cinst_doe_init = <0>;
+		cinst_doe_ls_enable = <192>;
+		cinst_doe_ls_period = <255>;
+		cinst_doe_ls_credit = <255>;
+		cinst_doe_vx_enable = <192>;
+		cinst_doe_vx_period = <255>;
+		cinst_doe_vx_credit = <255>;
+		cinst_doe_ls_low_en = <0>;
+		cinst_doe_ls_low_period = <255>;
+		cinst_doe_vx_low_en = <0>;
+		cinst_doe_vx_low_period = <255>;
+		cinst_doe_ls_const_en = <0>;
+		cinst_doe_vx_const_en = <0>;
+
+		/* iglre */
+		igBitEn = <240>;
+		lreBitEn = <240>;
+	};
+
 	bt@18000000 {
 		compatible = "mediatek,bt";
 			/* conn_infra_rgu */
