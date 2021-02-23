@@ -313,6 +313,22 @@
 			alloc-ranges = <0 0x50000000 0 0x40000000>;
 		};
 
+#ifdef CONFIG_MICROTRUST_TEE_SUPPORT
+		soter-shared-mem {
+			compatible = "microtrust,shared_mem";
+			no-map;
+#if defined(CONFIG_MTK_SEC_VIDEO_PATH_SUPPORT) || \
+	defined(CONFIG_MTK_CAM_SECURITY_SUPPORT)
+			size = <0 0x800000>;
+			alignment = <0 0x1000000>;
+#else
+			size = <0 0x200000>;
+			alignment = <0 0x200000>;
+#endif
+			alloc-ranges = <0 0x40000000 0 0x50000000>;
+		};
+#endif
+
 		reserve-memory-scp_share {
 			compatible = "mediatek,reserve-memory-scp_share";
 			no-map;
@@ -660,6 +676,18 @@
 	};
 
 	/* AMMS SW IRQ number GIC:327 DTS:295 */
+	/* Microtrust SW IRQ number 117(149) ~ 122(154) */
+	utos {
+		compatible = "microtrust,utos";
+		interrupts = <GIC_SPI 117 IRQ_TYPE_EDGE_RISING>,
+			<GIC_SPI 118 IRQ_TYPE_EDGE_RISING>;
+	};
+
+	utos_tester {
+		compatible = "microtrust,tester-v1";
+	};
+
+
 	amms_control {
 		compatible = "mediatek,amms";
 		interrupts = <GIC_SPI 295 IRQ_TYPE_EDGE_RISING>;
