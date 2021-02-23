@@ -171,7 +171,9 @@ static int __mt6877_suspend_prompt(int type, int cpu,
 	/* Record md sleep time */
 	get_md_sleep_time(&before_md_sleep_status);
 
-
+	pr_info("[name:spm&][%s:%d] - suspend skip\n",
+			 __func__, __LINE__);
+	ret = -1;
 PLAT_LEAVE_SUSPEND:
 	return ret;
 }
