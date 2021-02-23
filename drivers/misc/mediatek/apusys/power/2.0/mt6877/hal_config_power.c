@@ -344,7 +344,7 @@ static void hw_init_setting(void)
 	 *	(a) IOMMU enable SCP_SYS_VPU.
 	 *		then triggering CCF to
 	 *		(1) enable clk of ipu_if_sel/dsp_sel
-	 *		(2) clear BUCK_ISOLATION  bit[0] and bit[5]
+	 *		(2) clear BUCK_ISOLATION  bit[2] and bit[5]
 	 *		(3) set SPM_CROSS_WAKE_M01_REQ = 1
 	 *		(4) write VCORE/CONN_CG_CLR to un-gated inner CG
 	 *	(b) IOMMU un-gated CCF nodes, CLK_APUC_IOMMU_0.
@@ -443,6 +443,7 @@ static int init_power_resource(void *param)
 	ret = enable_apu_conn_clksrc();
 	if (ret)
 		goto out;
+
 	hw_init_setting();
 
 #if !BYPASS_POWER_OFF
@@ -1227,7 +1228,7 @@ static int buck_control(enum DVFS_USER user, int level)
 		 */
 
 		/* Release buck isolation */
-		DRV_ClearBitReg32(BUCK_ISOLATION, (BIT(0) | BIT(5)));
+		DRV_ClearBitReg32(BUCK_ISOLATION, (BIT(2) | BIT(5)));
 
 	} else if (level == 2) {
 		/* default voltage */
@@ -1278,7 +1279,7 @@ static int buck_control(enum DVFS_USER user, int level)
 		} else {
 
 			/* Enable buck isolation */
-			DRV_SetBitReg32(BUCK_ISOLATION, (BIT(0) | BIT(5)));
+			DRV_SetBitReg32(BUCK_ISOLATION, (BIT(2) | BIT(5)));
 
 			/*
 			 * In mt6877, vsrarm is shared with vcore

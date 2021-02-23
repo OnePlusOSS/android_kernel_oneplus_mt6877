@@ -690,7 +690,7 @@ static unsigned int pll_freqmeter_get(unsigned int pll_sel)
 	while (DRV_Reg32(con0) & 0x10) {
 		udelay(10);
 		i++;
-		if (i > 10000) {
+		if (i > 30) {
 			timeout = true;
 			LOG_WRN("timeout! [PLL%d]con0: 0x%x, con1: 0x%x\n",
 				pll_sel, DRV_Reg32(con0), DRV_Reg32(con1));
