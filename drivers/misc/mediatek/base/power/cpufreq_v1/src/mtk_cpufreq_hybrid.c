@@ -57,6 +57,9 @@
 #include "mtk_cpufreq_hybrid.h"
 #include "mtk_cpufreq_opp_pv_table.h"
 #include "mtk_cpufreq_debug.h"
+#ifdef DSU_DVFS_ENABLE
+#include "swpm_v1/mtk_swpm_interface.h"
+#endif
 
 #ifdef CONFIG_MTK_CPU_MSSV
 extern unsigned int cpumssv_get_state(void);
@@ -111,6 +114,10 @@ static void __iomem *csram_base;
 #endif
 /* log_box_parsed[MAX_LOG_FETCH] is also used to save last log entry */
 static struct cpu_dvfs_log_box log_box_parsed[1 + MAX_LOG_FETCH];
+#ifdef DSU_DVFS_ENABLE
+unsigned int force_disable;
+unsigned int last_status;
+#endif
 
 void parse_time_log_content(unsigned int time_stamp_l_log,
 	unsigned int time_stamp_h_log, int idx)
@@ -1461,12 +1468,29 @@ void cpuhvfs_update_cci_map_tbl(unsigned int idx_1, unsigned int idx_2,
 
 void cpuhvfs_update_cci_mode(unsigned int mode, unsigned int use_id)
 {
-	if (mode < NR_CCI_TBL) {
-		csram_write(OFFS_CCI_TBL_USER, use_id);
-		/* mode = 0(Normal as 50%) mode = 1(Perf as 70%) */
-		csram_write(OFFS_CCI_TBL_MODE, mode);
-		csram_write(OFFS_CCI_TOGGLE_BIT, 1);
+	/* mode = 0(Normal as 50%) mode = 1(Perf as 70%) */
+
+#ifdef DSU_DVFS_ENABLE
+	if ((use_id == FPS_PERF && force_disable) ||
+		(use_id == FPS_PERF && last_status == mode))
+		return;
+	if (!use_id) {
+		if (mode == PERF) {
+			swpm_pmu_enable(0);
+			force_disable = 1;
+		} else {
+			swpm_pmu_enable(1);
+			force_disable = 0;
+		}
 	}
+	if (use_id == FPS_PERF)
+		last_status = mode;
+
+#endif
+	csram_write(OFFS_CCI_TBL_USER, use_id);
+	csram_write(OFFS_CCI_TBL_MODE, mode);
+	csram_write(OFFS_CCI_TOGGLE_BIT, 1);
+
 }
 
 unsigned int cpuhvfs_get_cci_mode(void)
