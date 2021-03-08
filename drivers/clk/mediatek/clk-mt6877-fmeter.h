@@ -31,10 +31,7 @@
 #define FM_DSP_CK				12
 #define FM_DSP1_CK				13
 #define FM_DSP2_CK				14
-#define FM_DSP3_CK				15
 #define FM_DSP4_CK				16
-#define FM_DSP5_CK				17
-#define FM_DSP6_CK				18
 #define FM_DSP7_CK				19
 #define FM_FCAMTG_CK				20
 #define FM_FCAMTG2_CK				21
@@ -51,7 +48,6 @@
 #define FM_FPWRAP_ULPOSC_CK			32
 #define FM_ATB_CK				33
 #define FM_SSPM_CK				34
-#define FM_SCAM_CK				35
 #define FM_FDISP_PWM_CK				36
 #define FM_FUSB_CK				37
 #define FM_FSSUSB_XHCI_CK			38
@@ -75,7 +71,6 @@
 #define FM_PWM_CK				58
 #define FM_AUDIO_H_CK				59
 #define FM_MCUPM_CK				60
-#define FM_SPMI_P_MST_CK			61
 #define FM_SPMI_M_MST_CK			62
 #define FM_DVFSRC_CK				63
 /* ABIST Part */

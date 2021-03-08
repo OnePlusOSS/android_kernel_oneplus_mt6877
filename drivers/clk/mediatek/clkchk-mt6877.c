@@ -179,10 +179,7 @@ static const char * const clks[] = {
 	"ifrao_ccif4_md",
 	"ifrao_spi6_ck",
 	"ifrao_spi7_ck",
-	"ifrao_mux_tia_ck",
-	"ifrao_pwarp_sys_p_ck",
 	"ifrao_aes_0p_ck",
-	"ifrao_pwrap_tmr_p_ck",
 
 	/* apmixedsys */
 	"armpll_ll",

@@ -2144,14 +2144,8 @@ static const struct mtk_gate ifrao_clks[] = {
 	GATE_IFRAO3(CLK_IFRAO_SPI7_CK, "ifrao_spi7_ck",
 			"spi_ck"/* parent */, 31),
 	/* IFRAO4 */
-	GATE_IFRAO4(CLK_IFRAO_RG_MUX_TIA_CK, "ifrao_mux_tia_ck",
-			"axi_ck"/* parent */, 8),
-	GATE_IFRAO4(CLK_IFRAO_RG_PWARP_SYS_P_CK, "ifrao_pwarp_sys_p_ck",
-			"fpwrap_ulposc_ck"/* parent */, 16),
 	GATE_IFRAO4(CLK_IFRAO_RG_AES_CK_0P_CK, "ifrao_aes_0p_ck",
 			"aes_msdcfde_ck"/* parent */, 18),
-	GATE_IFRAO4(CLK_IFRAO_RG_PWRAP_TMR_P_CK, "ifrao_pwrap_tmr_p_ck",
-			"fpwrap_ulposc_ck"/* parent */, 30),
 };
 
 
