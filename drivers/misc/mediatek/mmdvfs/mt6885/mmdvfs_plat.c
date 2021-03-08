@@ -149,3 +149,18 @@ s32 dram_write_weight(s32 val)
 #endif
 }
 
+s32 emi_occ_ratio(void)
+{
+	return 50;
+}
+
+s32 cam_occ_ratio(void)
+{
+	return 100;
+}
+
+s32 disp_occ_ratio(void)
+{
+	return 100;
+}
+
