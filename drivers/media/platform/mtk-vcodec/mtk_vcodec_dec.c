@@ -402,6 +402,18 @@ static void mtk_vdec_queue_error_event(struct mtk_vcodec_ctx *ctx)
 	static const struct v4l2_event ev_error = {
 		.type = V4L2_EVENT_MTK_VDEC_ERROR,
 	};
+	int i = 0;
+
+	for (i = 0; i < MTK_VDEC_HW_NUM; i++) {
+		/* user killed when holding lock */
+		if (ctx->hw_locked[i] == 1)
+			vdec_decode_unprepare(ctx, i);
+		/* user killed when waiting lock, do not unlock*/
+		if (ctx->hw_locked[i] == -1) {
+			mtk_vdec_pmqos_end_frame(ctx, i);
+			mtk_vcodec_dec_clock_off(&ctx->dev->pm, i);
+		}
+	}
 
 	mtk_v4l2_debug(1, "[%d]", ctx->id);
 	v4l2_event_queue_fh(&ctx->fh, &ev_error);
@@ -987,20 +999,7 @@ void mtk_vcodec_dec_empty_queues(struct file *file, struct mtk_vcodec_ctx *ctx)
 
 void mtk_vcodec_dec_release(struct mtk_vcodec_ctx *ctx)
 {
-	int i = 0;
-
 	vdec_if_deinit(ctx);
-	if (ctx->user_lock_hw)
-		for (i = 0; i < MTK_VDEC_HW_NUM; i++) {
-			/* user killed when holding lock */
-			if (ctx->hw_locked[i] == 1)
-				vdec_decode_unprepare(ctx, i);
-			/* user killed when waiting lock, do not unlock*/
-			if (ctx->hw_locked[i] == -1) {
-				mtk_vdec_pmqos_end_frame(ctx, i);
-				mtk_vcodec_dec_clock_off(&ctx->dev->pm, i);
-			}
-		}
 }
 
 void mtk_vcodec_dec_set_default_params(struct mtk_vcodec_ctx *ctx)

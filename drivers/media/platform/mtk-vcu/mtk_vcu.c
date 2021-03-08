@@ -355,7 +355,7 @@ int vcu_ipi_register(struct platform_device *pdev,
 	unsigned int i = 0;
 
 	if (vcu == NULL) {
-		dev_err(&pdev->dev, "vcu device in not ready\n");
+		dev_info(&pdev->dev, "vcu device is not ready\n");
 		return -EPROBE_DEFER;
 	}
 
@@ -2043,13 +2043,13 @@ static int mtk_vcu_suspend(struct device *pDev)
 		pr_info("[VCU] %s fail due to videocodec activity\n", __func__);
 		return -EBUSY;
 	}
-	pr_info("[VCU] %s done\n", __func__);
+	pr_debug("[VCU] %s done\n", __func__);
 	return 0;
 }
 
 static int mtk_vcu_resume(struct device *pDev)
 {
-	pr_info("[VCU] %s done\n", __func__);
+	pr_debug("[VCU] %s done\n", __func__);
 	return 0;
 }
 
@@ -2067,7 +2067,7 @@ static int mtk_vcu_suspend_notifier(struct notifier_block *nb,
 {
 	int wait_cnt = 0;
 
-	pr_info("[VCU] %s ok action = %ld\n", __func__, action);
+	pr_debug("[VCU] %s ok action = %ld\n", __func__, action);
 	switch (action) {
 	case PM_SUSPEND_PREPARE:
 		vcu_ptr->is_entering_suspend = 1;
