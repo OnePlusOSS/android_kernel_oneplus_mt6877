@@ -495,6 +495,13 @@ struct opp_table_info g_opp_table_segment_3[] = {
 /**************************************************
  * Aging table
  **************************************************/
+struct g_asensor_info {
+	u32 efuse_val1, efuse_val2;
+	u32 a_t0_lvt_rt, a_t0_ulvt_rt;
+	u32 a_tn_lvt_cnt, a_tn_ulvt_cnt;
+	int tj1, tj2;
+	int adiff1, adiff2;
+};
 unsigned int g_aging_table[][NUM_OF_OPP_IDX] = {
 	/* Aging Table 0 */
 	{1875, 1875, 1875, 1875, 1875, 1875, 1875, 1875,

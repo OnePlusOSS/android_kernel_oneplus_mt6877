@@ -219,6 +219,7 @@ static unsigned int g_segment_max_opp_idx;
 static unsigned int g_segment_min_opp_idx;
 static unsigned int g_aging_enable = 1;
 static int g_aging_table_id = -1;
+static struct g_asensor_info g_asensor;
 static unsigned int g_aging_most_agrresive;
 static unsigned int g_cur_opp_freq;
 static unsigned int g_cur_opp_vgpu;
@@ -1457,6 +1458,16 @@ static void __mt_gpufreq_update_table_by_asensor(void)
 #endif
 
 	g_aging_table_id = aging_table_id;
+	g_asensor.efuse_val1 = efuse_val1;
+	g_asensor.efuse_val2 = efuse_val2;
+	g_asensor.a_t0_lvt_rt = a_t0_lvt_rt;
+	g_asensor.a_t0_ulvt_rt = a_t0_ulvt_rt;
+	g_asensor.a_tn_lvt_cnt = a_tn_lvt_cnt;
+	g_asensor.a_tn_ulvt_cnt = a_tn_ulvt_cnt;
+	g_asensor.tj1 = tj1;
+	g_asensor.tj2 = tj2;
+	g_asensor.adiff1 = adiff1;
+	g_asensor.adiff2 = adiff2;
 
 	/* 8. Update aginge value */
 	for (i = 0; i < NUM_OF_OPP_IDX; i++)
@@ -2281,9 +2292,25 @@ out:
 
 static int mt_gpufreq_aging_enable_proc_show(struct seq_file *m, void *v)
 {
-	seq_printf(m, "g_aging_enable = %d\n", g_aging_enable);
+	seq_printf(m, "g_aging_enable = %d\n\n", g_aging_enable);
 	seq_printf(m, "g_aging_table_id = %d, g_aging_most_agrresive = %d\n",
 		g_aging_table_id, g_aging_most_agrresive);
+	seq_printf(m, "efuse_val1 = 0x%08x, efuse_val2 = 0x%08x\n"
+					"a_t0_lvt_rt = %d, a_t0_ulvt_rt = %d\n"
+					"a_tn_lvt_cnt = %d, a_tn_ulvt_cnt = %d\n"
+					"tj1 = %d, tj2 = %d\n"
+					"adiff1 = %d, adiff2 = %d\n",
+					g_asensor.efuse_val1,
+					g_asensor.efuse_val2,
+					g_asensor.a_t0_lvt_rt,
+					g_asensor.a_t0_ulvt_rt,
+					g_asensor.a_tn_lvt_cnt,
+					g_asensor.a_tn_ulvt_cnt,
+					g_asensor.tj1,
+					g_asensor.tj2,
+					g_asensor.adiff1,
+					g_asensor.adiff2);
+
 	return 0;
 }
 
