@@ -579,6 +579,8 @@ int debounce_times_perf_down_force_local = -1;
 int pm_qos_update_request_status;
 int cm_mgr_dram_opp_base = -1;
 int cm_mgr_dram_opp = -1;
+int cm_mgr_dram_perf_opp = -1;
+int cm_mgr_dram_step_opp = 2;
 
 static int cm_mgr_fb_notifier_callback(struct notifier_block *self,
 		unsigned long event, void *data)
@@ -724,8 +726,18 @@ void cm_mgr_perf_platform_set_status(int enable)
 		perf_now = ktime_get();
 
 		if (cm_mgr_dram_opp_base == -1) {
-			cm_mgr_dram_opp = 0;
-			cm_mgr_dram_opp_base = cm_mgr_get_dram_opp();
+			cm_mgr_dram_opp_base = get_cur_ddr_opp();
+
+			if (cm_mgr_dram_perf_opp < 0)
+				cm_mgr_dram_opp = 0;
+			else if (cm_mgr_dram_opp_base > cm_mgr_dram_perf_opp) {
+				if (cm_mgr_dram_step_opp < 0)
+					cm_mgr_dram_step_opp = 0;
+				cm_mgr_dram_opp = cm_mgr_dram_step_opp;
+
+			} else
+				cm_mgr_dram_opp = 0;
+
 			pm_qos_update_request(&ddr_opp_req,
 					cm_mgr_dram_opp);
 		} else {
@@ -760,6 +772,11 @@ void cm_mgr_perf_platform_set_status(int enable)
 			cm_mgr_dram_opp = cm_mgr_dram_opp_base *
 				debounce_times_perf_down_local /
 				debounce_times_perf_down;
+
+			if ((cm_mgr_dram_perf_opp >= 0) &&
+				(cm_mgr_dram_opp < cm_mgr_dram_step_opp))
+				cm_mgr_dram_opp = cm_mgr_dram_step_opp;
+
 			pm_qos_update_request(&ddr_opp_req,
 					cm_mgr_dram_opp);
 		} else {
@@ -799,7 +816,8 @@ void cm_mgr_perf_platform_set_force_status(int enable)
 
 		if (cm_mgr_dram_opp_base == -1) {
 			cm_mgr_dram_opp = 0;
-			cm_mgr_dram_opp_base = cm_mgr_get_dram_opp();
+			cm_mgr_dram_opp_base = get_cur_ddr_opp();
+
 			pm_qos_update_request(&ddr_opp_req,
 					cm_mgr_dram_opp);
 		} else {
@@ -954,23 +972,12 @@ int cm_mgr_platform_init(void)
 	return r;
 }
 
-#if 0
-/* no 800 */
-int phy_to_virt_dram_opp[] = {
-	0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x5
-};
-int virt_to_phy_dram_level[] = {
-	0x1, 0x2, 0x3, 0x4, 0x5, 0x6
-};
-#else
+
 /* no 1200 */
 int phy_to_virt_dram_opp[] = {
-	0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x5
-};
+	0x0, 0x1, 0x2, 0x3, 0x4, 0x5, 0x5, 0x6};
 int virt_to_phy_dram_level[] = {
-	0x0, 0x2, 0x3, 0x4, 0x5, 0x6
-};
-#endif
+	0x0, 0x2, 0x3, 0x4, 0x5, 0x6, 0x7};
 
 void cm_mgr_set_dram_level(int level)
 {

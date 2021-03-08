@@ -100,6 +100,10 @@ extern int pm_qos_update_request_status;
 extern int cm_mgr_dram_opp_base;
 extern int cm_mgr_dram_opp;
 
+#define USE_STEP_PERF_OPP
+extern int cm_mgr_dram_perf_opp;
+extern int cm_mgr_dram_step_opp;
+
 extern void cm_mgr_update_met(void);
 extern int cm_mgr_get_idx(void);
 extern int cm_mgr_get_stall_ratio(int cpu);
