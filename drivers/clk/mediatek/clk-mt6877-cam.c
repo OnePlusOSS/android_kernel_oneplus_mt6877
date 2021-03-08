@@ -51,8 +51,6 @@ static const struct mtk_gate cam_m_clks[] = {
 			"cam_ck"/* parent */, 0),
 	GATE_CAM_M(CLK_CAM_M_LARB14, "cam_m_larb14",
 			"cam_ck"/* parent */, 2),
-	GATE_CAM_M(CLK_CAM_M_RESERVED0, "cam_m_reserved0",
-			"cam_ck"/* parent */, 3),
 	GATE_CAM_M(CLK_CAM_M_CAM, "cam_m_cam",
 			"cam_ck"/* parent */, 6),
 	GATE_CAM_M(CLK_CAM_M_CAMTG, "cam_m_camtg",
@@ -73,12 +71,14 @@ static const struct mtk_gate cam_m_clks[] = {
 			"cam_ck"/* parent */, 14),
 	GATE_CAM_M(CLK_CAM_M_MRAW0, "cam_m_mraw0",
 			"cam_ck"/* parent */, 15),
-	GATE_CAM_M(CLK_CAM_M_RESERVED2, "cam_m_reserved2",
-			"cam_ck"/* parent */, 16),
 	GATE_CAM_M(CLK_CAM_M_CCU_GALS, "cam_m_ccu_gals",
 			"cam_ck"/* parent */, 18),
 	GATE_CAM_M(CLK_CAM_M_CAM2MM_GALS, "cam_m_cam2mm_gals",
 			"cam_ck"/* parent */, 19),
+	GATE_CAM_M(CLK_CAM_M_CAMSV4, "cam_m_camsv4",
+			"cam_ck"/* parent */, 20),
+	GATE_CAM_M(CLK_CAM_M_PDA, "cam_m_pda",
+			"cam_ck"/* parent */, 21),
 };
 
 /* get spm power status struct to register inside clk_data */

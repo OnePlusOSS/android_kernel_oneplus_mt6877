@@ -377,7 +377,6 @@ static const char * const clks[] = {
 	/* camsys_main */
 	"cam_m_larb13",
 	"cam_m_larb14",
-	"cam_m_reserved0",
 	"cam_m_cam",
 	"cam_m_camtg",
 	"cam_m_seninf",
@@ -388,9 +387,10 @@ static const char * const clks[] = {
 	"cam_m_ccu0",
 	"cam_m_ccu1",
 	"cam_m_mraw0",
-	"cam_m_reserved2",
 	"cam_m_ccu_gals",
 	"cam_m_cam2mm_gals",
+	"cam_m_camsv4",
+	"cam_m_pda",
 
 	/* camsys_rawa */
 	"cam_ra_larbx",
@@ -679,7 +679,6 @@ struct pg_check_swcg audio_swcgs[] = {
 struct pg_check_swcg camsys_main_swcgs[] = {
 	SWCG("cam_m_larb13"),
 	SWCG("cam_m_larb14"),
-	SWCG("cam_m_reserved0"),
 	SWCG("cam_m_cam"),
 	SWCG("cam_m_camtg"),
 	SWCG("cam_m_seninf"),
@@ -690,9 +689,10 @@ struct pg_check_swcg camsys_main_swcgs[] = {
 	SWCG("cam_m_ccu0"),
 	SWCG("cam_m_ccu1"),
 	SWCG("cam_m_mraw0"),
-	SWCG("cam_m_reserved2"),
 	SWCG("cam_m_ccu_gals"),
 	SWCG("cam_m_cam2mm_gals"),
+	SWCG("cam_m_camsv4"),
+	SWCG("cam_m_pda"),
 	SWCG(NULL),
 };
 /* camsys_rawa */
