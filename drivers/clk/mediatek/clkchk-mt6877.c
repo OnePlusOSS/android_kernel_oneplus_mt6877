@@ -1191,8 +1191,6 @@ static void devapc_dump(void)
 	print_subsys_reg(ifrao);
 	print_subsys_reg(infracfg_ao_bus);
 	print_subsys_reg(apmixed);
-	print_subsys_reg(mfg_ao);
-	print_subsys_reg(apu_ao);
 }
 
 static void __init init_regbase(void)
