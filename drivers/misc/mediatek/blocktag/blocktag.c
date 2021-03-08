@@ -285,11 +285,13 @@ static bool mtk_btag_earaio_send_uevent(const char *src)
 }
 
 #define EARAIO_UEVT_THRESHOLD_BYTES (100 * 1024)
+#define EARAIO_UEVT_THRESHOLD_QD    (50)
 void mtk_btag_earaio_boost(bool boost)
 {
 	struct mtk_btag_mictx_struct *ctx;
 	static bool boosted;
 	bool ret = false;
+	u64 qd;
 
 	/* Use earaio_obj.minor to indicate if obj is existed */
 	if (!(boost ^ boosted) || unlikely(!earaio_obj.minor))
@@ -301,13 +303,20 @@ void mtk_btag_earaio_boost(bool boost)
 			return;
 
 		/* Establish threshold to avoid lousy uevents */
-		if ((ctx->req.r.size_top >= EARAIO_UEVT_THRESHOLD_BYTES) ||
+		if (((ctx->req.r.size_top >= EARAIO_UEVT_THRESHOLD_BYTES) ||
 			(ctx->req.w.size_top >= EARAIO_UEVT_THRESHOLD_BYTES) ||
 			(ctx->top_r_pages >= (EARAIO_UEVT_THRESHOLD_BYTES >> 12)) ||
-			(ctx->top_w_pages >= (EARAIO_UEVT_THRESHOLD_BYTES >> 12)))
+			(ctx->top_w_pages >= (EARAIO_UEVT_THRESHOLD_BYTES >> 12)))) {
+
+			qd = (ctx->weighted_qd * 100) /
+				(sched_clock() - ctx->window_begin);
+			if (qd < EARAIO_UEVT_THRESHOLD_QD)
+				return;
+
 			ret = mtk_btag_earaio_send_uevent("boost=1");
-		else
+		} else {
 			return;
+		}
 	} else {
 		ret = mtk_btag_earaio_send_uevent("boost=0");
 	}
