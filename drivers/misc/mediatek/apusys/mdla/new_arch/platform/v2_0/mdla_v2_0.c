@@ -84,7 +84,7 @@ static inline unsigned long mdla_plat_get_wait_time(u32 core_id)
 {
 	unsigned long time;
 
-	if (mdla_prof_pmu_timer_is_running(core_id))
+	if (mdla_trace_get_cfg_pmu_tmr_en())
 		time = usecs_to_jiffies(mdla_dbg_read_u64(FS_CFG_PMU_PERIOD));
 	else
 		time = msecs_to_jiffies(mdla_dbg_read_u32(FS_POLLING_CMD_DONE));

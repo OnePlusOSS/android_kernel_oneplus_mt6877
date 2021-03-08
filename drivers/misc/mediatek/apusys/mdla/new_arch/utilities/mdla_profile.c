@@ -29,6 +29,7 @@ enum MDLA_DEBUG_FS_PROF {
 
 static u32 mdla_prof_core_bitmask;
 static bool mdla_prof_lat_en;
+static u32 fs_cfg_timer_en;
 
 struct mdla_prof_lat {
 	u64 max;
@@ -623,6 +624,8 @@ static void mdla_prof_fs_init(int mode)
 		prof_use_dbgfs_pmu_event = mdla_prof_v1_use_dbgfs_pmu_event;
 		debugfs_create_file(DBGFS_PROF_NAME_V1, 0644, d, NULL,
 				&mdla_prof_v1_fops);
+		debugfs_create_u32("prof_start", 0660, d, &fs_cfg_timer_en);
+		mdla_trace_register_cfg_pmu_tmr(&fs_cfg_timer_en);
 		break;
 	case PROF_V2:
 		prof_start               = mdla_prof_v2_start;

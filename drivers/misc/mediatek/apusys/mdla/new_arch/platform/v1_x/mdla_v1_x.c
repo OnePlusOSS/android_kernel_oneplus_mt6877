@@ -43,7 +43,6 @@ static void *apu_mdla_gsm_base;
 static struct mdla_dev *mdla_plat_devices;
 
 static u32 fs_zero_skip_count;
-static u32 fs_cfg_timer_en;
 
 static int mdla_dbgfs_u64_create[NF_MDLA_DEBUG_FS_U64] = {
 	[FS_CFG_PMU_PERIOD] = 1,
@@ -137,7 +136,7 @@ static inline unsigned long mdla_plat_get_wait_time(u32 core_id)
 {
 	unsigned long time;
 
-	if (fs_cfg_timer_en)
+	if (mdla_trace_get_cfg_pmu_tmr_en())
 		time = usecs_to_jiffies(mdla_dbg_read_u64(FS_CFG_PMU_PERIOD));
 	else
 		time = msecs_to_jiffies(mdla_dbg_read_u32(FS_POLLING_CMD_DONE));
@@ -368,14 +367,10 @@ static void mdla_plat_dbgfs_init(struct device *dev, struct dentry *parent)
 
 	debugfs_create_devm_seqfile(dev, DBGFS_PMU_NAME, parent,
 				mdla_plat_register_show);
-	debugfs_create_u32("prof_start", 0660,
-			parent, &fs_cfg_timer_en);
 	debugfs_create_u32("zero_skip_count", 0660,
 			parent, &fs_zero_skip_count);
 	debugfs_create_devm_seqfile(dev, DBGFS_USAGE_NAME, parent,
 				mdla_plat_dbgfs_usage);
-
-	mdla_trace_register_cfg_pmu_tmr(&fs_cfg_timer_en);
 }
 
 static int mdla_plat_get_base_addr(struct platform_device *pdev, void **reg, int num)
