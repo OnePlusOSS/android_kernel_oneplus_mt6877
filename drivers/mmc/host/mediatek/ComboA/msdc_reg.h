@@ -635,8 +635,7 @@
 #define SDC_ADV_CFG0_DAT_BUF_FREQ_CTL_EN (0x1  << 18) /* RW */
 #define SDC_ADV_CFG0_SDIO_IRQ_ENHANCE_EN (0x1  << 19) /* RW */
 #define SDC_ADV_CFG0_SDC_RX_ENH_EN      (0x1  << 20) /* RW */
-#define SDC_ADV_CFG0_TX_PIPE_EN         (0x1 << 30)
-#define SDC_ADV_CFG0_TX_PIPE_EN_2       (0x1 << 31)
+#define SDC_ADV_CFG0_TX_PIPE_EN         (0x1 << 31)
 
 /* MSDC_NEW_RX_CFG mask  */
 #define MSDC_NEW_RX_PATH_SEL            (0x1 << 0)

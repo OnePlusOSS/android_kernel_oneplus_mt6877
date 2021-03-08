@@ -315,9 +315,13 @@ void msdc_sd_power(struct msdc_host *host, u32 on)
 			&host->power_flash);
 
 		/* VMC VOLSEL */
+#ifndef NMCARD_SUPPORT
 		msdc_ldo_power(on, host->mmc->supply.vqmmc, VOL_3000,
 			&host->power_io);
-
+#else
+		msdc_ldo_power(on, host->mmc->supply.vqmmc, VOL_1800,
+			&host->power_io);
+#endif
 		pr_info("msdc%d power %s\n", host->id, (on ? "on" : "off"));
 		break;
 
@@ -526,24 +530,40 @@ int msdc_get_ccf_clk_pointer(struct platform_device *pdev,
 	static char const * const hclk_names[] = {
 		MSDC0_HCLK_NAME, MSDC1_HCLK_NAME
 	};
-	if (host->support_new_rx) {
-		if  (pdev->id == 0) {
-			host->new_rx_clk_ctl = devm_clk_get(&pdev->dev,
-							MSDC0_NEW_RX_CLK_NAME);
-			if (IS_ERR(host->new_rx_clk_ctl)) {
-				pr_notice("[msdc%d] cannot get new rx clk ctrl\n",
-					pdev->id);
-				return 1;
-			}
-			if (clk_prepare_enable(host->new_rx_clk_ctl)) {
-				pr_notice("[msdc%d] cannot prepare new rx clk ctrl\n",
-					pdev->id);
-				return 1;
-			}
+
+#ifdef SUPPORT_NEW_TX_NEW_RX
+	if  (pdev->id == 0) {
+		host->new_rx_clk_ctl = devm_clk_get(&pdev->dev,
+						MSDC0_NEW_RX_CLK_NAME);
+		if (IS_ERR(host->new_rx_clk_ctl)) {
+			pr_notice("[msdc%d] cannot get new rx clk ctrl\n",
+				pdev->id);
+			return 1;
 		}
-	} else {
+		if (clk_prepare_enable(host->new_rx_clk_ctl)) {
+			pr_notice("[msdc%d] cannot prepare new rx clk ctrl\n",
+				pdev->id);
+			return 1;
+		}
 		host->new_rx_clk_ctl = NULL;
 	}
+#endif
+	if (pdev->id == 0) {
+		host->src_hclk_ctl = devm_clk_get(&pdev->dev,
+						MSDC0_SRC_HCLK_NAME);
+		if (IS_ERR(host->src_hclk_ctl)) {
+			pr_notice("[msdc%d] cannot get src hclk ctrl\n",
+				pdev->id);
+			return 1;
+		}
+		if (clk_prepare_enable(host->src_hclk_ctl)) {
+			pr_notice("[msdc%d] cannot prepare src hclk ctrl\n",
+				pdev->id);
+			return 1;
+		}
+		host->src_hclk_ctl = NULL;
+	}
+
 	if  (clk_names[pdev->id]) {
 		host->clk_ctl = devm_clk_get(&pdev->dev,
 			clk_names[pdev->id]);
@@ -1428,10 +1448,6 @@ int msdc_of_parse(struct platform_device *pdev, struct mmc_host *mmc)
 		WARN_ON(1);
 	}
 	host->hclk = msdc_get_hclk(host->id, host->hw->clk_src);
-	if (of_property_read_bool(np, "support_new_rx"))
-		host->support_new_rx = 1;
-	else
-		host->support_new_rx = 0;
 #endif
 
 	if (of_find_property(np, "sd-uhs-ddr208", &len))

@@ -968,6 +968,13 @@ static void msdc_init_hw(struct msdc_host *host)
 	/* Reset */
 	msdc_reset_hw(host->id);
 
+#ifdef SUPPORT_NEW_TX_OLD_RX
+	msdc_new_tx_old_rx_setting(host);
+#endif
+#ifdef SUPPORT_NEW_TX_NEW_RX
+	msdc_new_tx_new_rx_setting(host);
+#endif
+
 	/* Disable card detection */
 	MSDC_CLR_BIT32(MSDC_PS, MSDC_PS_CDEN);
 	if (!(host->mmc->caps & MMC_CAP_NONREMOVABLE)) {
@@ -4379,6 +4386,10 @@ void msdc_ops_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 			}
 			msdc_set_driving(host, host->hw->driving_applied);
 		}
+#if	defined(SUPPORT_NEW_TX_NEW_RX) || defined(SUPPORT_NEW_TX_OLD_RX)
+		pr_notice("[AUTOK]eMMC new tx/rx timing setting\n");
+		msdc_new_rx_tx_timing_setting(host);
+#endif
 	}
 
 	if (host->mclk != ios->clock) {
@@ -4406,10 +4417,6 @@ void msdc_ops_set_ios(struct mmc_host *mmc, struct mmc_ios *ios)
 			mmc_retune_disable(host->mmc);
 		}
 	}
-#ifdef SUPPORT_NEW_TX
-	msdc_new_tx_setting(mmc);
-#endif
-
 	spin_unlock(&host->lock);
 }
 
