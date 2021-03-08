@@ -64,6 +64,7 @@ static struct mtk_drm_property mtk_crtc_property[CRTC_PROP_MAX] = {
 	{DRM_MODE_PROP_ATOMIC, "OVERLAP_LAYER_NUM", 0, UINT_MAX, 0},
 	{DRM_MODE_PROP_ATOMIC, "LAYERING_IDX", 0, UINT_MAX, 0},
 	{DRM_MODE_PROP_ATOMIC, "PRESENT_FENCE", 0, UINT_MAX, 0},
+	{DRM_MODE_PROP_ATOMIC, "SF_PRESENT_FENCE", 0, UINT_MAX, 0},
 	{DRM_MODE_PROP_ATOMIC, "DOZE_ACTIVE", 0, UINT_MAX, 0},
 	{DRM_MODE_PROP_ATOMIC, "OUTPUT_ENABLE", 0, UINT_MAX, 0},
 	{DRM_MODE_PROP_ATOMIC, "OUTPUT_BUFF_IDX", 0, UINT_MAX, 0},
@@ -2883,6 +2884,7 @@ void mtk_crtc_start_trig_loop(struct drm_crtc *crtc)
 	struct mtk_drm_crtc *mtk_crtc = to_mtk_crtc(crtc);
 	unsigned long crtc_id = (unsigned long)drm_crtc_index(crtc);
 	struct mtk_drm_private *priv = crtc->dev->dev_private;
+	struct cmdq_pkt_buffer *buf = &(mtk_crtc->gce_obj.buf);
 #if defined(CONFIG_MACH_MT6873) || defined(CONFIG_MACH_MT6853) || \
 	defined(CONFIG_MACH_MT6833)
 	struct cmdq_operand lop, rop;
@@ -3006,6 +3008,19 @@ void mtk_crtc_start_trig_loop(struct drm_crtc *crtc)
 		cmdq_pkt_set_event(cmdq_handle,
 			mtk_crtc->gce_obj.event[EVENT_SYNC_TOKEN_SODI]);
 #endif
+		if (mtk_drm_helper_get_opt(priv->helper_opt,
+					   MTK_DRM_OPT_SF_PF)) {
+			cmdq_pkt_clear_event(cmdq_handle,
+				mtk_crtc->gce_obj.event[EVENT_DSI0_SOF]);
+			cmdq_pkt_wait_no_clear(cmdq_handle,
+				mtk_crtc->gce_obj.event[EVENT_DSI0_SOF]);
+			cmdq_pkt_mem_move(cmdq_handle, mtk_crtc->gce_obj.base,
+				buf->pa_base +
+				DISP_SLOT_SF_PRESENT_FENCE_CONF(crtc_id),
+				buf->pa_base +
+				DISP_SLOT_SF_PRESENT_FENCE(crtc_id),
+				CMDQ_THR_SPR_IDX3);
+		}
 
 		if (mtk_drm_helper_get_opt(priv->helper_opt,
 					   MTK_DRM_OPT_LAYER_REC)) {
@@ -4483,8 +4498,13 @@ static void mtk_drm_crtc_release_fence(struct drm_crtc *crtc)
 
 	/* release present fence */
 	if (MTK_SESSION_TYPE(session_id) == MTK_SESSION_PRIMARY ||
-			MTK_SESSION_TYPE(session_id) == MTK_SESSION_EXTERNAL)
+			MTK_SESSION_TYPE(session_id) == MTK_SESSION_EXTERNAL) {
 		mtk_drm_suspend_release_present_fence(crtc->dev->dev, id);
+		if (mtk_drm_helper_get_opt(priv->helper_opt,
+					   MTK_DRM_OPT_SF_PF))
+			mtk_drm_suspend_release_sf_present_fence(
+				crtc->dev->dev, id);
+	}
 }
 #endif
 
@@ -5325,7 +5345,7 @@ static void mtk_drm_crtc_atomic_flush(struct drm_crtc *crtc,
 {
 	struct mtk_drm_crtc *mtk_crtc = to_mtk_crtc(crtc);
 	struct mtk_drm_private *priv = crtc->dev->dev_private;
-	int index = drm_crtc_index(crtc);
+	unsigned int index = drm_crtc_index(crtc);
 	unsigned int pending_planes = 0;
 	unsigned int i, j;
 #ifdef CONFIG_MTK_DISPLAY_CMDQ
@@ -5416,6 +5436,37 @@ static void mtk_drm_crtc_atomic_flush(struct drm_crtc *crtc,
 	}
 #endif
 
+#ifdef MTK_DRM_DELAY_PRESENT_FENCE_SOF
+	/* backup present fence */
+	if (state->prop_val[CRTC_PROP_PRES_FENCE_IDX] != (unsigned int)-1) {
+		struct cmdq_pkt_buffer *cmdq_buf = &(mtk_crtc->gce_obj.buf);
+		dma_addr_t addr =
+			cmdq_buf->pa_base +
+			DISP_SLOT_PRESENT_FENCE(drm_crtc_index(crtc));
+
+		cmdq_pkt_write(cmdq_handle,
+			mtk_crtc->gce_obj.base, addr,
+			state->prop_val[CRTC_PROP_PRES_FENCE_IDX], ~0);
+		CRTC_MMP_MARK(index, update_present_fence, 0,
+				state->prop_val[CRTC_PROP_PRES_FENCE_IDX]);
+	}
+#endif
+	if (mtk_drm_helper_get_opt(priv->helper_opt,
+			MTK_DRM_OPT_SF_PF) &&
+		state->prop_val[CRTC_PROP_SF_PRES_FENCE_IDX] !=
+			(unsigned int)-1) {
+		struct cmdq_pkt_buffer *cmdq_buf = &(mtk_crtc->gce_obj.buf);
+
+		dma_addr_t addr = cmdq_buf->pa_base +
+					DISP_SLOT_SF_PRESENT_FENCE_CONF(index);
+
+		cmdq_pkt_write(cmdq_handle, mtk_crtc->gce_obj.base, addr,
+			       state->prop_val[CRTC_PROP_SF_PRES_FENCE_IDX],
+			       ~0);
+		CRTC_MMP_MARK(index, update_sf_present_fence, 0,
+			      state->prop_val[CRTC_PROP_SF_PRES_FENCE_IDX]);
+	}
+
 	atomic_set(&mtk_crtc->delayed_trig, 1);
 	cb_data->state = old_crtc_state;
 	cb_data->cmdq_handle = cmdq_handle;
@@ -5453,7 +5504,7 @@ static void mtk_drm_crtc_atomic_flush(struct drm_crtc *crtc,
 #endif
 #endif
 
-#ifdef MTK_DRM_FENCE_SUPPORT
+#if defined(MTK_DRM_FENCE_SUPPORT) && !defined(MTK_DRM_DELAY_PRESENT_FENCE_SOF)
 	if (state->prop_val[CRTC_PROP_PRES_FENCE_IDX] != (unsigned int)-1)
 		mtk_drm_fence_update(state->prop_val[CRTC_PROP_PRES_FENCE_IDX],
 		index);
@@ -5906,6 +5957,78 @@ static int dc_main_path_commit_thread(void *data)
 	return 0;
 }
 
+#ifdef MTK_DRM_DELAY_PRESENT_FENCE_SOF
+static int mtk_drm_pf_release_thread(void *data)
+{
+	struct sched_param param = {.sched_priority = 87};
+	struct mtk_drm_private *private;
+	struct mtk_drm_crtc *mtk_crtc = (struct mtk_drm_crtc *)data;
+	struct drm_crtc *crtc;
+	struct cmdq_pkt_buffer *cmdq_buf;
+	unsigned int fence_idx, crtc_idx;
+
+	crtc = &mtk_crtc->base;
+	private = crtc->dev->dev_private;
+	crtc_idx = drm_crtc_index(crtc);
+	if (sched_setscheduler(current, SCHED_RR, &param) < 0) {
+		DDPMSG("error: %s sched_setscheduler failed.\n", __func__);
+		return -1;
+	}
+
+	while (!kthread_should_stop()) {
+		wait_event_interruptible(mtk_crtc->present_fence_wq,
+			atomic_read(&mtk_crtc->pf_event));
+		atomic_set(&mtk_crtc->pf_event, 0);
+
+		mutex_lock(&private->commit.lock);
+		cmdq_buf = &(mtk_crtc->gce_obj.buf);
+		fence_idx = *(unsigned int *)(cmdq_buf->va_base +
+			DISP_SLOT_PRESENT_FENCE(crtc_idx));
+
+		mtk_release_present_fence(private->session_id[crtc_idx],
+			fence_idx);
+		mutex_unlock(&private->commit.lock);
+	}
+
+	return 0;
+}
+#endif
+
+static int mtk_drm_sf_pf_release_thread(void *data)
+{
+	struct sched_param param = {.sched_priority = 87};
+	struct mtk_drm_private *private;
+	struct mtk_drm_crtc *mtk_crtc = (struct mtk_drm_crtc *)data;
+	struct drm_crtc *crtc;
+	struct cmdq_pkt_buffer *cmdq_buf;
+	unsigned int fence_idx, crtc_idx;
+
+	crtc = &mtk_crtc->base;
+	private = crtc->dev->dev_private;
+	crtc_idx = drm_crtc_index(crtc);
+	if (sched_setscheduler(current, SCHED_RR, &param) < 0) {
+		DDPMSG("error: %s sched_setscheduler failed.\n", __func__);
+		return -1;
+	}
+
+	while (!kthread_should_stop()) {
+		wait_event_interruptible(mtk_crtc->sf_present_fence_wq,
+					 atomic_read(&mtk_crtc->sf_pf_event));
+		atomic_set(&mtk_crtc->sf_pf_event, 0);
+
+		mutex_lock(&private->commit.lock);
+		cmdq_buf = &(mtk_crtc->gce_obj.buf);
+		fence_idx = *(unsigned int *)(cmdq_buf->va_base +
+				DISP_SLOT_SF_PRESENT_FENCE(crtc_idx));
+
+		mtk_release_sf_present_fence(private->session_id[crtc_idx],
+					     fence_idx);
+		mutex_unlock(&private->commit.lock);
+	}
+
+	return 0;
+}
+
 int mtk_drm_crtc_create(struct drm_device *drm_dev,
 			const struct mtk_crtc_path_data *path_data)
 {
@@ -6189,7 +6312,25 @@ int mtk_drm_crtc_create(struct drm_device *drm_dev,
 		mutex_init(&mtk_crtc->blank_lock);
 		init_waitqueue_head(&mtk_crtc->state_wait_queue);
 	}
-
+#ifdef MTK_DRM_DELAY_PRESENT_FENCE_SOF
+	init_waitqueue_head(&mtk_crtc->present_fence_wq);
+	atomic_set(&mtk_crtc->pf_event, 0);
+	mtk_crtc->pf_release_thread =
+		kthread_run(mtk_drm_pf_release_thread,
+			mtk_crtc, "pf_release_thread");
+	if (IS_ERR(mtk_crtc->pf_release_thread))
+		DDPMSG("error: %s kthread_run create fail\n", __func__);
+#endif
+	if (mtk_drm_helper_get_opt(priv->helper_opt,
+					   MTK_DRM_OPT_SF_PF)) {
+		init_waitqueue_head(&mtk_crtc->sf_present_fence_wq);
+		atomic_set(&mtk_crtc->sf_pf_event, 0);
+		mtk_crtc->sf_pf_release_thread =
+				kthread_run(mtk_drm_sf_pf_release_thread,
+					    mtk_crtc, "sf_pf_release_thread");
+		if (IS_ERR(mtk_crtc->sf_pf_release_thread))
+			DDPMSG("error: %s SF kthread_run create fail\n", __func__);
+	}
 	/* init wakelock resources */
 	{
 		unsigned int len = 21;
@@ -6264,6 +6405,76 @@ int mtk_drm_crtc_getfence_ioctl(struct drm_device *dev, void *data,
 	args->fence_idx = fence.value;
 
 	DDPFENCE("P+/%d/L%d/idx%d/fd%d\n",
+		 MTK_SESSION_DEV(mtk_get_session_id(crtc)),
+		 tl, args->fence_idx,
+		 args->fence_fd);
+	return ret;
+}
+
+int mtk_drm_crtc_get_sf_fence_ioctl(struct drm_device *dev, void *data,
+				    struct drm_file *file_priv)
+{
+	int ret = 0;
+	struct drm_crtc *crtc;
+	struct drm_mtk_fence *args = data;
+	struct mtk_drm_private *private;
+	struct fence_data fence;
+	struct mtk_crtc_state *crtc_state;
+	unsigned int fence_idx;
+	struct mtk_fence_info *l_info = NULL;
+	int tl;
+	unsigned int idx;
+
+	crtc = drm_crtc_find(dev, file_priv, args->crtc_id);
+	if (!crtc) {
+		DDPMSG("ERROR:Unknown CRTC ID %u\n", args->crtc_id);
+		return -ENOENT;
+	}
+	DDPDBG("[CRTC:%d:%s]\n", crtc->base.id, crtc->name);
+
+	idx = drm_crtc_index(crtc);
+	if (!crtc->dev) {
+		DDPMSG("ERROR:%s:%d dev is null\n", __func__, __LINE__);
+		return -EFAULT;
+	}
+	if (!crtc->dev->dev_private) {
+		DDPMSG("ERROR:%s:%d dev private is null\n", __func__, __LINE__);
+		return -EFAULT;
+	}
+	private = crtc->dev->dev_private;
+	fence_idx = atomic_read(&private->crtc_sf_present[idx]);
+	tl = mtk_fence_get_sf_present_timeline_id(mtk_get_session_id(crtc));
+	l_info = mtk_fence_get_layer_info(mtk_get_session_id(crtc), tl);
+	if (!l_info) {
+		DDPMSG("ERROR:%s:%d layer_info is null\n", __func__, __LINE__);
+		return -EFAULT;
+	}
+
+	if (mtk_drm_helper_get_opt(private->helper_opt, MTK_DRM_OPT_SF_PF)) {
+		/* create fence */
+		fence.fence = MTK_INVALID_FENCE_FD;
+		fence.value = ++fence_idx;
+		atomic_inc(&private->crtc_sf_present[idx]);
+		ret = mtk_sync_fence_create(l_info->timeline, &fence);
+		if (ret)
+			DDPMSG("ERROR:%d,L%d create Fence Object failed!\n",
+				  MTK_SESSION_DEV(mtk_get_session_id(crtc)), tl);
+
+		args->fence_fd = fence.fence;
+		args->fence_idx = fence.value;
+		crtc_state = to_mtk_crtc_state(crtc->state);
+
+		if (crtc_state && crtc_state->prop_val[CRTC_PROP_DOZE_ACTIVE]) {
+			DDPINFO("%s:%d DOZE mode not support SF rensent fence\n",
+				__func__, __LINE__);
+			ret = -EFAULT;
+		}
+	} else {
+		args->fence_fd = MTK_INVALID_FENCE_FD;
+		args->fence_idx = fence_idx;
+	}
+
+	DDPFENCE("SF_P+/%d/L%d/idx%d/fd%d\n",
 		 MTK_SESSION_DEV(mtk_get_session_id(crtc)),
 		 tl, args->fence_idx,
 		 args->fence_fd);
