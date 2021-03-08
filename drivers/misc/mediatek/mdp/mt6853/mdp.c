@@ -10,6 +10,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  */
+#include <linux/atomic.h>
+static atomic_t mutex_clk_count = ATOMIC_INIT(0);
+static atomic_t dl_clk_count = ATOMIC_INIT(0);
 #include "cmdq_reg.h"
 #include "mdp_common.h"
 #ifdef CMDQ_MET_READY
@@ -1100,6 +1103,14 @@ void cmdq_mdp_enable_clock(bool enable, enum CMDQ_ENG_ENUM engine)
 {
 	switch (engine) {
 	case CMDQ_ENG_MDP_CAMIN:
+		if (enable) {
+			atomic_inc(&dl_clk_count);
+		} else {
+			atomic_dec(&dl_clk_count);
+			if (atomic_read(&dl_clk_count) < 0)
+				CMDQ_ERR("%s MDP_CAMIN disable dl_clk_count %d\n",
+					__func__, atomic_read(&dl_clk_count));
+		}
 		cmdq_mdp_enable_clock_IMG_DL_ASYNC0(enable);
 		cmdq_mdp_enable_clock_IMG0_IMG_DL_ASYNC0(enable);
 		cmdq_mdp_enable_clock_IMG0_IMG_DL_RELAY0_ASYNC0(enable);
@@ -2016,9 +2027,14 @@ static void cmdq_mdp_enable_common_clock(bool enable)
 		/* Use SMI clock API */
 		smi_bus_prepare_enable(SMI_LARB2, "MDP");
 		cmdq_mdp_enable_clock_APB(enable);
+		atomic_inc(&mutex_clk_count);
 		cmdq_mdp_enable_clock_MDP_MUTEX0(enable);
 	} else {
 		/* disable, reverse the sequence */
+		atomic_dec(&mutex_clk_count);
+		if (atomic_read(&mutex_clk_count) < 0)
+			CMDQ_ERR("%s MDP_MUTEX0 disable %d\n",
+				__func__, atomic_read(&mutex_clk_count));
 		cmdq_mdp_enable_clock_MDP_MUTEX0(enable);
 		cmdq_mdp_enable_clock_APB(enable);
 		smi_bus_disable_unprepare(SMI_LARB2, "MDP");
