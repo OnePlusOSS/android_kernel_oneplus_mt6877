@@ -1415,10 +1415,11 @@ static void __mt_gpufreq_update_table_by_asensor(void)
 	tj1 = 40;
 	tj2 = 40;
 #endif
-	tj = ceil(((MAX(tj1, tj2) - 25.0) * 5) / 40);
+
+	tj = (((MAX(tj1, tj2) - 25) * 5) / 40) + 1;
 
 	/* 4. Calculate adiff (aging diff)
-	 * (EfuseRead + ceil(((max(tj1,tj2) - 25.0) * 5) / 40) - SNRead
+	 * (EfuseRead + (((MAX(tj1, tj2) - 25) * 5) / 40) + 1) - SNRead
 	 */
 
 	adiff1 = a_t0_lvt_rt + tj - a_tn_lvt_cnt;
@@ -3206,7 +3207,7 @@ static unsigned int __calculate_vsram_settletime(bool mode, int deltaV)
 
 	if (mode) {
 		/* rising 10 mV/us */
-		settleTime = deltaV / (12.5 * 100) + 8;
+		settleTime = deltaV / (125 * 10) + 8;
 	} else {
 		/* falling 5 mV/us */
 		settleTime = deltaV / (5 * 100) + 8;
