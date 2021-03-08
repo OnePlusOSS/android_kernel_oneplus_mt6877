@@ -750,9 +750,11 @@ static void swpm_core_thermal_cb(void)
 	if (!core_ptr)
 		return;
 
+#if 0
+	/* need fix */
 	infra_temp = get_immediate_tslvts6_0_wrap();
 	cam_temp = get_immediate_tslvts6_1_wrap();
-
+#endif
 	temp = (infra_temp + cam_temp) / 2;
 
 	/* truncate negative deg */
@@ -802,9 +804,6 @@ static int swpm_get_spower_devid(enum cpu_lkg_type type)
 		break;
 	case CPU_B_LKG:
 		devid = MTK_SPOWER_CPUL;
-		break;
-	case CPU_BB_LKG:
-		devid = MTK_SPOWER_CPUB;
 		break;
 	case DSU_LKG:
 	default:
@@ -867,9 +866,7 @@ static void swpm_idx_snap(void)
 		swpm_lock(&swpm_snap_lock);
 		/* directly copy due to 8 bytes alignment problem */
 		mem_idx_snap.read_bw[0] = share_idx_ref->mem_idx.read_bw[0];
-		mem_idx_snap.read_bw[1] = share_idx_ref->mem_idx.read_bw[1];
 		mem_idx_snap.write_bw[0] = share_idx_ref->mem_idx.write_bw[0];
-		mem_idx_snap.write_bw[1] = share_idx_ref->mem_idx.write_bw[1];
 		swpm_unlock(&swpm_snap_lock);
 	}
 }
@@ -890,9 +887,8 @@ static void swpm_log_loop(unsigned long data)
 #endif
 
 	/* initialization retry */
-	if (!swpm_init_state) {
+	if (!swpm_init_state)
 		swpm_pass_to_sspm();
-	}
 
 	for (i = 0; i < NR_POWER_RAIL; i++) {
 		if ((1 << i) & swpm_log_mask) {
@@ -1139,11 +1135,9 @@ static char *_copy_from_user_for_proc(const char __user *buffer, size_t count)
 static int dram_bw_proc_show(struct seq_file *m, void *v)
 {
 	swpm_lock(&swpm_snap_lock);
-	seq_printf(m, "DRAM BW [N]R/W=%d/%d,[S]R/W=%d/%d\n",
+	seq_printf(m, "DRAM BW R/W=%d/%d\n",
 		   mem_idx_snap.read_bw[0],
-		   mem_idx_snap.write_bw[0],
-		   mem_idx_snap.read_bw[1],
-		   mem_idx_snap.write_bw[1]);
+		   mem_idx_snap.write_bw[0]);
 	swpm_unlock(&swpm_snap_lock);
 
 	return 0;
