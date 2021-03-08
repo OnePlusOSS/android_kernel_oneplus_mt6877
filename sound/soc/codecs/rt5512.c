@@ -1148,7 +1148,7 @@ int rt5512_i2c_probe(struct i2c_client *client,
 	chip_rev = rt5512_chip_id_check(chip);
 	if (chip_rev < 0) {
 		dev_err(&client->dev, "chip id check fail\n");
-		return ret;
+		return -ENODEV;
 	}
 	chip->chip_rev = chip_rev;
 
@@ -1191,6 +1191,7 @@ int rt5512_i2c_probe(struct i2c_client *client,
 	chip->t0 = rt5512_get_t0(chip);
 	if (chip->t0 < 0) {
 		dev_err(chip->dev, "get t0 fail(%d)\n", chip->t0);
+		ret = chip->t0;
 		goto probe_fail;
 	}
 
@@ -1237,10 +1238,12 @@ module_exit(rt5512_driver_exit);
 MODULE_AUTHOR("Jeff Chang <jeff_chang@richtek.com>");
 MODULE_DESCRIPTION("RT5512 SPKAMP Driver");
 MODULE_LICENSE("GPL");
-MODULE_VERSION("1.0.3_M");
+MODULE_VERSION("1.0.4_M");
 /*
  * 1.0.2_M
  *	1. update INIT SETTING & amp on flow
  * 1.0.3_M
  *	1. update amp flow
+ * 1.0.4_M
+ *	1. fix id check return error code
  */
