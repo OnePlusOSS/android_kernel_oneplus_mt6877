@@ -190,6 +190,13 @@ static void phy_advance_settings(struct mtk_phy_instance *instance)
 	u3phywrite32(
 		(MTK_USB_PHY_U3PHYD_BASE + offset), 16,
 		(0x1f<<16), val);
+
+	/* HQA request */
+	u3phywrite32(U3D_USBPHYACR6, RG_USB20_SQTH_OFST,
+		RG_USB20_SQTH, 0x5);
+
+	u3phywrite32(U3D_USBPHYACR6, (28),
+		(0x1<<28), 0x1);
 }
 
 static void phy_efuse_settings(struct mtk_phy_instance *instance)
