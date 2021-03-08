@@ -95,8 +95,5 @@
 
 #define CCCI_USE_DFD_OFFSET_0
 
-#ifdef CCCI_PLATFORM_MT6877
-#define DISABLE_MD_DUMP_REGISTER
-#endif
 
 #endif

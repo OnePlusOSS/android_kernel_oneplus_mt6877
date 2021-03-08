@@ -48,7 +48,11 @@
 #include "md_sys1_platform.h"
 #include "modem_secure_base.h"
 #include "modem_reg_base.h"
+#ifdef CCCI_PLATFORM_MT6877
+#include "ap_md_reg_dump_6877.h"
+#else
 #include "ap_md_reg_dump.h"
+#endif
 #include <devapc_public.h>
 #include "ccci_fsm.h"
 
