@@ -21,7 +21,7 @@
 #include "clkchk-mt6877.h"
 
 #define TAG			"[clkchk] "
-#define	BUG_ON_CHK_ENABLE	0
+#define	BUG_ON_CHK_ENABLE	1
 
 int __attribute__((weak)) get_sw_req_vcore_opp(void)
 {
