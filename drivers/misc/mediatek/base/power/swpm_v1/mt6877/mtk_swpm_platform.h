@@ -77,10 +77,10 @@ enum ddr_freq {
 	DDR_600,
 	DDR_800,
 	DDR_933,
-	DDR_1200,
-	DDR_1600,
+	DDR_1333,
 	DDR_1866,
 	DDR_2133,
+	DDR_2750,
 
 	NR_DDR_FREQ
 };

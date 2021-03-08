@@ -30,7 +30,7 @@
 #define SUSPEND_SRAM (share_idx_ref_ext->suspend)
 
 #define OPP_FREQ_TO_DDR(x) \
-	((x != 1866) ? (x * 2) : ((x * 2) + 1))
+	(((x != 1866) && (x != 1333)) ? (x * 2) : ((x * 2) + 1))
 
 static struct timer_list swpm_sp_timer;
 static DEFINE_SPINLOCK(swpm_sp_spinlock);
