@@ -1378,14 +1378,19 @@ irqreturn_t lvts_tscpu_thermal_all_tc_interrupt_handler(int irq, void *dev_id)
 	lvts_printk("%s : THERMINTST = 0x%x THERMINTST_MCU = 0x%x\n",
 		__func__, ret, ret_mcu);
 
-	ret = ((ret_mcu >> 1) << LVTS_MCU_CONTROLLER0) |
-		((ret >> 1) << LVTS_AP_CONTROLLER0);
+	ret_mcu = ((ret_mcu >> 1) << LVTS_MCU_CONTROLLER0);
+	ret = ((ret >> 1) << LVTS_AP_CONTROLLER0);
 
 	for (i = 0; i < ARRAY_SIZE(lvts_tscpu_g_tc); i++) {
 		mask = 1 << i;
 
-		if ((ret & mask) == 0)
-			lvts_interrupt_handler(i);
+		if (i < LVTS_AP_CONTROLLER0) {
+			if ((ret_mcu & mask) == 0)
+				lvts_interrupt_handler(i);
+		} else {
+			if ((ret & mask) == 0)
+				lvts_interrupt_handler(i);
+		}
 	}
 
 	return IRQ_HANDLED;
