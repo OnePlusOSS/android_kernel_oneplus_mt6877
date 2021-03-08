@@ -62,6 +62,20 @@ static int total_bw_value;
 int cpu_power_bcpu_weight_max = 350;
 int cpu_power_bcpu_weight_min = 100;
 #endif /* USE_BCPU_WEIGHT */
+#ifdef CM_TRIGEAR
+int cpu_power_bbcpu_weight_max = 100;
+int cpu_power_bbcpu_weight_min = 100;
+#endif
+#ifdef DSU_DVFS_ENABLE
+unsigned int dsu_debounce_up = 5;
+unsigned int dsu_debounce_down;
+unsigned int dsu_diff_pwr_up = 10;
+unsigned int dsu_diff_pwr_down;
+unsigned int dsu_l_pwr_ratio = 100;
+unsigned int dsu_b_pwr_ratio = 100;
+unsigned int dsu_bb_pwr_ratio = 100;
+
+#endif
 unsigned int cpu_power_ratio_up[CM_MGR_EMI_OPP] = {100, 120, 140, 100, 100, 0};
 unsigned int cpu_power_ratio_down[CM_MGR_EMI_OPP] = {100, 100, 100, 100, 100, 0};
 unsigned int vcore_power_ratio_up[CM_MGR_EMI_OPP] = {100, 100, 100, 100, 100, 100};
