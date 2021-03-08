@@ -66,6 +66,8 @@ s32 get_md_hrt_bw(void);
 
 s32 emi_occ_ratio(void);
 
+s32 emi_occ_ui_only(void);
+
 s32 cam_occ_ratio(void);
 
 s32 disp_occ_ratio(void);

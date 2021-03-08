@@ -138,27 +138,37 @@ s32 dram_write_weight(s32 val)
 s32 emi_occ_ratio(void)
 {
 #if IS_ENABLED(CONFIG_MACH_MT6877)
-	return 74;
+	return 740;
 #else
-	return 50;
+	return 500;
 #endif
 }
+
+s32 emi_occ_ui_only(void)
+{
+#if IS_ENABLED(CONFIG_MACH_MT6877)
+	return 745;
+#else
+	return 500;
+#endif
+}
+
 
 s32 cam_occ_ratio(void)
 {
 #if IS_ENABLED(CONFIG_MACH_MT6877)
-	return 88;
+	return 880;
 #else
-	return 100;
+	return 1000;
 #endif
 }
 
 s32 disp_occ_ratio(void)
 {
 #if IS_ENABLED(CONFIG_MACH_MT6877)
-	return 90;
+	return 900;
 #else
-	return 100;
+	return 1000;
 #endif
 }
 

@@ -188,6 +188,7 @@ static struct pm_qos_request smi_freq_request[MAX_COMM_NUM];
 static DEFINE_MUTEX(step_mutex);
 static DEFINE_MUTEX(bw_mutex);
 static s32 total_hrt_bw = UNINITIALIZED_VALUE;
+static s32 total_ui_only_hrt_bw = UNINITIALIZED_VALUE;
 static BLOCKING_NOTIFIER_HEAD(hrt_bw_throttle_notifier);
 
 
@@ -721,8 +722,8 @@ static s32 channel_disp_hrt_cnt[MAX_COMM_NUM][MAX_CH_COUNT] = {};
 
 #define MULTIPLY_BW_THRESH_HIGH(value) ((value)*1/2)
 #define MULTIPLY_BW_THRESHOLD_LOW(value) ((value)*2/5)
-#define MULTIPLY_RATIO(value) ((value)*100)
-#define DIVIDE_RATIO(value) ((value)/100)
+#define MULTIPLY_RATIO(value) ((value)*1000)
+#define DIVIDE_RATIO(value) ((value)/1000)
 static s32 current_hrt_bw;
 static u32 camera_max_bw;
 static s32 get_cam_hrt_bw(void)
@@ -986,8 +987,6 @@ s32 mm_qos_add_request(struct plist_head *owner_list,
 	u32 larb_id, port_id;
 	struct mm_qos_request *enum_req = NULL;
 
-	if (skip_smi_config)
-		return 0;
 	larb_id = SMI_PMQOS_LARB_DEC(smi_master_id);
 	port_id = SMI_PMQOS_PORT_MASK(smi_master_id);
 	if (!req) {
@@ -1043,8 +1042,6 @@ s32 mm_qos_set_request(struct mm_qos_request *req, u32 bw_value,
 	struct mm_qos_request *enum_req = NULL;
 	bool hrt_port = false;
 
-	if (skip_smi_config)
-		return 0;
 	if (!req)
 		return -EINVAL;
 
@@ -1222,8 +1219,6 @@ void mm_qos_update_all_request(struct plist_head *owner_list)
 	struct mm_qos_request *enum_req = NULL;
 #endif
 
-	if (skip_smi_config)
-		return;
 	if (!owner_list || plist_head_empty(owner_list)) {
 		pr_notice("%s: owner_list is invalid\n", __func__);
 		return;
@@ -1417,8 +1412,6 @@ void mm_qos_update_all_request_zero(struct plist_head *owner_list)
 {
 	struct mm_qos_request *req = NULL;
 
-	if (skip_smi_config)
-		return;
 	plist_for_each_entry(req, owner_list, owner_node) {
 		mm_qos_set_request(req, 0, 0, 0);
 	}
@@ -1429,9 +1422,6 @@ EXPORT_SYMBOL_GPL(mm_qos_update_all_request_zero);
 void mm_qos_remove_all_request(struct plist_head *owner_list)
 {
 	struct mm_qos_request *temp, *req = NULL;
-
-	if (skip_smi_config)
-		return;
 
 	mutex_lock(&bw_mutex);
 	plist_for_each_entry_safe(req, temp, owner_list, owner_node) {
@@ -1455,9 +1445,9 @@ s32 mm_hrt_get_available_hrt_bw(u32 master_id)
 	s32 cam_occ_max_bw;
 	s32 result;
 
-	if (skip_smi_config)
-		return UNINITIALIZED_VALUE;
 	if (total_hrt_bw == UNINITIALIZED_VALUE)
+		return UNINITIALIZED_VALUE;
+	if (total_ui_only_hrt_bw == UNINITIALIZED_VALUE)
 		return UNINITIALIZED_VALUE;
 
 	cam_occ_bw = dram_write_weight(MULTIPLY_RATIO(get_cam_hrt_bw())/cam_occ_ratio());
@@ -1466,7 +1456,10 @@ s32 mm_hrt_get_available_hrt_bw(u32 master_id)
 	else
 		src_hrt_bw = MULTIPLY_RATIO(src_hrt_bw)/disp_occ_ratio();
 
-	result = total_hrt_bw - total_used_hrt_bw + src_hrt_bw;
+	if (camera_max_bw > 0)
+		result = total_hrt_bw - total_used_hrt_bw + src_hrt_bw;
+	else
+		result = total_ui_only_hrt_bw - total_used_hrt_bw + src_hrt_bw;
 
 	if (SMI_PMQOS_LARB_DEC(master_id) ==
 			SMI_PMQOS_LARB_DEC(PORT_VIRTUAL_DISP)) {
@@ -1565,9 +1558,6 @@ void mmdvfs_set_max_camera_hrt_bw(u32 bw)
 #ifdef HRT_MECHANISM
 	u32 mw_hrt_bw;
 
-	if (skip_smi_config)
-		return;
-
 	cam_scen_change = true;
 	cam_scen_start_time = jiffies;
 
@@ -1587,7 +1577,7 @@ void mmdvfs_set_max_camera_hrt_bw(u32 bw)
 }
 EXPORT_SYMBOL_GPL(mmdvfs_set_max_camera_hrt_bw);
 
-static s32 get_total_hrt_bw(void)
+static s32 get_total_hrt_bw(bool ui_only)
 {
 	s32 result = 0;
 #if defined(USE_MEDIATEK_EMI)
@@ -1595,7 +1585,10 @@ static s32 get_total_hrt_bw(void)
 	s32 ch_num = mtk_emicen_get_ch_cnt();
 	s32 io_width = get_io_width();
 
-	result = DIVIDE_RATIO(max_freq * ch_num * io_width * emi_occ_ratio());
+	if (ui_only)
+		result = DIVIDE_RATIO(max_freq * ch_num * io_width * emi_occ_ui_only());
+	else
+		result = DIVIDE_RATIO(max_freq * ch_num * io_width * emi_occ_ratio());
 #elif defined(USE_MTK_DRAMC)
 	s32 max_freq = dram_steps_freq(0);
 	s32 ch_num = get_emi_ch_num();
@@ -2099,7 +2092,8 @@ static int __init mmdvfs_pmqos_late_init(void)
 	mmdvfs_qos_force_step(-1);
 	pr_notice("force flip step0 when late_init\n");
 #endif
-	total_hrt_bw = get_total_hrt_bw();
+	total_hrt_bw = get_total_hrt_bw(false);
+	total_ui_only_hrt_bw = get_total_hrt_bw(true);
 	init_me_swpm();
 	return 0;
 }
