@@ -1470,12 +1470,9 @@ static void eemg_init_ctrl(struct eemg_ctrl *ctrl)
 
 static unsigned int eemg_vmin_init(void)
 {
-/*
- *	int vmin_idx = (get_devinfo_with_index(209) >> 9) & 3;
- *
- *	return vmin_idx == 0x2 ? 0x20 : vmin_idx == 0x1 ? 0x24 : 0x1C;
- */
-	return 0x14;
+	int vmin_idx = (get_devinfo_with_index(183) >> 14) & 3;
+
+	return vmin_idx == 0x1 ? 0x20 : vmin_idx == 0x2 ? 0x1C : 0x18;
 }
 
 static void eemg_init_det(struct eemg_det *det, struct eemg_devinfo *devinfo)
