@@ -579,7 +579,7 @@ int debounce_times_perf_down_force_local = -1;
 int pm_qos_update_request_status;
 int cm_mgr_dram_opp_base = -1;
 int cm_mgr_dram_opp = -1;
-int cm_mgr_dram_perf_opp = -1;
+int cm_mgr_dram_perf_opp = 2;
 int cm_mgr_dram_step_opp = 2;
 
 static int cm_mgr_fb_notifier_callback(struct notifier_block *self,
