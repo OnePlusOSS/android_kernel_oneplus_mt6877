@@ -1252,6 +1252,16 @@ static void lvts_interrupt_handler(int tc_num)
 	lvts_printk("[Thermal IRQ] LVTS thermal controller %d, LVTSMONINTSTS=0x%08x\n",
 		tc_num, ret);
 
+	if (ret & THERMAL_PROTECTION_STAGE_3) {
+		lvts_printk("[Thermal IRQ]: Thermal protection stage 3 interrupt triggered, Thermal HW reboot\n");
+		dump_lvts_error_info_by_ctrl_num(tc_num);
+	}
+
+	if (ret & THERMAL_IMMEDIATE_INTERRUPT_3) {
+		lvts_printk("[Thermal IRQ]: Immediate sense interrupt triggered, sensor point 3\n");
+		dump_lvts_error_info_by_ctrl_num(tc_num);
+	}
+
 	if (ret & THERMAL_COLD_INTERRUPT_0)
 		lvts_dbg_printk("[Thermal IRQ]: Cold interrupt triggered, sensor point 0\n");
 
@@ -1333,11 +1343,6 @@ static void lvts_interrupt_handler(int tc_num)
 	if (ret & THERMAL_HOT2NORMAL_INTERRUPT_3)
 		lvts_dbg_printk("[Thermal IRQ]: Hot to normal interrupt triggered, sensor point 3\n");
 
-	if (ret & THERMAL_IMMEDIATE_INTERRUPT_3) {
-		lvts_printk("[Thermal IRQ]: Immediate sense interrupt triggered, sensor point 3\n");
-		dump_lvts_error_info_by_ctrl_num(tc_num);
-	}
-
 	if (ret & THERMAL_FILTER_INTERRUPT_3)
 		lvts_dbg_printk("[Thermal IRQ]: Filter sense interrupt triggered, sensor point 3\n");
 
@@ -1351,10 +1356,6 @@ static void lvts_interrupt_handler(int tc_num)
 #endif
 	}
 
-	if (ret & THERMAL_PROTECTION_STAGE_3) {
-		lvts_printk("[Thermal IRQ]: Thermal protection stage 3 interrupt triggered, Thermal HW reboot\n");
-		dump_lvts_error_info_by_ctrl_num(tc_num);
-	}
 }
 
 irqreturn_t lvts_tscpu_thermal_all_tc_interrupt_handler(int irq, void *dev_id)
