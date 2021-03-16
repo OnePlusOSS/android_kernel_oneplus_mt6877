@@ -176,28 +176,22 @@ struct mutex apu_qos_boost_mtx;
 static void notify_sspm_apusys_on(void)
 {
 	LOG_DEBUG("+\n");
-#ifdef APUSYS_SSPM
 	qos_sram_write(APU_CLK, 1); // temp mark
-#endif
 	LOG_DEBUG("-\n");
 }
 
 /* register to apusys power off callback(before power off) */
 static void notify_sspm_apusys_off(void)
 {
-#ifdef APUSYS_SSPM
-
 	int bw_nord = 0;
 
 	LOG_DEBUG("+\n");
-
 	qos_sram_write(APU_CLK, 0);
 	while (bw_nord == 0) {
 		bw_nord = qos_sram_read(APU_BW_NORD);
 		udelay(500);
 		LOG_DEBUG("wait SSPM bw_nord");
 	}
-#endif
 	LOG_DEBUG("-\n");
 }
 
