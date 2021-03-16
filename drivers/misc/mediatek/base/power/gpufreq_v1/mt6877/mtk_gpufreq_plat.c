@@ -318,6 +318,22 @@ void mt_gpufreq_wdt_reset(void)
 	}
 }
 
+void mt_gpufreq_hardstop_dump_aee(void)
+{
+#if defined(CONFIG_MTK_AEE_FEATURE) && defined(AGING_LOAD)
+	int cx = 0;
+	char aeelog[128];
+
+	cx = snprintf(aeelog, 128, "mfgpll=%d freq=%d vgpu=%d vsram_gpu=%d",
+		mt_get_subsys_freq(FM_MFGPLL1),
+		g_cur_opp_freq,
+		g_cur_opp_vgpu,
+		g_cur_opp_vsram_gpu);
+	if (cx >= 0 && cx < 128)
+		aee_kernel_exception("GPUEXP", "\nCRDISPATCH_KEY:GPUHS %s\n", aeelog);
+#endif
+}
+
 void mt_gpufreq_dump_infra_status(void)
 {
 	int i;
