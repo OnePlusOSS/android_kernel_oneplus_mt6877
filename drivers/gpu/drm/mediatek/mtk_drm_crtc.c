@@ -7547,6 +7547,8 @@ int mtk_crtc_mipi_freq_switch(struct drm_crtc *crtc, unsigned int en,
 
 	DDP_MUTEX_LOCK(&mtk_crtc->lock, __func__, __LINE__);
 
+	mtk_drm_idlemgr_kick(__func__, crtc, 0);
+
 	mtk_crtc->mipi_hopping_sta = en;
 
 
