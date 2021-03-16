@@ -3708,6 +3708,7 @@ const char *cmdq_mdp_get_rsz_state(const u32 state)
 void cmdq_mdp_dump_rot(const unsigned long base, const char *label)
 {
 	u32 value[50] = { 0 };
+	u8 i;
 
 	value[0] = CMDQ_REG_GET32(base + 0x000);
 	value[1] = CMDQ_REG_GET32(base + 0x008);
@@ -3847,6 +3848,19 @@ void cmdq_mdp_dump_rot(const unsigned long base, const char *label)
 	CMDQ_ERR(
 		"VIDO_PVRIC: 0x%08x, VIDO_PENDING_ZERO: 0x%08x, VIDO_FRAME_SIZE: 0x%08x\n",
 		value[47], value[48], value[49]);
+
+	for (i = 0; i < 4; i++) {
+		CMDQ_REG_SET32(base + 0x018, 0x00000300);
+		value[12] = CMDQ_REG_GET32(base + 0x0D0);
+		CMDQ_REG_SET32(base + 0x018, 0x00001900);
+		value[34] = CMDQ_REG_GET32(base + 0x0D0);
+		CMDQ_ERR(
+			"REPEAT %u ROT_DEBUG_3 %#010x line %#06x pixel %#05x ROT_DEBUG_19 %#010x smi req:%u ack:%u\n",
+			i, value[12],
+			value[12] >> 16, (value[12] >> 4) & 0xFFF,
+			value[34],
+			(value[34] >> 30) & 0x1, (value[34] >> 29) & 0x1);
+	}
 }
 
 void cmdq_mdp_dump_color(const unsigned long base, const char *label)
