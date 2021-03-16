@@ -136,6 +136,7 @@
  **************************************************/
 #define MT_GPUFREQ_ASENSOR_ENABLE		1
 #define ASENSOR_DISABLE_VOLT            (55000)
+#define MT_GPUFREQ_AGING_GAP0			(-3)
 #define MT_GPUFREQ_AGING_GAP1			(2)
 #define MT_GPUFREQ_AGING_GAP2			(4)
 #define MT_GPUFREQ_AGING_GAP3			(6)

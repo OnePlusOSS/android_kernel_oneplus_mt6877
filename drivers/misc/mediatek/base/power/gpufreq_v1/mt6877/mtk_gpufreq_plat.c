@@ -1397,7 +1397,7 @@ static void __mt_gpufreq_update_table_by_asensor(void)
 	a_t0_lvt_rt = (efuse_val1 & 0x3FF);
 	a_t0_ulvt_rt = ((efuse_val1 & 0xFFC00) >> 10);
 
-	error_bit = (efuse_val1	| efuse_val2) >> 31;
+	error_bit = efuse_val1 >> 31;
 
 	/*
 	 * 2. Get a sensor counter val
@@ -1433,7 +1433,10 @@ static void __mt_gpufreq_update_table_by_asensor(void)
 		aging_table_id = 3;
 	else if (error_bit)
 		aging_table_id = 3;
-	else if (adiff < MT_GPUFREQ_AGING_GAP1)
+	else if (adiff < MT_GPUFREQ_AGING_GAP0)
+		aging_table_id = 3;
+	else if ((adiff >= MT_GPUFREQ_AGING_GAP0)
+		&& (adiff < MT_GPUFREQ_AGING_GAP1))
 		aging_table_id = 0;
 	else if ((adiff >= MT_GPUFREQ_AGING_GAP1)
 		&& (adiff < MT_GPUFREQ_AGING_GAP2))
