@@ -147,6 +147,16 @@ int apusys_dev_to_core_id(int dev_type, int dev_core)
 		if (dev_core >= 0 && dev_core < NR_APU_ENGINE_VPU)
 			ret = dev_core;
 		break;
+	case APUSYS_DEVICE_MDLA:
+	case APUSYS_DEVICE_MDLA_RT:
+		if (dev_core >= 0 && dev_core < NR_APU_ENGINE_MDLA)
+			ret = NR_APU_ENGINE_VPU + dev_core;
+		break;
+	case APUSYS_DEVICE_EDMA:
+	case APUSYS_DEVICE_EDMA_3_0:
+		if (dev_core >= 0 && dev_core < NR_APU_ENGINE_EDMA)
+			ret = NR_APU_ENGINE_VPU + NR_APU_ENGINE_MDLA + dev_core;
+		break;
 	/* for midware UT */
 	case APUSYS_DEVICE_SAMPLE:
 	case APUSYS_DEVICE_SAMPLE_RT:
