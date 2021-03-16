@@ -458,8 +458,6 @@ static signed int pda_wait_irq(struct PDA_WAIT_IRQ_STRUCT *wait_irq)
 	do_gettimeofday(&time_end);
 #endif
 
-	LOG_INF("wait_event_interruptible_timeout Success");
-
 	if (g_HWstatus < 0)
 		LOG_INF("PDA HW error");
 	else
@@ -862,15 +860,11 @@ static int PDA_remove(struct platform_device *pdev)
 
 static int PDA_suspend(struct platform_device *pdev, pm_message_t mesg)
 {
-	//Disable clock
-	EnableClock(MFALSE);
 	return 0;
 }
 
 static int PDA_resume(struct platform_device *pdev)
 {
-	//Enable clock
-	EnableClock(MTRUE);
 	return 0;
 }
 
