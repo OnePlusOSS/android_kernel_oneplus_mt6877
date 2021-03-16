@@ -767,18 +767,16 @@ s32 smi_debug_bus_hang_detect(const bool gce, const char *user)
 
 	for (i = 0; i < SMI_LARB_NUM && !ret; i++)
 		ret = (busy[i] == time ? i : ret);
-	if (!ret || busy[SMI_LARB_NUM] < time) {
-		SMIWRN(gce, "SMI MM bus NOT hang, check master %s\n", user);
-		smi_debug_dump_status(gce);
-		return 0;
-	}
 
-	SMIWRN(gce, "SMI MM bus may hang by %s/M4U/EMI/DVFS\n", user);
+	if (!ret || busy[SMI_LARB_NUM] < time)
+		SMIWRN(gce, "SMI MM bus NOT hang, check master %s\n", user);
+	else
+		SMIWRN(gce, "SMI MM bus may hang by %s/M4U/EMI/DVFS\n", user);
 	for (i = 0; i <= SMI_DEV_NUM; i++)
 		if (!i || i == SMI_LARB_NUM || i == SMI_DEV_NUM)
 			smi_debug_dumper(gce, true, i);
 
-	for (i = 1; i < time; i++)
+	for (i = 0; i < time; i++)
 		for (j = 0; j <= SMI_DEV_NUM; j++)
 			smi_debug_dumper(gce, false, j);
 	smi_debug_dump_status(gce);
