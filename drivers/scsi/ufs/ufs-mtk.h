@@ -201,6 +201,7 @@ struct ufs_mtk_host {
 	bool pm_qos_init;
 	struct pm_qos_request *req_vcore;
 	struct pm_qos_request req_cpu_dma_latency;
+	struct pm_qos_request req_mm_bandwidth;
 
 	/* passthrough keyhint if number of key slots is enough */
 	bool passthrough_keyhint;
@@ -247,7 +248,6 @@ int ufs_mtk_ioctl_ffu(struct scsi_device *dev, void __user *buf_user);
 int ufs_mtk_ioctl_get_fw_ver(struct scsi_device *dev, void __user *buf_user);
 int ufs_mtk_ioctl_query(struct ufs_hba *hba, u8 lun, void __user *buf_user);
 int ufs_mtk_ioctl_rpmb(struct ufs_hba *hba, void __user *buf_user);
-bool ufs_mtk_is_data_write_cmd(char cmd_op, bool isolation);
 void ufs_mtk_rpmb_dump_frame(struct scsi_device *sdev, u8 *data_frame, u32 cnt);
 struct rpmb_dev *ufs_mtk_rpmb_get_raw_dev(void);
 void ufs_mtk_runtime_pm_init(struct scsi_device *sdev);
