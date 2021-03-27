@@ -319,14 +319,14 @@ static irqreturn_t mtk_disp_rdma_irq_handler(int irq, void *dev_id)
 
 	if (val & (1 << 1)) {
 		DDPIRQ("[IRQ] %s: frame start!\n", mtk_dump_comp_str(rdma));
-		mtk_drm_refresh_tag_start(&priv->ddp_comp);
-		MMPathTraceDRM(rdma);
 #ifdef MTK_DRM_DELAY_PRESENT_FENCE_SOF
 		if (mtk_crtc) {
 			atomic_set(&mtk_crtc->pf_event, 1);
 			wake_up_interruptible(&mtk_crtc->present_fence_wq);
 		}
 #endif
+		mtk_drm_refresh_tag_start(&priv->ddp_comp);
+		MMPathTraceDRM(rdma);
 	}
 
 	if (val & (1 << 3)) {
