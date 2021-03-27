@@ -257,8 +257,8 @@ static unsigned int check_pdn(void __iomem *base,
 	} else if (type != SUBSYS && ((clk_readl(base + fm_all_clks[i].ofs)
 			& BIT(fm_all_clks[i].pdn)) == BIT(fm_all_clks[i].pdn)))
 		return 1;
-	else
-		return 0;
+
+	return 0;
 }
 
 static unsigned int get_clk_div(unsigned int type, unsigned int ID)
