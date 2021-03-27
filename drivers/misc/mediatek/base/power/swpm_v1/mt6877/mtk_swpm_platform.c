@@ -1229,6 +1229,34 @@ static ssize_t pmu_ms_mode_proc_write(struct file *file,
 	return count;
 }
 
+static unsigned int swpm_pmsr_en = 1;
+static int swpm_pmsr_en_proc_show(struct seq_file *m, void *v)
+{
+	seq_puts(m, "swpm_pmsr only support disabling cmd\n");
+	seq_printf(m, "%d\n", swpm_pmsr_en);
+	return 0;
+}
+static ssize_t swpm_pmsr_en_proc_write(struct file *file,
+	const char __user *buffer, size_t count, loff_t *pos)
+{
+	unsigned int enable = 0;
+	char *buf = _copy_from_user_for_proc(buffer, count);
+
+	if (!buf)
+		return -EINVAL;
+
+	if (!kstrtouint(buf, 10, &enable)) {
+		if (!enable) {
+			swpm_pmsr_en = enable;
+			/* TODO: remove this path after qos commander ready */
+			swpm_set_update_cnt(0, 9696 << SWPM_CODE_USER_BIT);
+		}
+	} else
+		swpm_err("echo <0/1> > /proc/swpm/swpm_pmsr_en\n");
+
+	return count;
+}
+
 static int core_static_replace_proc_show(struct seq_file *m, void *v)
 {
 	seq_printf(m, "default: %d, replaced %d (valid:0~999)\n",
@@ -1259,6 +1287,7 @@ static ssize_t core_static_replace_proc_write(struct file *file,
 PROC_FOPS_RW(idd_tbl);
 PROC_FOPS_RO(dram_bw);
 PROC_FOPS_RW(pmu_ms_mode);
+PROC_FOPS_RW(swpm_pmsr_en);
 PROC_FOPS_RW(core_static_replace);
 
 static void swpm_cmd_dispatcher(unsigned int type,
@@ -1380,11 +1409,13 @@ static void swpm_platform_procfs(void)
 	struct swpm_entry idd_tbl = PROC_ENTRY(idd_tbl);
 	struct swpm_entry dram_bw = PROC_ENTRY(dram_bw);
 	struct swpm_entry pmu_mode = PROC_ENTRY(pmu_ms_mode);
+	struct swpm_entry swpm_pmsr = PROC_ENTRY(swpm_pmsr_en);
 	struct swpm_entry core_lkg_rp = PROC_ENTRY(core_static_replace);
 
 	swpm_append_procfs(&idd_tbl);
 	swpm_append_procfs(&dram_bw);
 	swpm_append_procfs(&pmu_mode);
+	swpm_append_procfs(&swpm_pmsr);
 	swpm_append_procfs(&core_lkg_rp);
 }
 
