@@ -955,30 +955,6 @@ static struct mtk_device_info mt6877_devices_peri2[] = {
 	{-1, -1, 130, "OOB_way_en", true},
 	{-1, -1, 131, "OOB_way_en", true},
 
-	/* 110 */
-	{-1, -1, 112, "OOB_way_en", true},
-	{-1, -1, 113, "OOB_way_en", true},
-	{-1, -1, 114, "OOB_way_en", true},
-	{-1, -1, 115, "OOB_way_en", true},
-	{-1, -1, 116, "OOB_way_en", true},
-	{-1, -1, 117, "OOB_way_en", true},
-	{-1, -1, 118, "OOB_way_en", true},
-	{-1, -1, 119, "OOB_way_en", true},
-	{-1, -1, 120, "OOB_way_en", true},
-	{-1, -1, 121, "OOB_way_en", true},
-
-	/* 120 */
-	{-1, -1, 122, "OOB_way_en", true},
-	{-1, -1, 123, "OOB_way_en", true},
-	{-1, -1, 124, "OOB_way_en", true},
-	{-1, -1, 125, "OOB_way_en", true},
-	{-1, -1, 126, "OOB_way_en", true},
-	{-1, -1, 127, "OOB_way_en", true},
-	{-1, -1, 128, "OOB_way_en", true},
-	{-1, -1, 129, "OOB_way_en", true},
-	{-1, -1, 130, "OOB_way_en", true},
-	{-1, -1, 131, "OOB_way_en", true},
-
 	/* 130 */
 	{-1, -1, 132, "OOB_way_en", true},
 	{-1, -1, 133, "OOB_way_en", true},
