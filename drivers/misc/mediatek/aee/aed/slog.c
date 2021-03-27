@@ -33,6 +33,7 @@ struct tracepoints_table {
 
 static unsigned int ufs_count;
 static unsigned int ccci_count;
+static unsigned int gpu_count;
 static unsigned int threshold;
 static struct proc_dir_entry *dir;
 
@@ -65,9 +66,19 @@ static void probe_ccci_event(void *data, char *string, char *sub_string,
 	slog("#$#%s#@#%s#%d:%d#%d", string, sub_string, sub_type, resv, ccci_count);
 }
 
+static void probe_gpu_hardstop_event(void *data, char *string, char *sub_string,
+	unsigned int mfgpll, unsigned int freq, unsigned int vgpu, unsigned int vsram_gpu)
+{
+	gpu_count++;
+	slog("#$#%s#@#%s#%d:%d:%d:%d#%d",
+		string, sub_string, mfgpll, freq, vgpu, vsram_gpu, gpu_count);
+}
+
 static struct tracepoints_table interests[] = {
 	{.name = "ufs_mtk_event", .mod_name = NULL, .module = false, .func = probe_ufs_mtk_event},
 	{.name = "ccci_event", .mod_name = "NULL", .module = false, .func = probe_ccci_event},
+	{.name = "gpu_hardstop", .mod_name = "NULL", .module = false,
+		.func = probe_gpu_hardstop_event},
 };
 
 #define FOR_EACH_INTEREST(i) \
