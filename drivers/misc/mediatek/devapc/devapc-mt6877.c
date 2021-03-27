@@ -571,17 +571,17 @@ static struct mtk_device_info mt6877_devices_infra[] = {
 	{-1, -1, 463, "Decode_error", true},
 	{-1, -1, 464, "SRAMROM", true},
 	{-1, -1, 465, "MDP_MALI", true},
-	{-1, -1, 466, "reserve", true},
+	{-1, -1, 466, "reserve", false},
 	{-1, -1, 467, "MMSYS_MALI", true},
-	{-1, -1, 468, "PMIC_WRAP", true},
-	{-1, -1, 469, "PMIF1", true},
-	{-1, -1, 470, "PMIF2", true},
-	{-1, -1, 471, "Reserve", true},
+	{-1, -1, 468, "PMIC_WRAP", false},
+	{-1, -1, 469, "PMIF1", false},
+	{-1, -1, 470, "PMIF2", false},
+	{-1, -1, 471, "Reserve", false},
 
 	/* 470 */
-	{-1, -1, 472, "Reserve", true},
-	{-1, -1, 473, "DEVICE_APC_INFRA_AO", true},
-	{-1, -1, 474, "DEVICE_APC_INFRA_PDN", true},
+	{-1, -1, 472, "Reserve", false},
+	{-1, -1, 473, "DEVICE_APC_INFRA_AO", false},
+	{-1, -1, 474, "DEVICE_APC_INFRA_PDN", false},
 
 };
 
@@ -792,8 +792,8 @@ static struct mtk_device_info mt6877_devices_peri[] = {
 	{-1, -1, 179, "Decode_error", true},
 
 	/* 170 */
-	{-1, -1, 180, "DEVICE_APC_PERI_AO", true},
-	{-1, -1, 181, "DEVICE_APC_PERI_PDN", true},
+	{-1, -1, 180, "DEVICE_APC_PERI_AO", false},
+	{-1, -1, 181, "DEVICE_APC_PERI_PDN", false},
 
 };
 
@@ -1066,13 +1066,13 @@ static struct mtk_device_info mt6877_devices_peri2[] = {
 	/* 220 */
 	{-1, -1, 222, "Decode_error", true},
 	{-1, -1, 223, "Decode_error", true},
-	{-1, -1, 224, "CQ_DMA", true},
-	{-1, -1, 225, "EMI", true},
-	{-1, -1, 226, "EMI_MPU", true},
-	{-1, -1, 227, "GCE", true},
-	{-1, -1, 228, "AP_DMA", true},
-	{-1, -1, 229, "DEVICE_APC_PERI_AO2", true},
-	{-1, -1, 230, "DEVICE_APC_PERI_PDN2", true},
+	{-1, -1, 224, "CQ_DMA", false},
+	{-1, -1, 225, "EMI", false},
+	{-1, -1, 226, "EMI_MPU", false},
+	{-1, -1, 227, "GCE", false},
+	{-1, -1, 228, "AP_DMA", false},
+	{-1, -1, 229, "DEVICE_APC_PERI_AO2", false},
+	{-1, -1, 230, "DEVICE_APC_PERI_PDN2", false},
 
 };
 
@@ -1156,9 +1156,9 @@ static struct mtk_device_info mt6877_devices_peri_par[] = {
 	{-1, -1, 63, "Decode_error", true},
 	{-1, -1, 64, "Decode_error", true},
 	{-1, -1, 65, "DISP_PWM", true},
-	{-1, -1, 66, "IMP_IIC_WRAP", true},
-	{-1, -1, 67, "DEVICE_APC_PERI_PAR_AO", true},
-	{-1, -1, 68, "DEVICE_APC_PERI_PAR_PDN", true},
+	{-1, -1, 66, "IMP_IIC_WRAP", false},
+	{-1, -1, 67, "DEVICE_APC_PERI_PAR_AO", false},
+	{-1, -1, 68, "DEVICE_APC_PERI_PAR_PDN", false},
 
 };
 
