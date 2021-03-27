@@ -5049,8 +5049,6 @@ link_startup:
 
 		/* check if device is detected by inter-connect layer */
 		if (!ret && !ufshcd_is_device_present(hba)) {
-			ufshcd_update_evt_hist(hba, UFS_EVT_LINK_STARTUP_FAIL,
-					       0);
 			dev_err(hba->dev, "%s: Device not present\n", __func__);
 			ret = -ENXIO;
 			goto out;
@@ -5064,17 +5062,12 @@ link_startup:
 		 * but we can't be sure if the link is up until link startup
 		 * succeeds. So reset the local Uni-Pro and try again.
 		 */
-		if (ret && ufshcd_hba_enable(hba)) {
-			ufshcd_update_evt_hist(hba, UFS_EVT_LINK_STARTUP_FAIL,
-					       (u32)ret);
+		if (ret && ufshcd_hba_enable(hba))
 			goto out;
-		}
 	} while (ret && retries--);
 
 	if (ret) {
 		/* failed to get the link up... retire */
-		ufshcd_update_evt_hist(hba, UFS_EVT_LINK_STARTUP_FAIL,
-				       (u32)ret);
 		goto out;
 	}
 
@@ -5103,6 +5096,8 @@ link_startup:
 out:
 	if (ret) {
 		dev_err(hba->dev, "link startup failed %d\n", ret);
+		ufshcd_update_evt_hist(hba, UFS_EVT_LINK_STARTUP_FAIL,
+				       (u32)ret);
 		ufshcd_print_host_state(hba, 0, NULL, NULL, NULL);
 		ufshcd_print_pwr_info(hba);
 		ufshcd_print_host_regs(hba);
@@ -5652,7 +5647,7 @@ static int __ufshcd_transfer_req_compl(struct ufs_hba *hba,
 
 				result = (DID_REQUEUE << 16);
 				requeued_reqs |= (1UL << index);
-			} else if (ocs_err_status) {
+			} else if (ocs_err_status & 0xC0000000) {
 				result = (DID_FATAL << 16);
 			} else {
 				result = ufshcd_transfer_rsp_status(hba, lrbp, index);
