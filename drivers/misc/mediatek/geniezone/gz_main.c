@@ -1450,7 +1450,6 @@ static int __init gz_init(void)
 		KREE_DEBUG("create sysfs failed: %d\n", res);
 	} else {
 		struct task_struct *gz_get_cpuinfo_task;
-		struct task_struct *ree_dummy_task;
 
 		gz_get_cpuinfo_task =
 		    kthread_create(gz_get_cpuinfo_thread, NULL,
@@ -1461,17 +1460,6 @@ static int __init gz_init(void)
 			res = PTR_ERR(gz_get_cpuinfo_task);
 		} else
 			wake_up_process(gz_get_cpuinfo_task);
-
-		ree_dummy_task =
-		kthread_create(ree_dummy_thread, NULL, "ree_dummy_task");
-		if (IS_ERR(ree_dummy_task)) {
-			KREE_ERR("Unable to start kernel thread %s\n",
-				__func__);
-			res = PTR_ERR(ree_dummy_task);
-		} else {
-			set_user_nice(ree_dummy_task, -20);
-			wake_up_process(ree_dummy_task);
-		}
 	}
 
 #if IS_ENABLED(CONFIG_MTK_DEVAPC) && !IS_ENABLED(CONFIG_DEVAPC_LEGACY)

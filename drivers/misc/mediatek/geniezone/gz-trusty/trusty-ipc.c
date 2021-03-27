@@ -120,9 +120,9 @@ struct tipc_virtio_dev {
 	struct mutex lock;	/* protects access to this device */
 	struct virtio_device *vdev;
 	struct virtqueue *rxvq;
-	struct virtqueue *txvq;
+	struct virtqueue **txvq;
 	char rxvq_name[MAX_DEV_NAME_LEN];
-	char txvq_name[MAX_DEV_NAME_LEN];
+	char (*txvq_name)[MAX_DEV_NAME_LEN];
 	uint msg_buf_cnt;
 	uint msg_buf_max_cnt;
 	size_t msg_buf_max_sz;
@@ -134,6 +134,10 @@ struct tipc_virtio_dev {
 	struct tipc_cdev_node cdev_node;
 	char cdev_name[MAX_DEV_NAME_LEN];
 	enum tee_id_t tee_id;
+
+	int rxvq_num;
+	int txvq_num;
+	bool multi_vqueue;
 };
 
 enum tipc_chan_state {
@@ -319,7 +323,6 @@ static int is_valid_vds(struct tipc_virtio_dev *vds)
 	int i = 0;
 	int ret = 0;
 
-	pr_debug("%s: vds 0x%p\n", __func__, vds);
 	if (unlikely(!virt_addr_valid(vds)))
 		return -EFAULT;
 
@@ -387,20 +390,32 @@ static int vds_queue_txbuf(struct tipc_virtio_dev *vds, struct tipc_msg_buf *mb)
 	int err;
 	struct scatterlist sg;
 	bool need_notify = false;
+	int txvq_id;
+	struct virtqueue *txvq;
 
+	/* Disable preemption to ensure correctness of smp_processor_id */
+	preempt_disable();
+	txvq_id = (vds->multi_vqueue) ? smp_processor_id() : 0;
+	txvq = vds->txvq[txvq_id];
+	preempt_enable_no_resched();
+
+	dev_dbg(&vds->vdev->dev, "%s: queue txvq id %d\n", __func__, txvq_id);
 
 	mutex_lock(&vds->lock);
 	if (vds->state == VDS_ONLINE) {
 		sg_init_one(&sg, mb->buf_va, mb->wpos);
-		err = virtqueue_add_outbuf(vds->txvq, &sg, 1, mb, GFP_KERNEL);
-		need_notify = virtqueue_kick_prepare(vds->txvq);
+		err = virtqueue_add_outbuf(txvq, &sg, 1, mb, GFP_KERNEL);
+		need_notify = virtqueue_kick_prepare(txvq);
 	} else {
 		err = -ENODEV;
 	}
 	mutex_unlock(&vds->lock);
 
-	if (need_notify)
-		virtqueue_notify(vds->txvq);
+	if (!need_notify)
+		dev_info(&vds->vdev->dev, "%s: forcibly notify txvq id %d\n",
+			 __func__, txvq_id);
+
+	virtqueue_notify(txvq);
 
 	return err;
 }
@@ -593,6 +608,8 @@ int tipc_chan_queue_msg(struct tipc_chan *chan, struct tipc_msg_buf *mb)
 	switch (chan->state) {
 	case TIPC_CONNECTED:
 		fill_msg_hdr(mb, chan->local, chan->remote);
+		pr_debug("%s: TIPC-Send local %d remote %d chan %p\n",
+			 __func__, chan->local, chan->remote, chan);
 		err = vds_queue_txbuf(chan->vds, mb);
 		if (err) {
 			/* this should never happen */
@@ -654,6 +671,8 @@ int tipc_chan_connect(struct tipc_chan *chan, const char *name)
 		strncpy(chan->srv_name, body->name, sizeof(body->name) - 1);
 
 		fill_msg_hdr(txbuf, chan->local, TIPC_CTRL_ADDR);
+		pr_debug("%s: TIPC-Send conn req local %d remote %d chan %p\n",
+			 __func__, chan->local, TIPC_CTRL_ADDR, chan);
 		err = vds_queue_txbuf(chan->vds, txbuf);
 		if (err) {
 			/* this should never happen */
@@ -727,6 +746,8 @@ int tipc_chan_shutdown(struct tipc_chan *chan)
 		body->target = chan->remote;
 
 		fill_msg_hdr(txbuf, chan->local, TIPC_CTRL_ADDR);
+		pr_debug("%s: TIPC-Send shut down local %d remote %d chan %p\n",
+			 __func__, chan->local, TIPC_CTRL_ADDR, chan);
 		err = vds_queue_txbuf(chan->vds, txbuf);
 		if (err) {
 			/* this should never happen */
@@ -799,6 +820,8 @@ struct tipc_msg_buf *dn_handle_msg(void *data, struct tipc_msg_buf *rxbuf)
 		if (newbuf) {
 			/* queue an old buffer and return a new one */
 			list_add_tail(&rxbuf->node, &dn->rx_msg_queue);
+			pr_debug("%s: TIPC-Receive chan %p get rx\n", __func__,
+				 dn->chan);
 			wake_up_interruptible(&dn->readq);
 		} else {
 			/*
@@ -1657,6 +1680,9 @@ static void _handle_conn_rsp(struct tipc_virtio_dev *vds,
 			}
 		}
 		mutex_unlock(&chan->lock);
+		dev_dbg(&vds->vdev->dev,
+		       "%s: TIPC-Receive conn rsp local %d remote %d chan %p\n",
+		       __func__, chan->local, chan->remote, chan);
 		kref_put(&chan->refcount, _free_chan);
 	}
 }
@@ -1677,6 +1703,9 @@ static void _handle_disc_req(struct tipc_virtio_dev *vds,
 
 	chan = vds_lookup_channel(vds, req->target);
 	if (chan) {
+		dev_dbg(&vds->vdev->dev,
+		       "%s: TIPC-Receive disc req local %d remote %d chan %p\n",
+		       __func__, chan->local, chan->remote, chan);
 		mutex_lock(&chan->lock);
 		if (chan->state == TIPC_CONNECTED ||
 		    chan->state == TIPC_CONNECTING) {
@@ -1774,6 +1803,9 @@ static int _handle_rxbuf(struct tipc_virtio_dev *vds,
 		chan = vds_lookup_channel(vds, msg->dst);
 		if (chan) {
 			/* handle it */
+			dev_dbg(dev,
+				"%s: IPC-Receive local %d remote %d chan %p\n",
+				__func__, msg->dst, msg->src, chan);
 			rxbuf = chan->ops->handle_msg(chan->ops_arg, rxbuf);
 			WARN_ON(!rxbuf);
 			kref_put(&chan->refcount, _free_chan);
@@ -1853,14 +1885,86 @@ static void tee_routing_init(void)
 	}
 }
 
+static int tipc_setup_virtqueue(struct tipc_virtio_dev *vds,
+				struct tipc_dev_config *config)
+{
+	int err, i;
+	struct virtio_device *vdev = vds->vdev;
+	struct virtqueue **vqs;
+	vq_callback_t **vq_cbs;
+	char **vq_names;
+	int allvq_num;
+
+	allvq_num = vds->rxvq_num + vds->txvq_num;
+
+	/* allocate temporary arrays */
+	vqs = devm_kcalloc(&vdev->dev, allvq_num, sizeof(struct virtqueue *),
+			   GFP_KERNEL);
+	if (!vqs)
+		return -ENOMEM;
+
+	vq_cbs = devm_kcalloc(&vdev->dev, allvq_num, sizeof(vq_callback_t *),
+			      GFP_KERNEL);
+	if (!vq_cbs)
+		return -ENOMEM;
+
+	vq_names = devm_kcalloc(&vdev->dev, allvq_num, sizeof(char *),
+				GFP_KERNEL);
+	if (!vq_names)
+		return -ENOMEM;
+
+	/* set rx vqueue name & callback */
+	snprintf(vds->rxvq_name, MAX_DEV_NAME_LEN, "%s-rxvq-0",
+		 config->dev_name.tee_name);
+
+	vq_names[0] = vds->rxvq_name;
+	vq_cbs[0] = _rxvq_cb;
+
+	/* set tx vqueue name & callback */
+	vds->txvq_name = devm_kcalloc(&vdev->dev, vds->txvq_num,
+				      sizeof(*vds->txvq_name), GFP_KERNEL);
+	if (!vds->txvq_name)
+		return -ENOMEM;
+
+	for (i = 0; i < vds->txvq_num; i++) {
+		int txvq_start_idx = vds->rxvq_num;
+
+		snprintf(vds->txvq_name[i], MAX_DEV_NAME_LEN, "%s-txvq-%d",
+			config->dev_name.tee_name, i);
+
+		vq_names[txvq_start_idx + i] = vds->txvq_name[i];
+		vq_cbs[txvq_start_idx + i] = _txvq_cb;
+	}
+
+	/* find tx virtqueues (rx and tx and in this order) */
+	err = vdev->config->find_vqs(vdev, allvq_num, vqs, vq_cbs,
+				     (const char **)vq_names, NULL, NULL);
+	if (err)
+		return err;
+
+	vds->rxvq = vqs[0];
+
+	vds->txvq = devm_kcalloc(&vdev->dev, vds->txvq_num,
+				 sizeof(struct virtqueue *), GFP_KERNEL);
+	for (i = 0; i < vds->txvq_num; i++) {
+		int txvq_start_idx = vds->rxvq_num;
+
+		vds->txvq[i] = vqs[txvq_start_idx + i];
+	}
+
+	/* release temporary arrays */
+	devm_kfree(&vdev->dev, vqs);
+	devm_kfree(&vdev->dev, vq_cbs);
+	devm_kfree(&vdev->dev, vq_names);
+
+	return 0;
+}
+
 static int tipc_virtio_probe(struct virtio_device *vdev)
 {
 	int err, i;
 	struct tipc_virtio_dev *vds;
 	struct tipc_dev_config config;
-	struct virtqueue *vqs[2];
-	vq_callback_t *vq_cbs[] = { _rxvq_cb, _txvq_cb };
-	char *vq_names[2];
 	int tee_id = vdev->dev.id;
 
 	dev_info(&vdev->dev, "--- init trusty-ipc for MTEE %d ---\n",
@@ -1890,28 +1994,27 @@ static int tipc_virtio_probe(struct virtio_device *vdev)
 	snprintf(vds->cdev_name, MAX_DEV_NAME_LEN, "%s-ipc-%s",
 		 config.dev_name.tee_name, config.dev_name.cdev_name);
 
-	/* set vqueue name */
-	snprintf(vds->rxvq_name, MAX_DEV_NAME_LEN, "%s-rxvq",
-		 config.dev_name.tee_name);
+	/* set multiple vqueue support */
+	vds->multi_vqueue =
+		((vdev->config->get_features(vdev) == TIPC_MULTIPLE_VQUEUE_FEATURE) &&
+		(trusty_get_api_version(vdev->dev.parent->parent) >=
+		TRUSTY_API_VERSION_MULTI_VQUEUE));
 
-	snprintf(vds->txvq_name, MAX_DEV_NAME_LEN, "%s-txvq",
-		 config.dev_name.tee_name);
+	vds->rxvq_num = 1;
+	vds->txvq_num = (vds->multi_vqueue) ? num_possible_cpus() : 1;
 
-	vq_names[0] = vds->rxvq_name;
-	vq_names[1] = vds->txvq_name;
-	/* find tx virtqueues (rx and tx and in this order) */
-	err = vdev->config->find_vqs(vdev, 2, vqs, vq_cbs,
-				     (const char **)vq_names, NULL, NULL);
+	dev_info(&vdev->dev,
+		 "Multiple vqueue support:%d, rxvq num:%d, txvq num:%d\n",
+		 vds->multi_vqueue, vds->rxvq_num, vds->txvq_num);
 
+	/* setup virtqueue */
+	err = tipc_setup_virtqueue(vds, &config);
 	if (err)
-		goto err_find_vqs;
-
-	vds->rxvq = vqs[0];
-	vds->txvq = vqs[1];
+		goto err_setup_vqs;
 
 	/* save max buffer size and count */
 	vds->msg_buf_max_sz = config.msg_buf_max_size;
-	vds->msg_buf_max_cnt = virtqueue_get_vring_size(vds->txvq);
+	vds->msg_buf_max_cnt = virtqueue_get_vring_size(vds->txvq[0]) * vds->txvq_num;
 
 	/* set up the receive buffers 32 */
 	for (i = 0; i < virtqueue_get_vring_size(vds->rxvq); i++) {
@@ -1937,7 +2040,7 @@ static int tipc_virtio_probe(struct virtio_device *vdev)
 
 err_free_rx_buffers:
 	_cleanup_vq(vds->rxvq);
-err_find_vqs:
+err_setup_vqs:
 	kref_put(&vds->refcount, _free_vds);
 	return err;
 }
@@ -1945,6 +2048,7 @@ err_find_vqs:
 static void tipc_virtio_remove(struct virtio_device *vdev)
 {
 	struct tipc_virtio_dev *vds = vdev->priv;
+	int i = 0;
 
 	_go_offline(vds);
 
@@ -1958,7 +2062,8 @@ static void tipc_virtio_remove(struct virtio_device *vdev)
 	idr_destroy(&vds->addr_idr);
 
 	_cleanup_vq(vds->rxvq);
-	_cleanup_vq(vds->txvq);
+	for (i = 0; i < vds->txvq_num; i++)
+		_cleanup_vq(vds->txvq[i]);
 	_free_msg_buf_list(&vds->free_buf_list);
 
 	vdev->config->del_vqs(vds->vdev);
