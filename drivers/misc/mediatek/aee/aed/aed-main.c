@@ -1556,7 +1556,7 @@ static long aed_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 	int aee_mode_tmp = 0;
 	int aee_force_exp_tmp = 0;
 
-	if (!arg) {
+	if (!arg && (cmd != AEEIOCTL_DAL_CLEAN)) {
 		pr_info("ERR: %s arg=NULL\n", __func__);
 		return -EINVAL;
 	}
