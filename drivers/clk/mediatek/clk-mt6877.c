@@ -231,22 +231,6 @@
 #define MFGPLL4_CON1				0x03C
 #define MFGPLL4_CON2				0x040
 #define MFGPLL4_CON3				0x044
-#define APUPLL_CON0				0x008
-#define APUPLL_CON1				0x00C
-#define APUPLL_CON2				0x010
-#define APUPLL_CON3				0x014
-#define NPUPLL_CON0				0x018
-#define NPUPLL_CON1				0x01C
-#define NPUPLL_CON2				0x020
-#define NPUPLL_CON3				0x024
-#define APUPLL1_CON0				0x028
-#define APUPLL1_CON1				0x02C
-#define APUPLL1_CON2				0x030
-#define APUPLL1_CON3				0x034
-#define APUPLL2_CON0				0x038
-#define APUPLL2_CON1				0x03C
-#define APUPLL2_CON2				0x040
-#define APUPLL2_CON3				0x044
 
 
 static DEFINE_SPINLOCK(mt6877_clk_lock);
@@ -254,8 +238,6 @@ static DEFINE_SPINLOCK(mt6877_clk_lock);
 static void __iomem *apmixed_plls_base;
 
 static void __iomem *mfg_ao_plls_base;
-
-static void __iomem *apu_ao_plls_base;
 
 static const struct mtk_fixed_factor top_divs[] = {
 	FACTOR(CLK_TOP_MFGPLL1, "mfgpll1_ck",
@@ -372,14 +354,6 @@ static const struct mtk_fixed_factor top_divs[] = {
 			"mmpll", 1, 7),
 	FACTOR(CLK_TOP_MMPLL_D9, "mmpll_d9",
 			"mmpll", 1, 9),
-	FACTOR(CLK_TOP_APUPLL, "apupll_ck",
-			"apu_ao_apupll", 1, 1),
-	FACTOR(CLK_TOP_NPUPLL, "npupll_ck",
-			"apu_ao_npupll", 1, 1),
-	FACTOR(CLK_TOP_APUPLL1, "apupll1_ck",
-			"apu_ao_apupll1", 1, 1),
-	FACTOR(CLK_TOP_APUPLL2, "apupll2_ck",
-			"apu_ao_apupll2", 1, 1),
 	FACTOR(CLK_TOP_TVDPLL, "tvdpll_ck",
 			"tvdpll", 1, 1),
 	FACTOR(CLK_TOP_TVDPLL_D2, "tvdpll_d2",
@@ -2311,33 +2285,6 @@ static const struct mtk_pll_data mfg_ao_plls[] = {
 		&mfg_ao_pwr_stat),
 };
 
-static const struct mtk_pll_data apu_ao_plls[] = {
-	PLL(CLK_APU_AO_APUPLL, "apu_ao_apupll", APUPLL_CON0/*base*/,
-		APUPLL_CON0, BIT(0)/*en*/,
-		APUPLL_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
-		APUPLL_CON1, 24/*pd*/,
-		0, 0, 0/*tuner*/,
-		APUPLL_CON1, 0, 22/*pcw*/),
-	PLL(CLK_APU_AO_NPUPLL, "apu_ao_npupll", NPUPLL_CON0/*base*/,
-		NPUPLL_CON0, BIT(0)/*en*/,
-		NPUPLL_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
-		NPUPLL_CON1, 24/*pd*/,
-		0, 0, 0/*tuner*/,
-		NPUPLL_CON1, 0, 22/*pcw*/),
-	PLL(CLK_APU_AO_APUPLL1, "apu_ao_apupll1", APUPLL1_CON0/*base*/,
-		APUPLL1_CON0, BIT(0)/*en*/,
-		APUPLL1_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
-		APUPLL1_CON1, 24/*pd*/,
-		0, 0, 0/*tuner*/,
-		APUPLL1_CON1, 0, 22/*pcw*/),
-	PLL(CLK_APU_AO_APUPLL2, "apu_ao_apupll2", APUPLL2_CON0/*base*/,
-		APUPLL2_CON0, BIT(0)/*en*/,
-		APUPLL2_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
-		APUPLL2_CON1, 24/*pd*/,
-		0, 0, 0/*tuner*/,
-		APUPLL2_CON1, 0, 22/*pcw*/),
-};
-
 static int clk_mt6877_apmixed_probe(struct platform_device *pdev)
 {
 	struct clk_onecell_data *clk_data;
@@ -2369,45 +2316,6 @@ static int clk_mt6877_apmixed_probe(struct platform_device *pdev)
 			__func__, r);
 
 	apmixed_plls_base = base;
-
-#if MT_CCF_BRINGUP
-	pr_notice("%s init end\n", __func__);
-#endif
-
-	return r;
-}
-
-static int clk_mt6877_apu_ao_probe(struct platform_device *pdev)
-{
-	struct clk_onecell_data *clk_data;
-	int r;
-	struct device_node *node = pdev->dev.of_node;
-
-	void __iomem *base;
-	struct resource *res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
-
-#if MT_CCF_BRINGUP
-	pr_notice("%s init begin\n", __func__);
-#endif
-
-	base = devm_ioremap_resource(&pdev->dev, res);
-	if (IS_ERR(base)) {
-		pr_err("%s(): ioremap failed\n", __func__);
-		return PTR_ERR(base);
-	}
-
-	clk_data = mtk_alloc_clk_data(CLK_APU_AO_NR_CLK);
-
-	mtk_clk_register_plls(node, apu_ao_plls, ARRAY_SIZE(apu_ao_plls),
-			clk_data);
-
-	r = of_clk_add_provider(node, of_clk_src_onecell_get, clk_data);
-
-	if (r)
-		pr_err("%s(): could not register clock provider: %d\n",
-			__func__, r);
-
-	apu_ao_plls_base = base;
 
 #if MT_CCF_BRINGUP
 	pr_notice("%s init end\n", __func__);
@@ -2562,16 +2470,12 @@ void pll_force_off(void)
 {
 	pll_force_off_internal(apmixed_plls, apmixed_plls_base);
 	pll_force_off_internal(mfg_ao_plls, mfg_ao_plls_base);
-	pll_force_off_internal(apu_ao_plls, apu_ao_plls_base);
 }
 
 static const struct of_device_id of_match_clk_mt6877[] = {
 	{
 		.compatible = "mediatek,mt6877-apmixedsys",
 		.data = clk_mt6877_apmixed_probe,
-	}, {
-		.compatible = "mediatek,mt6877-apu_pll_ctrl",
-		.data = clk_mt6877_apu_ao_probe,
 	}, {
 		.compatible = "mediatek,mt6877-gpu_pll_ctrl",
 		.data = clk_mt6877_mfg_ao_probe,
