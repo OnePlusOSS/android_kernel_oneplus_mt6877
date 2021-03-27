@@ -49,7 +49,7 @@ void printV30_error_status(struct edma_sub *edma_sub,
 	pr_notice("---------------- dump port [%d] registers ----------------\n"
 		, portID);
 
-	for (i = ((0x800+portID*0x100)/4); i < ((0x800+portID*0x200)/4); i++) {
+	for (i = ((0x800+portID*0x100)/4); i < ((0x900+portID*0x100)/4); i++) {
 		status = edma_read_reg32(edma_sub->base_addr, i*4);
 		pr_notice("edma error dump register[0x%x] = 0x%x\n",
 		i*4, status);
@@ -120,7 +120,7 @@ irqreturn_t edmaV30_isr_handler(int irq, void *edma_sub_info)
 void edmaV30_sw_reset(struct edma_sub *edma_sub)
 {
 	unsigned long flags;
-#if 1
+
 	//pr_notice("%s: new init for edma 3.0\n", __func__);
 	spin_lock_irqsave(&edma_sub->reg_lock, flags);
 
@@ -130,8 +130,6 @@ void edmaV30_sw_reset(struct edma_sub *edma_sub)
 	udelay(5);
 	edma_clear_reg32(edma_sub->base_addr, 0x004, (0x1 << 4));
 	spin_unlock_irqrestore(&edma_sub->reg_lock, flags);
-
-#endif
 	//LOG_DBG("%s edma 3.0 skip sw reset\n", __func__);
 }
 
