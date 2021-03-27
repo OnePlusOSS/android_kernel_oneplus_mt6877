@@ -6285,11 +6285,6 @@ out:
 	spin_unlock_irqrestore(hba->host->host_lock, flags);
 	ufshcd_scsi_unblock_requests(hba);
 
-	if (needs_reset && hba->invalid_resp_upiu) {
-		hba->invalid_resp_upiu = false;
-		ufshcd_vops_abort_handler(hba, -1, __FILE__, __LINE__);
-	}
-
 	ufshcd_release(hba);
 
 	if (rpm_put == true)
