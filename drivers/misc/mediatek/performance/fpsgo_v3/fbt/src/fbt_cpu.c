@@ -1639,8 +1639,6 @@ static int fbt_check_to_jerk(
 	}
 
 	/*during dequeue*/
-	fpsgo_systrace_c_fbt(pid, buffer_id, 1, "jerk_postpone");
-	fpsgo_systrace_c_fbt(pid, buffer_id, 0, "jerk_postpone");
 	return FPSGO_JERK_POSTPONE;
 }
 
@@ -2857,11 +2855,11 @@ static int fbt_boost_policy(
 	if (qr_enable || gcc_enable) {
 		int s32_target_time = update_quota(boost_info, target_fps, thread_info->Q2Q_time);
 
-		fpsgo_systrace_c_fbt(pid, buffer_id, boost_info->quota, "quota");
+		if (qr_debug)
+			fpsgo_systrace_c_fbt(pid, buffer_id, boost_info->quota, "quota");
 		fpsgo_systrace_c_fbt(pid, buffer_id, s32_target_time, "gcc_target_time");
 		fpsgo_systrace_c_fbt(pid, buffer_id, boost_info->quota_adj, "quota_adj");
-		if (qr_debug)
-			fpsgo_systrace_c_fbt(pid, buffer_id, boost_info->quota_mod, "quota_mod");
+		fpsgo_systrace_c_fbt(pid, buffer_id, boost_info->quota_mod, "quota_mod");
 	}
 
 	if (gcc_enable) {
