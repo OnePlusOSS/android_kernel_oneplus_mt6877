@@ -209,6 +209,6 @@ extern unsigned int mt_get_abist_freq(unsigned int ID);
 extern unsigned int mt_get_abist2_freq(unsigned int ID);
 extern unsigned int mt_get_subsys_freq(unsigned int ID);
 extern const struct fmeter_clk *get_fmeter_clks(void);
-extern int mt_subsys_freq_register(struct fm_subsys *fm);
+extern int mt_subsys_freq_register(struct fm_subsys *fm, unsigned int size);
 
 #endif /* _CLK_MT6877_FMETER_H */

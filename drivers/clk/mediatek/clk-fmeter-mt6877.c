@@ -249,10 +249,12 @@ static unsigned int check_pdn(void __iomem *base,
 	if (!fm_all_clks[i].ofs)
 		return 0;
 
-	if (type == SUBSYS && ((clk_readl(base + fm_all_clks[i].ofs)
-			& fm_all_clks[i].pdn) != fm_all_clks[i].pdn))
-		return 1;
-	else if (type != SUBSYS && ((clk_readl(base + fm_all_clks[i].ofs)
+	if (type == SUBSYS) {
+		if ((clk_readl(base + fm_all_clks[i].ofs) & fm_all_clks[i].pdn)
+				!= fm_all_clks[i].pdn) {
+			return 1;
+		}
+	} else if (type != SUBSYS && ((clk_readl(base + fm_all_clks[i].ofs)
 			& BIT(fm_all_clks[i].pdn)) == BIT(fm_all_clks[i].pdn)))
 		return 1;
 	else
@@ -308,15 +310,13 @@ unsigned int mt_get_ckgen_freq(unsigned int ID)
 	unsigned int temp, clk_dbg_cfg, clk_misc_cfg_0, clk26cali_1 = 0;
 	unsigned long flags;
 
-	pdn_lock(flags);
+	fmeter_lock(flags);
 	if (check_pdn(topck_base, CKGEN, ID)) {
 		pr_notice("ID-%d: MUX PDN, return 0.\n", ID);
-		pdn_unlock(flags);
+		fmeter_unlock(flags);
 		return 0;
 	}
-	pdn_unlock(flags);
 
-	fmeter_lock(flags);
 	while (clk_readl(CLK26CALI_0) & 0x1000) {
 		udelay(10);
 		i++;
@@ -471,15 +471,13 @@ unsigned int mt_get_abist2_freq(unsigned int ID)
 	unsigned long flags;
 	unsigned int temp, clk_dbg_cfg, clk_misc_cfg_0, clk26cali_1 = 0;
 
-	pdn_lock(flags);
+	fmeter_lock(flags);
 	if (check_pdn(topck_base, ABIST_2, ID)) {
 		pr_notice("ID-%d: MUX PDN, return 0.\n", ID);
-		pdn_unlock(flags);
+		fmeter_unlock(flags);
 		return 0;
 	}
-	pdn_unlock(flags);
 
-	fmeter_lock(flags);
 	while (clk_readl(CLK26CALI_0) & 0x1000) {
 		udelay(10);
 		i++;
@@ -549,20 +547,17 @@ unsigned int mt_get_subsys_freq(unsigned int ID)
 	unsigned int id;
 	unsigned int subsys_idx;
 
-	pdn_lock(flags);
+	fmeter_lock(flags);
 	if (check_pdn(spm_base, SUBSYS, ID)) {
 		pr_notice("ID-%d: PDN, return 0.\n", ID);
-		pdn_unlock(flags);
+		fmeter_unlock(flags);
 		return 0;
 	}
-	pdn_unlock(flags);
-
-	subsys_fmeter_lock(flags);
 
 	id = FM_ID(ID);
 	subsys_idx = FM_SYS(ID) * 4 + id;
 	if (subsys_idx >= (SUBSYS_PLL_NUM * FM_SYS_NUM) || subsys_idx < 0) {
-		subsys_fmeter_unlock(flags);
+		fmeter_unlock(flags);
 		return 0;
 	}
 
@@ -603,14 +598,14 @@ unsigned int mt_get_subsys_freq(unsigned int ID)
 	output = ((temp * 26000)) / 1024; // Khz
 
 	clk_writel(con0, 0x8000);
-
-	subsys_fmeter_unlock(flags);
 	pr_notice("[%d(%d)]con0: 0x%x, con1: 0x%x\n",
 				ID, id, clk_readl(con0), clk_readl(con1));
+	fmeter_unlock(flags);
+
 	return output * 4;
 }
 
-int mt_subsys_freq_register(struct fm_subsys *fm)
+int mt_subsys_freq_register(struct fm_subsys *fm, unsigned int size)
 {
 	unsigned int all_idx, sub_idx;
 	int i;
@@ -620,7 +615,7 @@ int mt_subsys_freq_register(struct fm_subsys *fm)
 	if (!fm_sub_clks)
 		return -ENOMEM;
 
-	for (; fm && fm->base != NULL; fm++) {
+	for (i = 0; i < size; i++, fm++) {
 		unsigned int sys = FM_SYS(fm->id);
 		unsigned int id = FM_ID(fm->id);
 
@@ -628,7 +623,7 @@ int mt_subsys_freq_register(struct fm_subsys *fm)
 			continue;
 
 		sub_idx = (sys * 4) + id;
-		all_idx = fm_clk_cnt + sub_idx;
+		all_idx = fm_clk_cnt;
 
 		fm_all_clks[all_idx].id = fm->id;
 		fm_all_clks[all_idx].type = SUBSYS;
@@ -639,9 +634,9 @@ int mt_subsys_freq_register(struct fm_subsys *fm)
 		fm_sub_clks[sub_idx].base = fm->base;
 		fm_sub_clks[sub_idx].con0 = fm->con0;
 		fm_sub_clks[sub_idx].con1 = fm->con1;
-	}
 
-	fm_clk_cnt = all_idx;
+		fm_clk_cnt++;
+	}
 
 	return 0;
 }
@@ -679,7 +674,7 @@ static int __init clk_fmeter_mt6877_init(void)
 	node = of_find_compatible_node(NULL, NULL,
 		"mediatek,mt6877-scpsys");
 	if (node) {
-		spm_base = of_iomap(node, 1);
+		spm_base = of_iomap(node, 0);
 		if (!spm_base) {
 			pr_err("%s() can't find iomem for spm\n",
 					__func__);

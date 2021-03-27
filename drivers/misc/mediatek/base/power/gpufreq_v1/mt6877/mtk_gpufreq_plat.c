@@ -3636,15 +3636,17 @@ static int __mt_gpufreq_init_clk(struct platform_device *pdev)
 	int ret = 0;
 	struct fm_pwr_sta mfg_fm_pwr_status = {
 		.ofs = PWR_STATUS_OFS,
-		.msk = 0,
+		.msk = 0x3F,
 	};
-	struct fm_subsys mfg_fm = {
+	struct fm_subsys mfg_fm[] = {
+		{
 		.id = FM_MFGPLL1,
 		.name = "fm_mfgpll1",
 		.base = 0,
 		.con0 = PLL4H_FQMTR_CON0_OFS,
 		.con1 = PLL4H_FQMTR_CON1_OFS,
 		.pwr_sta = mfg_fm_pwr_status,
+		}
 	};
 
 	/* MFGPLL1 & MFGPLL4 are from GPU_PLL_CTRL */
@@ -3657,8 +3659,8 @@ static int __mt_gpufreq_init_clk(struct platform_device *pdev)
 		return -ENOENT;
 	}
 
-	mfg_fm.base = g_gpu_pll_ctrl;
-	ret = mt_subsys_freq_register(&mfg_fm);
+	mfg_fm[0].base = g_gpu_pll_ctrl;
+	ret = mt_subsys_freq_register(&mfg_fm[0], ARRAY_SIZE(mfg_fm));
 	if (ret) {
 		gpufreq_pr_info("@%s: failed to register fmeter\n", __func__);
 		return ret;
