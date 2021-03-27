@@ -6081,7 +6081,7 @@
 		disable_write_silence = <1>;
 	};
 
-	gpufreq {
+	gpufreq: gpufreq {
 		compatible = "mediatek,gpufreq";
 		clocks =
 			<&topckgen_clk CLK_TOP_MFG_INTERNAL2_SEL>,
@@ -6111,6 +6111,11 @@
 		_vgpu-supply = <&mt_pmic_vproc2_buck_reg>;
 		_vsram_gpu-supply = <&mt_pmic_vsram_md_ldo_reg>;
 #endif
+	};
+
+	ged: ged {
+		compatible = "mediatek,ged";
+		gpufreq-supply = <&gpufreq>;
 	};
 
 	typec_mux_switch: typec_mux_switch {
