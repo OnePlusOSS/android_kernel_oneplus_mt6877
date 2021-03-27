@@ -31,11 +31,6 @@ int mtk_leds_unregister_notifier(struct notifier_block *nb);
 extern void disp_pq_notify_backlight_changed(int bl_1024);
 extern int enable_met_backlight_tag(void);
 extern int output_met_backlight_tag(int level);
-extern int _gate_ic_i2c_write_bytes(unsigned char cmd, unsigned char writeData);
-extern int _gate_ic_i2c_read_bytes(unsigned char cmd, unsigned char *returnData);
-extern void _gate_ic_backlight_power_on(void);
 extern void _gate_ic_backlight_set(unsigned int level);
-
-
 
 

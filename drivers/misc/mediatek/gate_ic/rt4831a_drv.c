@@ -102,8 +102,7 @@ static void _gate_ic_backlight_enable(void)
 	} else {
 		_gate_ic_i2c_write_bytes(BACKLIGHT_CONFIG_1, 0x68);
 		if (!atomic_read(&gate_client->backlight_status)) {
-			_gate_ic_i2c_write_bytes(BACKLIGHT_BRIGHTNESS_LSB, 0);
-			_gate_ic_i2c_write_bytes(BACKLIGHT_BRIGHTNESS_MSB, 0);
+			_gate_ic_backlight_set(0);
 		}
 	}
 	_gate_ic_i2c_write_bytes(BACKLIGHT_CONFIG_2, 0x9D);
@@ -149,13 +148,21 @@ static struct notifier_block leds_init_notifier = {
 void _gate_ic_backlight_set(unsigned int hw_level)
 {
 	int level_l, level_h;
+	struct i2c_client *client = _gate_ic_i2c_client;
+	char cmd_buf[3] = { 0x00, 0x00, 0x00 };
+	int ret = 0;
 
 	level_h = (hw_level >> BRIGHTNESS_HIGN_OFFSET) & BRIGHTNESS_HIGN_MASK;
 	level_l = (hw_level >> BRIGHTNESS_LOW_OFFSET) & BRIGHTNESS_LOW_MASK;
 
-	_gate_ic_i2c_write_bytes(BACKLIGHT_BRIGHTNESS_LSB, level_l);
-	_gate_ic_i2c_write_bytes(BACKLIGHT_BRIGHTNESS_MSB, level_h);
+	cmd_buf[0] = BACKLIGHT_BRIGHTNESS_LSB;
+	cmd_buf[1] = level_l;
+	cmd_buf[2] = level_h;
 
+	ret = i2c_master_send(client, cmd_buf, 3);
+	if (ret < 0)
+		pr_info("ERROR %d!! i2c write data fail 0x%0x, 0x%0x, 0x%0x !!\n",
+				ret, cmd_buf[0], cmd_buf[1], cmd_buf[2]);
 }
 EXPORT_SYMBOL_GPL(_gate_ic_backlight_set);
 
@@ -175,7 +182,7 @@ int _gate_ic_i2c_read_bytes(unsigned char addr, unsigned char *returnData)
 	ret = i2c_master_send(client, &cmd_buf[0], 1);
 	ret = i2c_master_recv(client, &cmd_buf[1], 1);
 	if (ret < 0)
-		pr_info("ERROR!! i2c read data 0x%0x fail !!\n", addr);
+		pr_info("ERROR %d!! i2c read data 0x%0x fail !!\n", ret, addr);
 
 	readData = cmd_buf[1];
 	*returnData = readData;
