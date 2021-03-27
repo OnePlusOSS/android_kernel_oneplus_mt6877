@@ -1118,6 +1118,32 @@ struct IMGSENSOR_HW_POWER_SEQ sensor_power_sequence[] = {
 		},
 	},
 #endif
+#if defined(OV64B_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_OV64B_MIPI_RAW,
+		{
+			{RST, Vol_Low, 1},
+			{SensorMCLK, Vol_High, 1},
+			{AVDD, Vol_2800, 2},
+			{DOVDD, Vol_1800, 1},
+			{DVDD, Vol_1100, 5},
+			{RST, Vol_High, 5},
+		},
+	},
+#endif
+#if defined(IMX615_MIPI_RAW)
+	{
+		SENSOR_DRVNAME_IMX615_MIPI_RAW,
+		{
+			{RST, Vol_Low, 1},
+			{AVDD, Vol_2900, 0},
+			{DVDD, Vol_1100, 0},
+			{DOVDD, Vol_1800, 1},
+			{SensorMCLK, Vol_High, 1},
+			{RST, Vol_High, 2},
+		},
+	},
+#endif
 
 	/* add new sensor before this line */
 	{NULL,},
