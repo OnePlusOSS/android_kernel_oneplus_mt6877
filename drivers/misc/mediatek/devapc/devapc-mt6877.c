@@ -1342,17 +1342,20 @@ static const char *mt6877_bus_id_to_master(uint32_t bus_id, uint32_t vio_addr,
 
 
 	if (slave_type == SLAVE_TYPE_INFRA) {
-		if (vio_addr <= 0x1FFFFF || shift_sta_bit == 3) {
+		if (vio_addr <= 0x1FFFFF || shift_sta_bit == 7) {
 			pr_info(PFX "vio_addr is from on-chip SRAMROM\n");
 			if ((bus_id & 0x1) == 0)
 				return "EMI_L2C_M";
 
 			return infra_mi_trans(bus_id >> 1);
 
-		} else if ((shift_sta_bit >= 0 && shift_sta_bit <= 2) || shift_sta_bit == 5) {
+		} else if (shift_sta_bit >= 0 && shift_sta_bit <= 3) {
+			return peri_mi_trans(bus_id);
+
+		} else if (shift_sta_bit >= 4 && shift_sta_bit <= 6) {
 			return infra_mi_trans(bus_id);
 
-		} else if (shift_sta_bit == 4) {
+		} else if (shift_sta_bit == 8) {
 			pr_info(PFX "vio_addr is from MMSYS_MALI\n");
 			if ((bus_id & 0x1) == 1)
 				return "GCE_M";
@@ -1363,8 +1366,8 @@ static const char *mt6877_bus_id_to_master(uint32_t bus_id, uint32_t vio_addr,
 		return err_master;
 
 	} else if (slave_type == SLAVE_TYPE_PERI) {
-		if (shift_sta_bit == 3 || shift_sta_bit == 4 ||
-				shift_sta_bit == 8) {
+		if (shift_sta_bit == 1 || shift_sta_bit == 2 ||
+				shift_sta_bit == 7) {
 			if ((bus_id & 0x1) == 0)
 				return "MD_AP_M";
 
