@@ -1805,6 +1805,8 @@ static void ISP_DumpDmaDeepDbg(enum ISP_IRQ_TYPE_ENUM module)
 
 #undef ISP_MODULE_GROUPS
 #endif
+	IRQ_LOG_KEEPER(module, m_CurrentPPB, _LOG_ERR,
+		"ISP clock rate %d,", mt_get_ckgen_freq(10));
 }
 
 #ifdef CONFIG_MTK_IOMMU_V2
@@ -6437,7 +6439,7 @@ EXIT:
 static int ISP_mmap(struct file *pFile, struct vm_area_struct *pVma)
 {
 	unsigned long length = 0;
-	unsigned int pfn = 0x0;
+	unsigned long pfn = 0x0;
 
 	/*LOG_DBG("- E."); */
 	length = (pVma->vm_end - pVma->vm_start);
@@ -7906,7 +7908,7 @@ void IRQ_INT_ERR_CHECK_CAM(unsigned int WarnStatus, unsigned int ErrStatus,
 				ErrStatus, WarnStatus, warnTwo);
 
 			/* DMA ERR print */
-			if (ErrStatus & DMA_ERR_ST)
+			if (ErrStatus & (DMA_ERR_ST | TG_ERR_ST))
 				ISP_DumpDmaDeepDbg(module);
 
 			break;
@@ -7933,7 +7935,7 @@ void IRQ_INT_ERR_CHECK_CAM(unsigned int WarnStatus, unsigned int ErrStatus,
 				ErrStatus, WarnStatus, warnTwo);
 
 			/* DMA ERR print */
-			if (ErrStatus & DMA_ERR_ST)
+			if (ErrStatus & (DMA_ERR_ST | TG_ERR_ST))
 				ISP_DumpDmaDeepDbg(module);
 
 			break;
@@ -7960,7 +7962,7 @@ void IRQ_INT_ERR_CHECK_CAM(unsigned int WarnStatus, unsigned int ErrStatus,
 				ErrStatus, WarnStatus, warnTwo);
 
 			/* DMA ERR print */
-			if (ErrStatus & DMA_ERR_ST)
+			if (ErrStatus & (DMA_ERR_ST | TG_ERR_ST))
 				ISP_DumpDmaDeepDbg(module);
 
 			break;
