@@ -265,6 +265,9 @@ void _gate_ic_i2c_panel_bias_enable(unsigned int power_status)
 		_gate_ic_i2c_write_bytes(LCM_BIAS, 0x24);
 		_gate_ic_i2c_write_bytes(VPOS_BIAS, 0x1c);
 		_gate_ic_i2c_write_bytes(VNEG_BIAS, 0x1c);
+		/* set dsv FPWM mode */
+		_gate_ic_i2c_write_bytes(0xF0, 0x69);
+		_gate_ic_i2c_write_bytes(0xB1, 0x6c);
 		/*bias enable*/
 		_gate_ic_i2c_write_bytes(DISPLAY_BIAS_CONFIGURATION_1, 0x9e);
 	} else {
