@@ -47,9 +47,7 @@ static dma_addr_t gpDMABuf_pa;
 struct nvt_ts_data *ts;
 
 #if BOOT_UPDATE_FIRMWARE
-//static struct workqueue_struct *nvt_fwu_wq;
-static struct kthread_delayed_work nvt_fwu_dw;
-static struct kthread_worker *nvt_fwu_worker;
+static struct workqueue_struct *nvt_fwu_wq;
 #endif
 
 static const struct nvt_ts_mem_map NT36772_memory_map = {
@@ -1592,11 +1590,16 @@ static int32_t nvt_ts_probe(struct i2c_client *client,
 	}
 
 #if BOOT_UPDATE_FIRMWARE
-	kthread_init_worker(nvt_fwu_worker);
-	kthread_init_delayed_work(&nvt_fwu_dw, Boot_Update_Firmware);
-	kthread_run(Boot_Update_Firmware,
-			nvt_fwu_worker, "nvt_fwu_worker");
-	kthread_queue_delayed_work(nvt_fwu_worker, &nvt_fwu_dw, msecs_to_jiffies(14000));
+	nvt_fwu_wq = create_singlethread_workqueue("nvt_fwu_wq");
+	if (!nvt_fwu_wq) {
+		NVT_ERR("nvt_fwu_wq create workqueue failed\n");
+		ret = -ENOMEM;
+		goto err_create_nvt_fwu_wq_failed;
+	}
+	INIT_DELAYED_WORK(&ts->nvt_fwu_work, Boot_Update_Firmware);
+	// please make sure boot update start after display reset(RESX) sequence
+	queue_delayed_work(nvt_fwu_wq, &ts->nvt_fwu_work,
+				msecs_to_jiffies(14000));
 #endif
 
 	//---set device node---
@@ -1902,11 +1905,8 @@ static void __exit nvt_driver_exit(void)
 	tpd_driver_remove(&nvt_device_driver);
 
 #if BOOT_UPDATE_FIRMWARE
-	if (nvt_fwu_worker) {
-		kthread_cancel_delayed_work_sync(&nvt_fwu_dw);
-		kthread_destroy_worker(nvt_fwu_worker);
-		nvt_fwu_worker = NULL;
-	}
+	if (nvt_fwu_wq)
+		destroy_workqueue(nvt_fwu_wq);
 #endif
 }
 
