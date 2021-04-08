@@ -1504,6 +1504,14 @@ s32 cmdq_mdp_handle_flush(struct cmdqRecStruct *handle)
 void cmdq_mdp_op_readback(struct cmdqRecStruct *handle, u16 engine,
 	dma_addr_t addr, u32 param)
 {
+	if (handle->readback_cnt >= CMDQ_MAX_READBACK_ENG) {
+		CMDQ_ERR("%s readback count %d exceed max readback engine\n",
+			__func__, handle->readback_cnt);
+		cmdq_dump_pkt(handle->pkt, 0, false);
+		CMDQ_AEE("MDP", "read back overflow %hu addr %lu param %u\n",
+			engine, addr, param);
+		return;
+	}
 	mdp_funcs.mdpComposeReadback(handle, engine, addr, param);
 }
 
