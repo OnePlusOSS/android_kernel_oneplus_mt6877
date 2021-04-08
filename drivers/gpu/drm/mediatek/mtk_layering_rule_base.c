@@ -2510,7 +2510,8 @@ static int layering_rule_start(struct drm_mtk_layering_info *disp_info_user,
 					       ADJUST_LAYOUT_OVERLAP_CAL);
 	overlap_num = calc_hrt_num(dev, &layering_info);
 	layering_info.hrt_weight = overlap_num;
-	DDPINFO("overlap_num %u\n", layering_info.hrt_weight);
+	DDPINFO("min(input_layer,ovl_support_layer) overlap_num %u\n",
+		layering_info.hrt_weight);
 
 	if (l_rule_ops->fbdc_restore_layout)
 		l_rule_ops->fbdc_restore_layout(&layering_info,
@@ -2539,6 +2540,7 @@ static int layering_rule_start(struct drm_mtk_layering_info *disp_info_user,
 	lyeblob_ids = kzalloc(sizeof(struct mtk_drm_lyeblob_ids), GFP_KERNEL);
 
 	ret = dispatch_ovl_id(&layering_info, lyeblob_ids, dev);
+	DDPINFO("real ovl input layer overlap_num %u\n", layering_info.hrt_weight);
 
 	check_layering_result(&layering_info);
 
