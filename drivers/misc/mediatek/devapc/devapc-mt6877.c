@@ -1343,7 +1343,7 @@ static const char *mt6877_bus_id_to_master(uint32_t bus_id, uint32_t vio_addr,
 
 	} else if (slave_type == SLAVE_TYPE_PERI) {
 		if (shift_sta_bit == 1 || shift_sta_bit == 2 ||
-				shift_sta_bit == 7) {
+				shift_sta_bit == 5) {
 			if ((bus_id & 0x1) == 0)
 				return "MD_AP_M";
 
@@ -1479,22 +1479,26 @@ static uint32_t mt6877_shift_group_get(int slave_type, uint32_t vio_idx)
 		else if (vio_idx >= 4 && vio_idx <= 5)
 			return 1;
 		else if ((vio_idx >= 6 && vio_idx <= 31) ||
-			 (vio_idx >= 344 && vio_idx <= 370) ||
-			 vio_idx == 390)
+			 (vio_idx >= 416 && vio_idx <= 442) ||
+			 vio_idx == 462)
 			return 2;
 		else if ((vio_idx >= 32 && vio_idx <= 45) ||
-			 (vio_idx >= 371 && vio_idx <= 385) ||
-			 vio_idx == 391)
+			 (vio_idx >= 443 && vio_idx <= 457) ||
+			 vio_idx == 463)
 			return 3;
-		else if ((vio_idx >= 46 && vio_idx <= 54) || vio_idx == 386)
+		else if ((vio_idx >= 46 && vio_idx <= 74) ||
+			vio_idx == 458)
 			return 4;
-		else if ((vio_idx >= 55 && vio_idx <= 60) || vio_idx == 387)
+		else if ((vio_idx >= 75 && vio_idx <= 82) ||
+			vio_idx == 459)
 			return 5;
-		else if ((vio_idx >= 61 && vio_idx <= 65) || vio_idx == 388)
+		else if ((vio_idx >= 83 && vio_idx <= 87) ||
+			vio_idx == 460)
 			return 6;
-		else if ((vio_idx >= 66 && vio_idx <= 67) || vio_idx == 389)
+		else if ((vio_idx >= 88 && vio_idx <= 90) ||
+			vio_idx == 461)
 			return 7;
-		else if (vio_idx >= 68 && vio_idx <= 343)
+		else if (vio_idx >= 91 && vio_idx <= 415)
 			return 8;
 
 		pr_err(PFX "%s:%d Wrong vio_idx:0x%x\n",
@@ -1502,98 +1506,102 @@ static uint32_t mt6877_shift_group_get(int slave_type, uint32_t vio_idx)
 
 	} else if (slave_type == SLAVE_TYPE_PERI) {
 		if ((vio_idx >= 0 && vio_idx <= 2) ||
-		    (vio_idx >= 132 && vio_idx <= 135) ||
-		    vio_idx == 186)
+		    (vio_idx >= 125 && vio_idx <= 128) ||
+		    vio_idx == 175)
 			return 0;
-		else if ((vio_idx >= 3 && vio_idx <= 25) || vio_idx == 136)
+		else if ((vio_idx >= 3 && vio_idx <= 25) ||
+			vio_idx == 129)
 			return 1;
-		else if ((vio_idx >= 26 && vio_idx <= 36) || vio_idx == 137)
+		else if ((vio_idx >= 26 && vio_idx <= 36) ||
+			vio_idx == 130)
 			return 2;
-		else if ((vio_idx >= 37 && vio_idx <= 38) || vio_idx == 138)
+		else if ((vio_idx >= 37 && vio_idx <= 38) ||
+			vio_idx == 131)
 			return 3;
-		else if ((vio_idx >= 39 && vio_idx <= 42) || vio_idx == 139)
+		else if ((vio_idx >= 39 && vio_idx <= 81) ||
+			vio_idx == 132)
 			return 4;
-		else if (vio_idx == 43 || vio_idx == 140)
+		else if ((vio_idx >= 82 && vio_idx <= 84) ||
+			vio_idx == 133)
 			return 5;
-		else if ((vio_idx >= 44 && vio_idx <= 86) || vio_idx == 141)
+		else if (vio_idx == 85 ||
+			(vio_idx >= 134 && vio_idx <= 135) ||
+			vio_idx == 176)
 			return 6;
-		else if ((vio_idx >= 87 && vio_idx <= 89) || vio_idx == 142)
+		else if (vio_idx >= 86 && vio_idx <= 87)
 			return 7;
-		else if (vio_idx == 90 || vio_idx == 143 ||
-			 vio_idx == 144 || vio_idx == 187)
+		else if ((vio_idx >= 88 && vio_idx <= 97) ||
+			(vio_idx >= 136 && vio_idx <= 145) ||
+			vio_idx == 177)
 			return 8;
-		if (vio_idx >= 91 && vio_idx <= 92)
+		else if ((vio_idx >= 98 && vio_idx <= 112) ||
+			(vio_idx >= 146 && vio_idx <= 161) ||
+			vio_idx == 178)
 			return 9;
-		else if ((vio_idx >= 93 && vio_idx <= 104) ||
-			 (vio_idx >= 145 && vio_idx <= 156) ||
-			 vio_idx == 188)
+		else if ((vio_idx >= 113 && vio_idx <= 124) ||
+			(vio_idx >= 162 && vio_idx <= 174) ||
+			vio_idx == 179)
 			return 10;
-		else if ((vio_idx >= 105 && vio_idx <= 119) ||
-			 (vio_idx >= 157 && vio_idx <= 172) ||
-			 vio_idx == 189)
-			return 11;
-		else if ((vio_idx >= 120 && vio_idx <= 131) ||
-			 (vio_idx >= 174 && vio_idx <= 185) ||
-			 vio_idx == 153 || vio_idx == 190)
-			return 12;
 
 		pr_err(PFX "%s:%d Wrong vio_idx:0x%x\n",
 				__func__, __LINE__, vio_idx);
 
 	} else if (slave_type == SLAVE_TYPE_PERI2) {
 		if ((vio_idx >= 0 && vio_idx <= 2) ||
-		    (vio_idx >= 106 && vio_idx <= 109) ||
-		    vio_idx == 212)
+		    (vio_idx >= 108 && vio_idx <= 111) ||
+		    vio_idx == 216)
 			return 0;
 		else if (vio_idx >= 3 && vio_idx <= 6)
 			return 1;
 		else if (vio_idx >= 7 && vio_idx <= 10)
 			return 2;
 		else if ((vio_idx >= 11 && vio_idx <= 26) ||
-			 (vio_idx >= 110 && vio_idx <= 126) ||
-			 vio_idx == 213)
+			 (vio_idx >= 112 && vio_idx <= 128) ||
+			 vio_idx == 217)
 			return 3;
 		else if ((vio_idx >= 27 && vio_idx <= 34) ||
-			 (vio_idx >= 127 && vio_idx <= 135) ||
-			 vio_idx == 214)
+			 (vio_idx >= 129 && vio_idx <= 137) ||
+			 vio_idx == 218)
 			return 4;
 		else if ((vio_idx >= 35 && vio_idx <= 50) ||
-			 (vio_idx >= 136 && vio_idx <= 152) ||
-			 vio_idx == 215)
+			 (vio_idx >= 138 && vio_idx <= 154) ||
+			 vio_idx == 219)
 			return 5;
 		else if ((vio_idx >= 51 && vio_idx <= 66) ||
-			 (vio_idx >= 153 && vio_idx <= 169) ||
-			 vio_idx == 216)
+			 (vio_idx >= 155 && vio_idx <= 171) ||
+			 vio_idx == 220)
 			return 6;
 		else if ((vio_idx >= 67 && vio_idx <= 74) ||
-			 (vio_idx >= 170 && vio_idx <= 178) ||
-			 vio_idx == 217)
+			 (vio_idx >= 172 && vio_idx <= 180) ||
+			 vio_idx == 221)
 			return 7;
 		else if ((vio_idx >= 75 && vio_idx <= 94) ||
-			 (vio_idx >= 179 && vio_idx <= 199) ||
-			 vio_idx == 218)
+			 (vio_idx >= 181 && vio_idx <= 201) ||
+			 vio_idx == 222)
 			return 8;
-		else if ((vio_idx >= 95 && vio_idx <= 105) ||
-			 (vio_idx >= 200 && vio_idx <= 211) ||
-			 vio_idx == 219)
+		else if ((vio_idx >= 95 && vio_idx <= 107) ||
+			 (vio_idx >= 202 && vio_idx <= 215) ||
+			 vio_idx == 223)
 			return 9;
 
 		pr_err(PFX "%s:%d Wrong vio_idx:0x%x\n",
 				__func__, __LINE__, vio_idx);
 
 	} else if (slave_type == SLAVE_TYPE_PERI_PAR) {
-		if ((vio_idx >= 0 && vio_idx <= 2) ||
-		    (vio_idx >= 29 && vio_idx <= 30) ||
-		    vio_idx == 60)
+		if (vio_idx >= 0 && vio_idx <= 3)
 			return 0;
-		else if ((vio_idx >= 3 && vio_idx <= 26) ||
-			 (vio_idx >= 31 && vio_idx <= 55) ||
-			 vio_idx == 61)
-			return 1;
-		else if ((vio_idx >= 27 && vio_idx <= 29) ||
-			 (vio_idx >= 56 && vio_idx <= 59) ||
+		else if ((vio_idx >= 4 && vio_idx <= 6) ||
+			 (vio_idx >= 32 && vio_idx <= 34) ||
 			 vio_idx == 62)
+			return 1;
+		else if ((vio_idx >= 7 && vio_idx <= 28) ||
+			 (vio_idx >= 35 && vio_idx <= 57) ||
+			 vio_idx == 63)
 			return 2;
+		else if ((vio_idx >= 29 && vio_idx <= 31) ||
+			 (vio_idx >= 58 && vio_idx <= 61) ||
+			 vio_idx == 64)
+			return 3;
 
 		pr_err(PFX "%s:%d Wrong vio_idx:0x%x\n",
 				__func__, __LINE__, vio_idx);
