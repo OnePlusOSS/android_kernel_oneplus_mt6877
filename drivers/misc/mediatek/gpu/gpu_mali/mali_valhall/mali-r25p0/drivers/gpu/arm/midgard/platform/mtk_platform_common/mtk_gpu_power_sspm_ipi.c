@@ -107,6 +107,7 @@ void MTKGPUPower_model_sspm_enable(void) {
 
 	//power always on if gpu sspm enable
 	policy_count = kbase_pm_list_policies(pm_kbdev, &policy_list);
+	new_policy = policy_list[0];
 
 	for (i = 0; i < policy_count; i++) {
 		if (strstr(policy_list[i]->name, "always_on")) {
