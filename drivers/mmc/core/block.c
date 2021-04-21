@@ -1228,9 +1228,11 @@ static int mmc_blk_ioctl(struct block_device *bdev, fmode_t mode,
 		mmc_blk_put(md);
 		return ret;
 	case MMC_IOC_MULTI_CMD:
+#ifndef OPLUS_FEATURE_STORAGE_TOOL
 		ret = mmc_blk_check_blkdev(bdev);
 		if (ret)
 			return ret;
+#endif
 		md = mmc_blk_get(bdev->bd_disk);
 		if (!md)
 			return -EINVAL;
@@ -1461,6 +1463,9 @@ static int card_busy_detect(struct mmc_card *card, unsigned int timeout_ms,
 			pr_err("%s: Card stuck in programming state! %s %s\n",
 				mmc_hostname(card->host),
 				req->rq_disk->disk_name, __func__);
+#ifdef OPLUS_FEATURE_STORAGE
+			card->host->card_stuck_in_programing_status = true;
+#endif
 			return -ETIMEDOUT;
 		}
 
@@ -4599,8 +4604,10 @@ static int mmc_blk_probe(struct mmc_card *card)
 	/*
 	 * Check that the card supports the command class(es) we need.
 	 */
+#ifndef OPLUS_FEATURE_STORAGE
 	if (!(card->csd.cmdclass & CCC_BLOCK_READ))
 		return -ENODEV;
+#endif
 
 	mmc_fixup_device(card, mmc_blk_fixups);
 

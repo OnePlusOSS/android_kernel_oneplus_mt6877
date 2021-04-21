@@ -54,6 +54,8 @@
 #include "mtk_disp_gamma.h"
 #include "mtk_disp_aal.h"
 #include "mtk_drm_mmp.h"
+#include <mt-plat/mtk_boot_common.h>
+extern unsigned long silence_mode;
 /* *******Panel Master******** */
 #include "mtk_fbconfig_kdebug.h"
 #ifdef CONFIG_MTK_HDMI_SUPPORT
@@ -408,6 +410,7 @@ static void mtk_atomic_force_doze_switch(struct drm_device *dev,
 	funcs = encoder->helper_private;
 
 	panel_funcs = mtk_drm_get_lcm_ext_funcs(crtc);
+	mtk_drm_idlemgr_kick(__func__, crtc, false);
 	if (panel_funcs && panel_funcs->doze_get_mode_flags) {
 		/* blocking flush before stop trigger loop */
 		mtk_crtc_pkt_create(&handle, &mtk_crtc->base,
@@ -3440,6 +3443,15 @@ static int mtk_drm_probe(struct platform_device *pdev)
 	DDPINFO("%s-\n", __func__);
 
 	disp_dts_gpio_init(dev, private);
+
+//#ifdef OPLUS_FEATURE_SILENCEMODE
+	pr_err("oplus_boot_mode=%d, get_boot_mode() is %d\n", oplus_boot_mode, get_boot_mode());
+	if ((oplus_boot_mode == OPLUS_SILENCE_BOOT)
+		||(get_boot_mode() == OPLUS_SAU_BOOT)) {
+		pr_err("%s OPLUS_SILENCE_BOOT set silence_mode to 1\n", __func__);
+		silence_mode = 1;
+	}
+//#endif
 #ifdef CONFIG_MTK_IOMMU_V2
 	memcpy(&mydev, pdev, sizeof(mydev));
 #endif

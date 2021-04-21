@@ -51,7 +51,7 @@ static struct scp_reserve_mblock scp_reserve_mblock[] = {
 		.num = VOW_BARGEIN_MEM_ID,
 		.start_phys = 0x0,
 		.start_virt = 0x0,
-		.size = 0x4600,  /* 17KB */
+		.size = 0x5A00,  /* 22.5KB */
 	},
 #endif
 #ifdef SCP_PARAMS_TO_SCP_SUPPORT
@@ -62,6 +62,12 @@ static struct scp_reserve_mblock scp_reserve_mblock[] = {
 		.size = 0x100,  /* 256 bytes */
 	},
 #endif
+	{
+		.num = SENS_FB_MEM_ID,
+		.start_phys = 0x0,
+		.start_virt = 0x0,
+		.size = 0x1000,  /* 4KB */
+	}
 };
 
 

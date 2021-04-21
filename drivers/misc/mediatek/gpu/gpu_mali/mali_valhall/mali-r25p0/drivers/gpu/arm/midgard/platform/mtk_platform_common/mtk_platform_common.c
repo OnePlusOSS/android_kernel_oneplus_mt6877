@@ -129,6 +129,24 @@ static int proc_gpu_help_show(struct seq_file *m, void *v)
 		return 0;
 }
 
+#if defined(OPLUS_FEATURE_MEMLEAK_DETECT) && defined(CONFIG_DUMP_TASKS_MEM)
+#define P2K(x) ((x) << (PAGE_SHIFT - 10))	/* Converts #Pages to KB */
+unsigned long get_gpumem_by_pid(pid_t pid, int mem_type)
+{
+	ssize_t ret = 0;
+#ifdef ENABLE_MTK_MEMINFO
+	int i = 0;
+	for (i = 0; (i < MTK_MEMINFO_SIZE) && (g_mtk_gpu_meminfo[i].pid != 0); i++) {
+		if(g_mtk_gpu_meminfo[i].pid == pid) {  //no lock protecte?
+			return P2K(g_mtk_gpu_meminfo[i].used_pages);
+		}
+	}
+#endif /* ENABLE_MTK_MEMINFO */
+	return ret;
+}
+EXPORT_SYMBOL(get_gpumem_by_pid);
+#endif
+
 static int kbasep_gpu_help_debugfs_open(struct inode *in, struct file *file)
 {
 	return single_open(file, proc_gpu_help_show, NULL);

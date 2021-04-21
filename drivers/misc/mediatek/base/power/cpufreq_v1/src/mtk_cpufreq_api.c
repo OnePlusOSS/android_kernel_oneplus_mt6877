@@ -52,6 +52,7 @@ int mt_cpufreq_set_by_wfi_load_cluster(unsigned int cluster_id,
 	if (g_pCpuFreqSampler_func_cpi)
 		g_pCpuFreqSampler_func_cpi(id, freq);
 #endif /* CONFIG_MTK_CM_MGR */
+
 #if defined(CONFIG_MACH_MT6893) || defined(CONFIG_MACH_MT6877)
 	for_each_cpu(cpu, policy->cpus)
 		trace_cpu_frequency(freq, cpu);

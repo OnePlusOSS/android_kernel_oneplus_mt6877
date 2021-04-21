@@ -46,6 +46,7 @@
 #include "mtk_dp_debug.h"
 #endif
 #include "mtk_drm_arr.h"
+#include "mtk_boot_common.h"
 
 #define DISP_REG_CONFIG_MMSYS_CG_SET(idx) (0x104 + 0x10 * (idx))
 #define DISP_REG_CONFIG_MMSYS_CG_CLR(idx) (0x108 + 0x10 * (idx))
@@ -61,6 +62,8 @@
 #define SMI_LARB_VC_PRI_MODE (0x020)
 #define SMI_LARB_NON_SEC_CON(port) (0x380 + 4 * (port))
 #define GET_M4U_PORT 0x1F
+#define PANEL_SERIAL_NUM_REG 0xD8
+#define PANEL_REG_READ_LEN   10
 
 #if IS_ENABLED(CONFIG_DEBUG_FS)
 static struct dentry *mtkfb_dbgfs;
@@ -354,7 +357,8 @@ int mtk_dprec_logger_get_buf(enum DPREC_LOGGER_PR_TYPE type, char *stringbuf,
 
 	return n;
 }
-
+static int readcount = 0;
+extern int panel_serial_number_read(struct drm_crtc *crtc, char cmd, int num);
 extern int mtk_drm_setbacklight(struct drm_crtc *crtc, unsigned int level);
 int mtkfb_set_backlight_level(unsigned int level)
 {
@@ -367,6 +371,15 @@ int mtkfb_set_backlight_level(unsigned int level)
 		DDPPR_ERR("find crtc fail\n");
 		return 0;
 	}
+	#ifdef OPLUS_BUG_STABILITY
+	if (get_boot_mode() == NORMAL_BOOT) {
+		if ((level > 1) && (readcount == 0)) {
+			panel_serial_number_read(crtc, PANEL_SERIAL_NUM_REG, PANEL_REG_READ_LEN);
+			DDPPR_ERR("%s :panel_serial_number_read,only read in NORMAL_BOOT\n", __func__);
+			readcount = 1;
+		}
+	}
+	#endif
 	mtk_drm_setbacklight(crtc, level);
 
 	return 0;
@@ -1765,6 +1778,19 @@ static void process_dbg_opt(const char *opt)
 
 		DDPINFO("mipi_ccci:%d\n", en);
 		mtk_disp_mipi_ccci_callback(en, 0);
+	/*#ifdef OPLUS_BUG_STABILITY*/
+	} else if (!strncmp(opt, "osc_ccci:", 9)) {
+		unsigned int en, ret;
+
+		ret = sscanf(opt, "osc_ccci:%d\n", &en);
+			if (ret != 1) {
+				DDPPR_ERR("%d error to parse cmd %s\n",
+					__LINE__, opt);
+				return;
+			}
+			DDPINFO("osc_ccci:%d\n", en);
+			mtk_disp_osc_ccci_callback(en, 0);
+	/*#endif*/
 	} else if (strncmp(opt, "aal:", 4) == 0) {
 		disp_aal_debug(opt + 4);
 	} else if (strncmp(opt, "aee:", 4) == 0) {
@@ -2308,3 +2334,10 @@ void get_disp_dbg_buffer(unsigned long *addr, unsigned long *size,
 		*start = 0;
 	}
 }
+
+struct drm_device *get_drm_device(){
+    return drm_dev;
+}
+EXPORT_SYMBOL(get_drm_device);
+
+

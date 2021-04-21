@@ -23,7 +23,6 @@ ccflags-y += -DSIA81XX_TUNING
 snd-soc-sia81xx-objs += $(MTK_PROJECT)/sia81xx_socket.o
 
 ifeq ($(TUNING_PLATFORM),mtk)
-ccflags-y += -DVENDOR_EDIT
 snd-soc-sia81xx-objs += $(MTK_PROJECT)/sia81xx_tuning_if_dev.o
 endif
 

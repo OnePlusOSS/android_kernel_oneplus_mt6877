@@ -232,6 +232,11 @@ static int disp_ccorr_write_coef_reg(struct mtk_ddp_comp *comp,
 		ccorr->offset[0] = g_disp_ccorr_coef[id]->offset[0];
 		ccorr->offset[1] = g_disp_ccorr_coef[id]->offset[1];
 		ccorr->offset[2] = g_disp_ccorr_coef[id]->offset[2];
+
+                DDPINFO("disp_ccorr_write_coef_reg ccorr->offset[0-2] = {0x%x, 0x%x, 0x%x}\n",
+                        ccorr->offset[0],
+                        ccorr->offset[1],
+                        ccorr->offset[2]);
 	}
 
 #if defined(CONFIG_MACH_MT6885) || defined(CONFIG_MACH_MT6873) \
@@ -544,17 +549,27 @@ static int disp_ccorr_set_coef(
 
 			old_ccorr = g_disp_ccorr_coef[id];
 			g_disp_ccorr_coef[id] = ccorr;
+
 			if ((g_disp_ccorr_coef[id]->offset[0] == 0) &&
 				(g_disp_ccorr_coef[id]->offset[1] == 0) &&
 				(g_disp_ccorr_coef[id]->offset[2] == 0) &&
 				need_offset) {
 				DDPINFO("%s:need change offset", __func__);
-				g_disp_ccorr_coef[id]->offset[0] =
-						(OFFSET_VALUE << 1) << 14;
-				g_disp_ccorr_coef[id]->offset[1] =
-						(OFFSET_VALUE << 1) << 14;
-				g_disp_ccorr_coef[id]->offset[2] =
-						(OFFSET_VALUE << 1) << 14;
+
+                                if ((0 != old_ccorr->offset[0]) ||
+                                        (0 != old_ccorr->offset[1]) ||
+                                        (0 != old_ccorr->offset[2])) {
+                                        g_disp_ccorr_coef[id]->offset[0] = old_ccorr->offset[0];
+                                        g_disp_ccorr_coef[id]->offset[1] = old_ccorr->offset[1];
+                                        g_disp_ccorr_coef[id]->offset[2] = old_ccorr->offset[2];
+                                } else {
+                                        g_disp_ccorr_coef[id]->offset[0] =
+	                                        (OFFSET_VALUE << 1) << 14;
+		                        g_disp_ccorr_coef[id]->offset[1] =
+			                        (OFFSET_VALUE << 1) << 14;
+				        g_disp_ccorr_coef[id]->offset[2] =
+                                                (OFFSET_VALUE << 1) << 14;
+                                }
 			}
 			DDPINFO("%s: Set module(%d) coef", __func__, id);
 			ret = disp_ccorr_write_coef_reg(comp, handle, 0);

@@ -896,7 +896,7 @@ SYNC_READINDEX:
 
 	/* handle for underflow */
 	if (dsp_mem->underflowed) {
-		pr_info("%s id = %d return -1 because underflowed[%d] %d\n",
+		pr_info("%s id = %d return -1 because underflowed[%d]\n",
 			__func__, id, dsp_mem->underflowed);
 		dsp_mem->underflowed = 0;
 		spin_unlock_irqrestore(&dsp_ringbuf_lock, flags);
@@ -1151,6 +1151,8 @@ static int mtk_dsp_pcm_close(struct snd_pcm_substream *substream)
 	mtk_dsp_deregister_feature(dsp_feature_id);
 
 	dsp->dsp_mem[id].substream = NULL;
+        dsp->dsp_mem[id].underflowed = false;
+        pr_err("underflowed  set to false");
 
 	return ret;
 }

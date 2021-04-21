@@ -622,15 +622,19 @@ unsigned long kbase_mem_evictable_reclaim_count_objects(struct shrinker *s,
 
 	kctx = container_of(s, struct kbase_context, reclaim);
 
+	if(mutex_is_locked(&kctx->jit_evict_lock)) {
+		return 0;
+	}
+
 	// MTK add to prevent false alarm
 	lockdep_off();
 
-	mutex_lock(&kctx->jit_evict_lock);
+	if (mutex_trylock(&kctx->jit_evict_lock)) {
+		list_for_each_entry(alloc, &kctx->evict_list, evict_node)
+			pages += alloc->nents;
 
-	list_for_each_entry(alloc, &kctx->evict_list, evict_node)
-		pages += alloc->nents;
-
-	mutex_unlock(&kctx->jit_evict_lock);
+		mutex_unlock(&kctx->jit_evict_lock);
+	}
 
 	// MTK add to prevent false alarm
 	lockdep_on();
@@ -681,6 +685,10 @@ unsigned long kbase_mem_evictable_reclaim_scan_objects(struct shrinker *s,
 	}
 
 	kctx = container_of(s, struct kbase_context, reclaim);
+
+	if(mutex_is_locked(&kctx->jit_evict_lock)) {
+		return SHRINK_STOP;
+	}
 
 	// MTK add to prevent false alarm
 	lockdep_off();

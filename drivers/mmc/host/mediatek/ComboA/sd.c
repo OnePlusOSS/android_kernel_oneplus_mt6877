@@ -69,6 +69,10 @@
 
 #include "dbg.h"
 
+#ifdef OPLUS_FEATURE_SDCARD_INFO
+#include "../../sdInfo/sdinfo.h"
+#endif
+
 #define CAPACITY_2G             (2 * 1024 * 1024 * 1024ULL)
 
 /* FIX ME: Check if its reference in mtk_sd_misc.h can be removed */
@@ -2595,6 +2599,12 @@ static void msdc_dma_start(struct msdc_host *host)
 	/* Schedule delayed work to check if data0 keeps busy */
 	if (host->data) {
 		host->data_timeout_ms = DATA_TIMEOUT_MS;
+#ifdef OPLUS_FEATURE_SDCARD_INFO
+		if (get_dma_data_timeout() && host->mmc && host->mmc->card && mmc_card_sd(host->mmc->card)) {
+			host->data_timeout_ms = 1000  * 10;    /* 10s */
+			pr_err("mmc set dma timeout to 10s\n");
+		}
+#endif
 		schedule_delayed_work(&host->data_timeout_work,
 			msecs_to_jiffies(host->data_timeout_ms));
 		N_MSG(DMA, "DMA Data Busy Timeout:%u ms, schedule_delayed_work",
@@ -4223,6 +4233,18 @@ static void msdc_ops_request(struct mmc_host *mmc, struct mmc_request *mrq)
 	bool cq_host_en = false;
 #endif
 
+#ifdef OPLUS_FEATURE_SDCARD_INFO
+	if ((SET_SDCARD_QUICK_RETURN == get_sdcard_remove()) && mmc->card && mmc_card_sd(mmc->card)) {
+		if (mrq && mrq->cmd && ((mrq->cmd->opcode == MMC_WRITE_BLOCK) || (mrq->cmd->opcode == MMC_WRITE_MULTIPLE_BLOCK))) {
+			pr_err("mmc card(sd) error, cmd: %u arg: %u\n", mrq->cmd->opcode, mrq->cmd->arg);
+			mrq->cmd->error = (unsigned int)-EIO;
+			if (mrq->done)
+				mrq->done(mrq);
+			goto end;
+		}
+	}
+#endif
+
 	if ((host->hw->host_function == MSDC_SDIO) &&
 	    !(host->trans_lock.active))
 		__pm_stay_awake(&host->trans_lock);
@@ -4686,6 +4708,9 @@ static void msdc_check_data_timeout(struct work_struct *work)
 		spin_unlock(&host->lock);
 
 		data->error = (unsigned int)-ETIMEDOUT;
+#ifdef OPLUS_FEATURE_SDCARD_INFO
+		sdinfo.data_timeout_count += 1;
+#endif
 		host->sw_timeout++;
 
 		if (mrq->done)
@@ -5234,6 +5259,10 @@ static int msdc_drv_probe(struct platform_device *pdev)
 	mmc = mmc_alloc_host(sizeof(struct msdc_host), &pdev->dev);
 	if (!mmc)
 		return -ENOMEM;
+
+#ifdef OPLUS_FEATURE_SDCARD_INFO
+	sdcard_remove_attr_init_sysfs(&pdev->dev);
+#endif
 
 	ret = msdc_dt_init(pdev, mmc);
 	if (ret) {

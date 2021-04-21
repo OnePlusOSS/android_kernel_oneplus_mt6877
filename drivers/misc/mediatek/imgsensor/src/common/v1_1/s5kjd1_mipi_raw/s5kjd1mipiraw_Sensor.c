@@ -94,14 +94,14 @@ static struct imgsensor_info_struct imgsensor_info = {
 		},
 	.normal_video = {
 		.pclk = 1056000000,
-		.linelength = 12108,
-		.framelength = 2906,
+		.linelength = 14464,
+		.framelength = 2432,
 		.startx = 0,
 		.starty = 0,
-		.grabwindow_width = 3280,
-		.grabwindow_height = 2460,
+		.grabwindow_width = 1920,
+		.grabwindow_height = 1080,
 		.mipi_data_lp2hs_settle_dc = 85,
-		.mipi_pixel_rate = 1200000000,
+		.mipi_pixel_rate = 150000000,
 		.max_framerate = 300,
 		},
 	.hs_video = {
@@ -142,14 +142,14 @@ static struct imgsensor_info_struct imgsensor_info = {
 		},
 	.custom2 = {
 		.pclk = 1056000000,
-		.linelength = 4036,
-		.framelength = 8718,
+		.linelength = 4804,
+		.framelength = 7326,
 		.startx = 0,
 		.starty = 0,
-		.grabwindow_width = 3280,
-		.grabwindow_height = 2460,
+		.grabwindow_width = 1920,
+		.grabwindow_height = 1080,
 		.mipi_data_lp2hs_settle_dc = 85,
-		.mipi_pixel_rate = 1200000000,
+		.mipi_pixel_rate = 480000000,
 		.max_framerate = 300,
 		},
 
@@ -214,7 +214,7 @@ static struct SENSOR_WINSIZE_INFO_STRUCT imgsensor_winsize_info[7] = {
 	    0,   0, 6560, 4920, 0, 0, 6560, 4920},
 	/* video*/
 	{6560, 4920, 0, 0, 6560, 4920, 3280, 2460,
-	   0,   0, 3280, 2460, 0, 0, 3280, 2460},
+	   0,   0, 1920, 1080, 0, 0, 1920, 1080},
 	/* hight speed video */
 	{6560, 4920, 0, 0, 6560, 4920, 3280, 2460,
 	   0,   0, 3280, 2460, 0, 0, 3280, 2460},
@@ -226,7 +226,7 @@ static struct SENSOR_WINSIZE_INFO_STRUCT imgsensor_winsize_info[7] = {
 	   0,   0, 3280, 2460, 0, 0, 3280, 2460},
 	/* custom2 normal video staggered HDR */
 	{6560, 4920, 0, 0, 6560, 4920, 3280, 2460,
-	   0,   0, 3280, 2460, 0, 0, 3280, 2460},
+	   0,   0, 1920, 1080, 0, 0, 1920, 1080},
 };
 
 static struct SENSOR_VC_INFO2_STRUCT SENSOR_VC_INFO2[5] = {
@@ -250,7 +250,7 @@ static struct SENSOR_VC_INFO2_STRUCT SENSOR_VC_INFO2[5] = {
 	{//video feature type
 		0x01, 0x0a, 0x00, 0x08, 0x40, 0x00,
 		{
-			{VC_STAGGER_NE, 0x00, 0x2b, 0x0CD0, 0x99C},
+			{VC_STAGGER_NE, 0x00, 0x2b, 0x0780, 0x0438},
 		},
 		1
 	},
@@ -266,9 +266,9 @@ static struct SENSOR_VC_INFO2_STRUCT SENSOR_VC_INFO2[5] = {
 	{//custom2 1080p stagger HDR 3exp
 		0x03, 0x0a, 0x00, 0x08, 0x40, 0x00,
 		{
-			{VC_STAGGER_NE, 0x00, 0x2b, 0x0CD0, 0x99C},
-			{VC_STAGGER_ME, 0x01, 0x2b, 0x0CD0, 0x99C},
-			{VC_STAGGER_SE, 0x02, 0x2b, 0x0CD0, 0x99C},
+			{VC_STAGGER_NE, 0x00, 0x2b, 0x0780, 0x0438},
+			{VC_STAGGER_ME, 0x01, 0x2b, 0x0780, 0x0438},
+			{VC_STAGGER_SE, 0x02, 0x2b, 0x0780, 0x0438},
 		},//custom2
 		1
 	},
@@ -5008,7 +5008,7 @@ static kal_uint32 normal_video(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
 	imgsensor.autoflicker_en = KAL_FALSE;
 	spin_unlock(&imgsensor_drv_lock);
 
-	if (0)
+	if (1)
 		normal_video_setting();
 	else
 		preview_setting();
@@ -5095,7 +5095,7 @@ static kal_uint32 Custom2(MSDK_SENSOR_EXPOSURE_WINDOW_STRUCT *image_window,
 	imgsensor.dummy_pixel = 0;
 	imgsensor.autoflicker_en = KAL_FALSE;
 	spin_unlock(&imgsensor_drv_lock);
-	if (0)
+	if (1)
 		custom2_setting();
 	else
 		custom1_setting();
@@ -6258,19 +6258,15 @@ static kal_uint32 feature_control(MSDK_SENSOR_FEATURE_ENUM feature_id,
 		switch (*feature_data) {
 		case MSDK_SCENARIO_ID_CAMERA_PREVIEW:
 			*pScenarios = MSDK_SCENARIO_ID_CUSTOM1;
-			*(pScenarios + 1) = MSDK_SCENARIO_ID_CUSTOM2;
 			break;
 		case MSDK_SCENARIO_ID_CUSTOM1:
 			*pScenarios = MSDK_SCENARIO_ID_CAMERA_PREVIEW;
-			*(pScenarios + 1) = MSDK_SCENARIO_ID_CUSTOM2;
 			break;
 		case MSDK_SCENARIO_ID_CUSTOM2:
 			*pScenarios = MSDK_SCENARIO_ID_VIDEO_PREVIEW;
-			*(pScenarios + 1) = MSDK_SCENARIO_ID_CAMERA_PREVIEW;
 			break;
 		case MSDK_SCENARIO_ID_VIDEO_PREVIEW:
 			*pScenarios = MSDK_SCENARIO_ID_CUSTOM2;
-			*(pScenarios + 1) = MSDK_SCENARIO_ID_CAMERA_PREVIEW;
 			break;
 		case MSDK_SCENARIO_ID_SLIM_VIDEO:
 		case MSDK_SCENARIO_ID_HIGH_SPEED_VIDEO:

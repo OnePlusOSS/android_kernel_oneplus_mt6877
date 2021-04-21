@@ -85,7 +85,8 @@ static int mtk_btag_init_procfs(void);
 /* mini context for major embedded storage only */
 #define MICTX_PROC_CMD_BUF_SIZE (1)
 static struct mtk_blocktag *btag_bootdev;
-static bool mtk_btag_mictx_debug;
+static bool mtk_btag_mictx_self_test;
+static bool mtk_btag_mictx_data_dump;
 
 /* blocktag */
 static DEFINE_MUTEX(mtk_btag_list_lock);
@@ -220,6 +221,26 @@ struct mtk_btag_mictx_struct *mtk_btag_mictx_get_ctx(void)
 		return NULL;
 }
 
+static void mtk_btag_mictx_reset(
+	struct mtk_btag_mictx_struct *ctx,
+	__u64 window_begin)
+{
+	if (!window_begin)
+		window_begin = sched_clock();
+	ctx->window_begin = window_begin;
+
+	if (!ctx->q_depth)
+		ctx->idle_begin = ctx->window_begin;
+	else
+		ctx->idle_begin = 0;
+
+	ctx->idle_total = 0;
+	ctx->tp_min_time = ctx->tp_max_time = 0;
+	ctx->weighted_qd = 0;
+	memset(&ctx->tp, 0, sizeof(struct mtk_btag_throughput));
+	memset(&ctx->req, 0, sizeof(struct mtk_btag_req));
+}
+
 #if IS_ENABLED(CONFIG_SCHED_TUNE)
 static int mtk_btag_get_schedtune_cgrp_id(struct task_struct *t)
 {
@@ -259,61 +280,113 @@ static bool mtk_btag_is_top_task(struct task_struct *task, int mode, unsigned lo
 }
 
 static struct miscdevice earaio_obj;
-static bool mtk_btag_earaio_send_uevent(const char *src)
+static void mtk_btag_earaio_uevt_worker(struct work_struct *work)
 {
+	struct mtk_btag_mictx_struct *ctx;
+	unsigned long flags;
 	int string_size = 10;
 	char event_string[string_size];
 	char *envp[2];
+	bool boost, restart, quit;
 	int ret;
+
+	ctx = container_of(work, struct mtk_btag_mictx_struct,
+			   uevt_work);
 
 	envp[0] = event_string;
 	envp[1] = NULL;
 
-	strlcpy(event_string, src, string_size);
-	if (event_string[0] == '\0')
-		return false;
+start:
+	boost = quit = restart = false;
+	spin_lock_irqsave(&ctx->lock, flags);
+	if (ctx->uevt_state != ctx->uevt_req)
+		boost = ctx->uevt_req;
+	else
+		quit = true;
+	spin_unlock_irqrestore(&ctx->lock, flags);
+
+	if (quit)
+		return;
+
+	snprintf(event_string, string_size, "boost=%d", boost ? 1 : 0);
 
 	ret = kobject_uevent_env(
 			&earaio_obj.this_device->kobj,
 			KOBJ_CHANGE, envp);
 	if (ret) {
-		pr_info("[BLOCK_TAG] send uevent fail:%d", ret);
-		return false;
+		pr_info("[BLOCK_TAG] send uevt fail:%d", ret);
+	} else {
+		ctx->uevt_state = boost;
+		if (mtk_btag_mictx_data_dump) {
+			pr_info("[BLOCK_TAG] uevt %s sent",
+				event_string);
+		}
 	}
+
+	spin_lock_irqsave(&ctx->lock, flags);
+	if (ctx->uevt_state != ctx->uevt_req)
+		restart = true;
+	spin_unlock_irqrestore(&ctx->lock, flags);
+
+	if (restart)
+		goto start;
+}
+
+static bool mtk_btag_earaio_send_uevt(struct mtk_btag_mictx_struct *ctx,
+				      bool boost)
+{
+	unsigned long flags;
+
+	spin_lock_irqsave(&ctx->lock, flags);
+	ctx->uevt_req = boost;
+	queue_work(ctx->uevt_workq, &ctx->uevt_work);
+	spin_unlock_irqrestore(&ctx->lock, flags);
 
 	return true;
 }
 
-#define EARAIO_UEVT_THRESHOLD_BYTES (100 * 1024)
+#define EARAIO_UEVT_THRESHOLD_BYTES (32 * 1024 * 1024)
 void mtk_btag_earaio_boost(bool boost)
 {
 	struct mtk_btag_mictx_struct *ctx;
-	static bool boosted;
-	bool ret = false;
+	unsigned long flags;
+	bool changed = false;
+
+	ctx = mtk_btag_mictx_get_ctx();
+	if (!ctx || !ctx->enabled || !ctx->earaio_enabled)
+		return;
 
 	/* Use earaio_obj.minor to indicate if obj is existed */
-	if (!(boost ^ boosted) || unlikely(!earaio_obj.minor))
+	if (!(boost ^ ctx->boosted) || unlikely(!earaio_obj.minor))
 		return;
 
 	if (boost) {
-		ctx = mtk_btag_mictx_get_ctx();
-		if (!ctx || !ctx->enabled)
-			return;
+		if (mtk_btag_mictx_data_dump) {
+			pr_info("[BLOCK_TAG] boost-chk: size-top:%llu,%llu, fuse-top: %u,%u, boosted: %d\n",
+				ctx->req.r.size_top, ctx->req.w.size_top,
+				ctx->top_r_pages, ctx->top_w_pages,
+				ctx->boosted);
+		}
 
 		/* Establish threshold to avoid lousy uevents */
 		if ((ctx->req.r.size_top >= EARAIO_UEVT_THRESHOLD_BYTES) ||
-			(ctx->req.w.size_top >= EARAIO_UEVT_THRESHOLD_BYTES) ||
-			(ctx->top_r_pages >= (EARAIO_UEVT_THRESHOLD_BYTES >> 12)) ||
-			(ctx->top_w_pages >= (EARAIO_UEVT_THRESHOLD_BYTES >> 12)))
-			ret = mtk_btag_earaio_send_uevent("boost=1");
-		else
-			return;
+			(ctx->req.w.size_top >= EARAIO_UEVT_THRESHOLD_BYTES))
+			changed = mtk_btag_earaio_send_uevt(ctx, true);
 	} else {
-		ret = mtk_btag_earaio_send_uevent("boost=0");
+		changed = mtk_btag_earaio_send_uevt(ctx, false);
 	}
 
-	if (ret)
-		boosted = boost;
+	if (changed)
+		ctx->boosted = boost;
+
+	if (!ctx->boosted) {
+		spin_lock_irqsave(&ctx->lock, flags);
+		if ((sched_clock() - ctx->window_begin) > 1000000000) {
+			mtk_btag_mictx_reset(ctx, 0);
+			ctx->top_r_pages = ctx->top_w_pages = 0;
+		}
+		spin_unlock_irqrestore(&ctx->lock, flags);
+	}
 }
 
 static int mtk_btag_earaio_init(void)
@@ -515,7 +588,7 @@ void mtk_btag_pidlog_eval(struct mtk_btag_pidlogger *pl,
 		memset(&ctx_pl->info[0], 0, size);
 	}
 
-	if (mtk_btag_mictx_debug)
+	if (mtk_btag_mictx_self_test)
 		mtk_btag_mictx_dump();
 }
 EXPORT_SYMBOL_GPL(mtk_btag_pidlog_eval);
@@ -1072,9 +1145,13 @@ static ssize_t mtk_btag_mictx_sub_write(struct file *file,
 	else if (cmd[0] == '2')
 		mtk_btag_mictx_enable(0);
 	else if (cmd[0] == '3')
-		mtk_btag_mictx_debug = 1;
+		mtk_btag_mictx_self_test = 1;
 	else if (cmd[0] == '4')
-		mtk_btag_mictx_debug = 0;
+		mtk_btag_mictx_self_test = 0;
+	else if (cmd[0] == '5')
+		mtk_btag_mictx_data_dump = 1;
+	else if (cmd[0] == '6')
+		mtk_btag_mictx_data_dump = 0;
 	else {
 		pr_info("[pidmap] invalid arg: 0x%x\n", cmd[0]);
 		goto err;
@@ -1096,10 +1173,12 @@ static int mtk_btag_mctx_sub_show(struct seq_file *s, void *data)
 	seq_puts(s, "Status:\n");
 	seq_printf(s, "  Ready: %d\n", ready);
 	seq_puts(s, "Commands:\n");
-	seq_puts(s, "  Enable Mini Context : echo 1 > blocktag_mictx\n");
-	seq_puts(s, "  Disable Mini Context: echo 2 > blocktag_mictx\n");
-	seq_puts(s, "  Enable Self-Test    : echo 3 > blocktag_mictx\n");
-	seq_puts(s, "  Disable Self-Test   : echo 4 > blocktag_mictx\n");
+	seq_puts(s, "  Enable Mini Context : echo 1 > blockio_mictx\n");
+	seq_puts(s, "  Disable Mini Context: echo 2 > blockio_mictx\n");
+	seq_puts(s, "  Enable Self-Test    : echo 3 > blockio_mictx\n");
+	seq_puts(s, "  Disable Self-Test   : echo 4 > blockio_mictx\n");
+	seq_puts(s, "  Enable Data Dump    : echo 5 > blockio_mictx\n");
+	seq_puts(s, "  Disable Data Dump   : echo 6 > blockio_mictx\n");
 	return 0;
 }
 
@@ -1158,7 +1237,7 @@ static void mtk_btag_pidlogger_init(void)
 
 init:
 	if (mtk_btag_pagelogger)
-		memset(mtk_btag_pagelogger, -1, size);
+		memset(mtk_btag_pagelogger, 0, size);
 	else
 		pr_info(
 		"[BLOCK_TAG] blockio: fail to allocate mtk_btag_pagelogger\n");
@@ -1336,26 +1415,6 @@ void mtk_btag_mictx_update_ctx(
 	spin_unlock_irqrestore(&ctx->lock, flags);
 }
 
-static void mtk_btag_mictx_reset(
-	struct mtk_btag_mictx_struct *ctx,
-	__u64 window_begin)
-{
-	if (!window_begin)
-		window_begin = sched_clock();
-	ctx->window_begin = window_begin;
-
-	if (!ctx->q_depth)
-		ctx->idle_begin = ctx->window_begin;
-	else
-		ctx->idle_begin = 0;
-
-	ctx->idle_total = 0;
-	ctx->tp_min_time = ctx->tp_max_time = 0;
-	ctx->weighted_qd = 0;
-	memset(&ctx->tp, 0, sizeof(struct mtk_btag_throughput));
-	memset(&ctx->req, 0, sizeof(struct mtk_btag_req));
-}
-
 int mtk_btag_mictx_get_data(
 	struct mtk_btag_mictx_iostat_struct *iostat)
 {
@@ -1403,7 +1462,7 @@ int mtk_btag_mictx_get_data(
 	iostat->wl = 100 -
 		((__u32)((ctx->idle_total >> 10) * 100) / (__u32)(dur >> 10));
 
-	if (mtk_btag_mictx_debug) {
+	if (mtk_btag_mictx_self_test) {
 		pr_info("[BLOCK_TAG] Mictx: fuse-top: %d, %d\n",
 			ctx->top_r_pages, ctx->top_w_pages);
 	}
@@ -1453,14 +1512,6 @@ int mtk_btag_mictx_get_data(
 
 	iostat->top = top;
 
-	if (mtk_btag_mictx_debug) {
-		pr_info("[BLOCK_TAG] Mictx: rs:%llu,%llu, top:%llu,%llu,%u, fuse-top: %d, %d\n",
-			ctx->req.r.size, ctx->req.w.size,
-			ctx->req.r.size_top, ctx->req.w.size_top, top,
-			ctx->top_r_pages,
-			ctx->top_w_pages);
-	}
-
 	/* fill-in cmdq depth */
 	btag = btag_bootdev;
 	if (btag && btag->vops->mictx_eval_wqd) {
@@ -1470,6 +1521,14 @@ int mtk_btag_mictx_get_data(
 				     (u32)(dur >> 10));
 	} else
 		iostat->q_depth = ctx->q_depth;
+
+	if (mtk_btag_mictx_self_test || mtk_btag_mictx_data_dump) {
+		pr_info("[BLOCK_TAG] Mictx: sz:%llu,%llu, sz-top:%llu,%llu,%u, fuse-top: %d,%d, qd:%u, wl:%u\n",
+			ctx->req.r.size, ctx->req.w.size,
+			ctx->req.r.size_top, ctx->req.w.size_top, top,
+			ctx->top_r_pages, ctx->top_w_pages,
+			iostat->q_depth, iostat->wl);
+	}
 
 	/* everything was provided, now we can reset the ctx */
 	mtk_btag_mictx_reset(ctx, time_cur);
@@ -1499,12 +1558,39 @@ void mtk_btag_mictx_enable(int enable)
 	spin_unlock_irqrestore(&ctx->lock, flags);
 }
 
+static void mtk_btag_mictx_init(const char *name,
+				struct mtk_blocktag *btag,
+				struct mtk_btag_vops *vops)
+{
+	char wq_name[sizeof("mtk_btag_uevt_00")];
+	unsigned int boot_type;
+
+	boot_type = get_boot_type();
+	if ((boot_type == BOOTDEV_UFS && !strcmp("ufs", name)) ||
+		(boot_type == BOOTDEV_SDMMC && !strcmp("mmc", name))) {
+		btag_bootdev = btag;
+		spin_lock_init(&btag->mictx.lock);
+
+		/* Enable mictx by default for EARA-IO */
+		if (vops->earaio_enabled) {
+			mtk_btag_mictx_enable(1);
+			btag->mictx.earaio_enabled = true;
+			snprintf(wq_name, ARRAY_SIZE(wq_name),
+				"mtk_btag_uevt_%d", boot_type);
+			btag->mictx.uevt_workq =
+				alloc_ordered_workqueue(wq_name,
+				WQ_MEM_RECLAIM);
+			INIT_WORK(&btag->mictx.uevt_work,
+				  mtk_btag_earaio_uevt_worker);
+		}
+	}
+}
+
 struct mtk_blocktag *mtk_btag_alloc(const char *name,
 	unsigned int ringtrace_count, size_t ctx_size, unsigned int ctx_count,
 	struct mtk_btag_vops *vops)
 {
 	struct mtk_blocktag *btag;
-	unsigned int boot_type;
 
 	if (!name || !ringtrace_count || !ctx_size || !ctx_count)
 		return NULL;
@@ -1574,18 +1660,7 @@ struct mtk_blocktag *mtk_btag_alloc(const char *name,
 	if (IS_ERR(btag->dentry.dlog_mictx))
 		goto out;
 
-	/* Initialize mictx */
-	boot_type = get_boot_type();
-	if ((boot_type == BOOTDEV_UFS && !strcmp("ufs", name)) ||
-		(boot_type == BOOTDEV_SDMMC && !strcmp("mmc", name))) {
-		pr_info("[BLOCK_TAG] %s: mictx is registered", name);
-		btag_bootdev = btag;
-		spin_lock_init(&btag->mictx.lock);
-
-		/* Enable mictx by default for EARA-IO */
-		if (vops->earaio_enabled)
-			mtk_btag_mictx_enable(1);
-	}
+	mtk_btag_mictx_init(name, btag, vops);
 out:
 	spin_lock_init(&btag->prbuf.lock);
 	list_add(&btag->list, &mtk_btag_list);

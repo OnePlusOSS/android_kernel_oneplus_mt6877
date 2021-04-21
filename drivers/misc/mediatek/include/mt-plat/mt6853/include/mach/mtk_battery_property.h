@@ -18,7 +18,12 @@
 #define DIFFERENCE_FULLOCV_ITH	200	/* mA */
 #define MTK_CHR_EXIST 1
 #define KEEP_100_PERCENT 1
-#define R_FG_VALUE	5				/* mOhm */
+#ifdef OPLUS_FEATURE_CHG_BASIC
+#define R_FG_VALUE	10				/* mOhm */
+#else
+#define R_FG_VALUE  5				/* mOhm */
+#endif
+
 #define EMBEDDED_SEL 0
 #define PMIC_SHUTDOWN_CURRENT 20	/* 0.01 mA */
 #define FG_METER_RESISTANCE	100
@@ -100,8 +105,13 @@
 #define CALI_CAR_TUNE_AVG_NUM	60
 
 /* Aging Compensation 1*/
-#define AGING_FACTOR_MIN 90
+#ifndef OPLUS_FEATURE_CHG_BASIC
+#define AGING_FACTOR_MIN 10
+#define AGING_FACTOR_DIFF 90
+#else
+#define AGING_FACTOR_MIN 85
 #define AGING_FACTOR_DIFF 10
+#endif
 #define DIFFERENCE_VOLTAGE_UPDATE 50
 #define AGING_ONE_EN 1
 #define AGING1_UPDATE_SOC 30
@@ -199,7 +209,11 @@
 
 #define BATTERY_TMP_TO_DISABLE_GM30 -50
 #define BATTERY_TMP_TO_DISABLE_NAFG -35
+#ifndef OPLUS_FEATURE_CHG_BASIC
 #define DEFAULT_BATTERY_TMP_WHEN_DISABLE_NAFG 25
+#else
+#define DEFAULT_BATTERY_TMP_WHEN_DISABLE_NAFG -30
+#endif
 #define BATTERY_TMP_TO_ENABLE_NAFG -20
 /* #define GM30_DISABLE_NAFG */
 

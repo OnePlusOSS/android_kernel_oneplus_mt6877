@@ -18,7 +18,11 @@
 
 #define LOW_POWER_LIMIT_LEVEL_1 15
 
+#ifndef OPLUS_FEATURE_CHG_BASIC
 #define PT_DLPT_BRINGUP 0
+#else
+#define PT_DLPT_BRINGUP 1
+#endif /*!OPLUS_FEATURE_CHG_BASIC*/
 
 #if defined(CONFIG_FPGA_EARLY_PORTING) || PT_DLPT_BRINGUP
 /* Define for disable low battery protect feature,
@@ -46,7 +50,11 @@
 //#define LOW_BATTERY_PT_SETTING_V2
 #endif
 
+#ifndef OPLUS_FEATURE_CHG_BASIC
 #define POWER_UVLO_VOLT_LEVEL 2600
+#else
+#define POWER_UVLO_VOLT_LEVEL 2600
+#endif
 #define IMAX_MAX_VALUE 5500
 
 #ifdef LOW_BATTERY_PT_SETTING_V2

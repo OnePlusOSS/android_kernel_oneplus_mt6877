@@ -1950,6 +1950,9 @@ int ufs_mtk_ioctl_query(struct ufs_hba *hba, u8 lun, void __user *buf_user)
 		switch (read_desc) {
 		case QUERY_DESC_IDN_DEVICE:
 		case QUERY_DESC_IDN_STRING:
+#ifdef OPLUS_FEATURE_STORAGE_TOOL
+		case QUERY_DESC_IDN_HEALTH:
+#endif
 			break;
 		default:
 			goto out_einval;
@@ -2242,6 +2245,9 @@ void ufs_mtk_runtime_pm_init(struct scsi_device *sdev)
 
 static void ufs_mtk_device_reset(struct ufs_hba *hba)
 {
+	/* disable hba before device reset */
+	ufshcd_hba_stop(hba, true);
+
 	(void)ufs_mtk_pltfrm_ufs_device_reset(hba);
 
 #ifdef CONFIG_MTK_UFS_LBA_CRC16_CHECK

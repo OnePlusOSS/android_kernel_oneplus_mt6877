@@ -109,11 +109,18 @@ static void vibrator_oc_handler(void)
 	vibrator_enable(0, 0);
 }
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+static atomic_t vibr_not_disable = ATOMIC_INIT(0);
+#endif
+
 static enum hrtimer_restart vibrator_timer_func(struct hrtimer *timer)
 {
 	struct mt_vibr *vibr = container_of(timer, struct mt_vibr, vibr_timer);
 
 	atomic_set(&vibr->vibr_state, 0);
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	atomic_set(&vibr_not_disable, 0);
+#endif
 	queue_work(vibr->vibr_queue, &vibr->vibr_work);
 	return HRTIMER_NORESTART;
 }
@@ -136,6 +143,9 @@ static ssize_t vibr_activate_store(struct device *dev,
 {
 	unsigned int activate = 0, dur = 0;
 	ssize_t ret;
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	struct vibrator_hw *hw = mt_get_cust_vibrator_hw();
+#endif
 
 	ret = kstrtouint(buf, 10, &activate);
 	if (ret) {
@@ -143,6 +153,18 @@ static ssize_t vibr_activate_store(struct device *dev,
 		return ret;
 	}
 	dur = atomic_read(&g_mt_vib->vibr_dur);
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (dur < hw->vib_timer)
+	{
+		if (activate) {
+			atomic_set(&vibr_not_disable, 1);
+		}
+		else if (atomic_read(&vibr_not_disable)) {
+			ret = size;
+			return ret;
+		}
+	}
+#endif
 	vibrator_enable(dur, activate);
 	ret = size;
 	return ret;

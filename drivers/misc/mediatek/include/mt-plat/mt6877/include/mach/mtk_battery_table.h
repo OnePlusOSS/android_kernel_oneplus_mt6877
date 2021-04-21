@@ -212,6 +212,37 @@ int g_temperature[MAX_TABLE] = {
 #define BIF_NTC_R 16000
 
 #if (BAT_NTC_10 == 1)
+#ifdef OPLUS_FEATURE_CHG_BASIC
+struct FUELGAUGE_TEMPERATURE Fg_Temperature_Table[27] = {
+		{-40, 195652},
+		{-35, 148171},
+		{-30, 113347},
+		{-25, 87559},
+		{-20, 68237},
+		{-15, 53650},
+		{-10, 42506},
+		{-5, 33892},
+		{0, 27219},
+		{5, 22021},
+		{10, 17926},
+		{15, 14674},
+		{20, 12081},
+		{25, 10000},
+		{30, 8315},
+		{35, 6948},
+		{40, 5834},
+		{45, 4917},
+		{50, 4161},
+		{55, 3535},
+		{60, 3014},
+		{65, 2586},
+		{70, 2228},
+		{75, 1925},
+		{80, 1669},
+		{85, 1452},
+		{90, 1268}
+};
+#else
 struct FUELGAUGE_TEMPERATURE Fg_Temperature_Table[21] = {
 		{-40, 195652},
 		{-35, 148171},
@@ -235,6 +266,7 @@ struct FUELGAUGE_TEMPERATURE Fg_Temperature_Table[21] = {
 		{55, 3535},
 		{60, 3014}
 };
+#endif
 #endif
 
 #if (BAT_NTC_47 == 1)

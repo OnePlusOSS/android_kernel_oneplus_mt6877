@@ -406,7 +406,7 @@ static int create_autodetect_quirks(struct snd_usb_audio *chip,
 }
 
 /*
- * Create a stream for an Edirol UA-700/UA-25/UA-4FX interface.  
+ * Create a stream for an Edirol UA-700/UA-25/UA-4FX interface.
  * The only way to detect the sample rate is by looking at wMaxPacketSize.
  */
 static int create_uaxx_quirk(struct snd_usb_audio *chip,
@@ -1239,6 +1239,19 @@ int snd_usb_select_mode_quirk(struct snd_usb_substream *subs,
 	return 0;
 }
 
+void snd_usb_endpoint_stop_quirk(struct snd_usb_endpoint *ep)
+{
+	if (!ep)
+		return;
+
+	/*
+	* Headset Meizu Corp Meizu HiFi DAC Headphone Amplifier needs a
+	* tiny delay for stop_endpoint().
+	*/
+	if(snd_usb_get_speed(ep->chip->dev) >= USB_SPEED_HIGH)
+		mdelay(10);
+}
+
 void snd_usb_endpoint_start_quirk(struct snd_usb_endpoint *ep)
 {
 	/*
@@ -1365,7 +1378,7 @@ u64 snd_usb_interface_dsd_format_quirks(struct snd_usb_audio *chip,
 	case USB_ID(0x20b1, 0x3008): /* iFi Audio micro/nano iDSD */
 	case USB_ID(0x20b1, 0x2008): /* Matrix Audio X-Sabre */
 	case USB_ID(0x20b1, 0x300a): /* Matrix Audio Mini-i Pro */
-	case USB_ID(0x22d9, 0x0416): /* OPPO HA-1 */
+	case USB_ID(0x22d9, 0x0416): /* Oplus HA-1 */
 	case USB_ID(0x2772, 0x0230): /* Pro-Ject Pre Box S2 Digital */
 		if (fp->altsetting == 2)
 			return SNDRV_PCM_FMTBIT_DSD_U32_BE;

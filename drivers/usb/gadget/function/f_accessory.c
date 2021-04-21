@@ -303,6 +303,10 @@ static void acc_complete_set_string(struct usb_ep *ep, struct usb_request *req)
 	char *string_dest = NULL;
 	int length = req->actual;
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		unsigned long flags;
+#endif
+
 	if (req->status != 0) {
 		pr_err("acc_complete_set_string, err %d\n", req->status);
 		return;
@@ -327,22 +331,48 @@ static void acc_complete_set_string(struct usb_ep *ep, struct usb_request *req)
 	case ACCESSORY_STRING_SERIAL:
 		string_dest = dev->serial;
 		break;
-	}
-	if (string_dest) {
-		unsigned long flags;
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	default:
+		pr_err("unknown accessory string index %d\n",
+				dev->string_index);
+		return;
+#endif
 
+	}
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (!length) {
+			pr_debug("zero length for accessory string index %d\n",
+					dev->string_index);
+			return;
+		}
+	
 		if (length >= ACC_STRING_SIZE)
 			length = ACC_STRING_SIZE - 1;
-
+	
 		spin_lock_irqsave(&dev->lock, flags);
 		memcpy(string_dest, req->buf, length);
 		/* ensure zero termination */
 		string_dest[length] = 0;
 		spin_unlock_irqrestore(&dev->lock, flags);
-	} else {
-		pr_err("unknown accessory string index %d\n",
-			dev->string_index);
-	}
+	
+#else
+		if (string_dest) {
+			unsigned long flags;
+	
+			if (length >= ACC_STRING_SIZE)
+				length = ACC_STRING_SIZE - 1;
+	
+			spin_lock_irqsave(&dev->lock, flags);
+			memcpy(string_dest, req->buf, length);
+			/* ensure zero termination */
+			string_dest[length] = 0;
+			spin_unlock_irqrestore(&dev->lock, flags);
+		} else {
+			pr_err("unknown accessory string index %d\n",
+				dev->string_index);
+		}
+#endif
+
 }
 
 static void acc_complete_set_hid_report_desc(struct usb_ep *ep,
@@ -840,6 +870,11 @@ int acc_ctrlrequest(struct usb_composite_dev *cdev,
 	u16	w_value = le16_to_cpu(ctrl->wValue);
 	u16	w_length = le16_to_cpu(ctrl->wLength);
 	unsigned long flags;
+
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (!dev)
+		return -ENODEV;
+#endif
 
 /*
 	printk(KERN_INFO "acc_ctrlrequest "

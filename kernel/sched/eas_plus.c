@@ -87,12 +87,12 @@ update_system_overutilized(struct lb_env *env)
 				continue;
 
 			group_util += cpu_util(i);
-			if (cpu_overutilized(i)) {
+			/*if (cpu_overutilized(i)) {
 				if (capacity_orig_of(i) == min_capacity) {
 					intra_overutil = true;
 					break;
 				}
-			}
+			}*/
 		}
 
 		/*
@@ -812,6 +812,10 @@ static unsigned int aggressive_idle_pull(int this_cpu)
 	 */
 	if (hmp_cpu_is_slowest(this_cpu)) {
 		hmp_slowest_idle_prefer_pull(this_cpu, &p, &target);
+#if defined(OPLUS_FEATURE_UIFIRST) && defined(CONFIG_SCHED_WALT)
+		if(p && sysctl_uifirst_enabled && sysctl_slide_boost_enabled && is_heavy_ux_task(p) && test_ux_task_cpu(task_cpu(p)))
+			goto done;
+#endif
 		if (p) {
 			trace_sched_hmp_migrate(p, this_cpu, 0x10);
 			moved = migrate_runnable_task(p, this_cpu, target);
@@ -1916,6 +1920,13 @@ void task_check_for_rotation(struct rq *src_rq)
 
 		if (rq->nr_running > 1)
 			continue;
+
+#if defined (CONFIG_SCHED_WALT) && defined (OPLUS_FEATURE_SCHED_ASSIST)
+		if (sysctl_sched_assist_enabled
+			&& is_sched_assist_scene()
+			&& (is_heavy_ux_task(rq->curr) || is_sf(rq->curr)))
+			continue;
+#endif /* OPLUS_FEATURE_SCHED_ASSIST */
 
 		run = wc - rq->curr->last_enqueued_ts;
 

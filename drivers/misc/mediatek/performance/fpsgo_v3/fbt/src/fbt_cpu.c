@@ -266,6 +266,7 @@ static int gcc_enq_bound_thrs;
 static int gcc_enq_bound_quota;
 static int gcc_deq_bound_thrs;
 static int gcc_deq_bound_quota;
+static int gcc_positive_clamp;
 
 module_param(bhr, int, 0644);
 module_param(bhr_opp, int, 0644);
@@ -339,6 +340,7 @@ module_param(gcc_enq_bound_thrs, int, 0644);
 module_param(gcc_enq_bound_quota, int, 0644);
 module_param(gcc_deq_bound_thrs, int, 0644);
 module_param(gcc_deq_bound_quota, int, 0644);
+module_param(gcc_positive_clamp, int, 0644);
 
 static DEFINE_SPINLOCK(freq_slock);
 static DEFINE_MUTEX(fbt_mlock);
@@ -2562,11 +2564,11 @@ int update_quota(struct fbt_boost_info *boost_info, int target_fps,
 	int s32_target_time;
 
 	if (!gcc_fps_margin && target_fps == 60)
-		target_time = vsync_duration_us_60;
+		target_time = max(target_time, (long long)vsync_duration_us_60);
 	if (!gcc_fps_margin && target_fps == 90)
-		target_time = vsync_duration_us_90;
+		target_time = max(target_time, (long long)vsync_duration_us_90);
 	if (!gcc_fps_margin && target_fps == 120)
-		target_time = vsync_duration_us_120;
+		target_time = max(target_time, (long long)vsync_duration_us_120);
 
 	s32_target_time = target_time;
 
@@ -2989,7 +2991,10 @@ static int fbt_boost_policy(
 		fpsgo_systrace_c_fbt(pid, buffer_id, gcc_boost, "gcc_boost");
 		fpsgo_systrace_c_fbt(pid, buffer_id, boost_info->correction, "correction");
 		fpsgo_systrace_c_fbt(pid, buffer_id, blc_wt, "before correction");
-		blc_wt = clamp((int)blc_wt + boost_info->correction, 1, 100);
+		if (!gcc_positive_clamp || boost_info->correction < 0)
+			blc_wt = clamp((int)blc_wt + boost_info->correction, 1, 100);
+		else
+			fpsgo_systrace_c_fbt(pid, buffer_id, 0, "correction");
 		fpsgo_systrace_c_fbt(pid, buffer_id, gpu_loading, "gpu_loading");
 		if (gcc_check_under_boost) {
 			fpsgo_systrace_c_fbt(pid, buffer_id,
@@ -4972,7 +4977,7 @@ static ssize_t limit_cfreq_store(struct kobject *kobj,
 	}
 
 	mutex_lock(&fbt_mlock);
-	if (limit_policy != FPSGO_LIMIT_CAPACITY || !limit_clus_ceil)
+	if (!limit_clus_ceil)
 		goto EXIT;
 
 	cluster = max_cap_cluster;
@@ -4984,6 +4989,7 @@ static ssize_t limit_cfreq_store(struct kobject *kobj,
 	if (val == 0) {
 		limit->cfreq = 0;
 		limit->copp = INVALID_NUM;
+		limit_policy = FPSGO_LIMIT_NONE;
 		goto EXIT;
 	}
 
@@ -4995,6 +5001,7 @@ static ssize_t limit_cfreq_store(struct kobject *kobj,
 	limit->cfreq = cpu_dvfs[cluster].power[opp];
 	limit->copp = opp;
 	limit_cap = check_limit_cap(0);
+	limit_policy = FPSGO_LIMIT_CAPACITY;
 
 EXIT:
 	mutex_unlock(&fbt_mlock);

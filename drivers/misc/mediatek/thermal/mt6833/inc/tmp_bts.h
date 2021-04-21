@@ -56,6 +56,14 @@
 
 #define BTSNRPA_RAP_ADC_CHANNEL		AUX_IN2_NTC
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+#define AUX_IN3_NTC							(3)
+#define FLASHLIGHT_RAP_ADC_CHANNEL			AUX_IN3_NTC
+#define FLASHLIGHT_RAP_PULL_UP_VOLTAGE		1800
+#define FLASHLIGHT_RAP_PULL_UP_R			100000
+#define FLASHLIGHT_TAP_OVER_CRITICAL_LOW	4397119
+#endif
+
 
 
 extern int IMM_GetOneChannelValue(int dwChannel, int data[4], int *rawdata);

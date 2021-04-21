@@ -822,10 +822,24 @@ static void mt_gpufreq_buck_control(enum mt_power_state power)
 					__func__);
 			return;
 		}
+		if (regulator_is_enabled(g_pmic->reg_vsram_gpu)) {
+		     gpufreq_pr_info("@%s: 1 gpu buck enabled vsram\n",
+                	 __func__);
+		}else {
+    			gpufreq_pr_info("@%s: 1 gpu buck disabled vsram\n",
+                 	__func__);
+		}
 		if (regulator_enable(g_pmic->reg_vgpu)) {
 			gpufreq_pr_info("@%s: fail to enable VGPU\n",
 					__func__);
 			return;
+		}
+		if (regulator_is_enabled(g_pmic->reg_vgpu)) {
+     			gpufreq_pr_info("@%s: 2 gpu buck enabled vgpu\n",
+                 	__func__);
+		} else {
+    			gpufreq_pr_info("@%s: 2 gpu buck disabled vgpu\n",
+                 	__func__);
 		}
 	} else {
 		if (regulator_disable(g_pmic->reg_vgpu)) {
@@ -833,10 +847,24 @@ static void mt_gpufreq_buck_control(enum mt_power_state power)
 					__func__);
 			return;
 		}
+		if (regulator_is_enabled(g_pmic->reg_vgpu)) {
+		     gpufreq_pr_info("@%s: 3 gpu buck enabled vgpu\n",
+                	 __func__);
+		} else {
+    			gpufreq_pr_info("@%s: 3 gpu buck disabled vgpu\n",
+                 	__func__);
+		}
 		if (regulator_disable(g_pmic->reg_vsram_gpu)) {
 			gpufreq_pr_info("@%s: fail to disable VSRAM_GPU\n",
 					__func__);
 			return;
+		}
+		if (regulator_is_enabled(g_pmic->reg_vsram_gpu)) {
+     			gpufreq_pr_info("@%s: 4 gpu buck enabled vsram\n",
+                 	__func__);
+		} else {
+    			gpufreq_pr_info("@%s: 4 gpu buck disabled vsram\n",
+        	         __func__);
 		}
 	}
 

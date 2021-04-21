@@ -111,7 +111,13 @@ enum DISP_PMQOS_SLOT {
 #define DISP_SLOT_READ_DDIC_BASE (DISP_SLOT_TRIG_CNT + 0x4)
 #define DISP_SLOT_READ_DDIC_BASE_END		\
 	(DISP_SLOT_READ_DDIC_BASE + READ_DDIC_SLOT_NUM * 0x4)
+//#ifdef OPLUS_FEATURE_ONSCREENFINGERPRINT
+#define DISP_SLOT_FP0_IDX (DISP_SLOT_OVL_STATUS + 0x4)
+//#define DISP_SLOT_FP1_IDX (DISP_SLOT_FP0_IDX + 0x4)
+//#define DISP_SLOT_CUR_USER_CMD_IDX (DISP_SLOT_FP1_IDX + 0x4)
+//#else
 #define DISP_SLOT_CUR_USER_CMD_IDX (DISP_SLOT_READ_DDIC_BASE_END + 0x4)
+//#endif
 #define DISP_SLOT_CUR_BL_IDX (DISP_SLOT_CUR_USER_CMD_IDX + 0x4)
 
 /* For Dynamic OVL feature */
@@ -785,6 +791,13 @@ unsigned int mtk_drm_dump_wk_lock(struct mtk_drm_private *priv,
 char *mtk_crtc_index_spy(int crtc_index);
 bool mtk_drm_get_hdr_property(void);
 int mtk_drm_aod_setbacklight(struct drm_crtc *crtc, unsigned int level);
+
+//#ifdef OPLUS_BUG_STABILITY
+void mtk_drm_send_lcm_cmd_prepare(struct drm_crtc *crtc,
+	struct cmdq_pkt **cmdq_handle);
+void mtk_drm_send_lcm_cmd_flush(struct drm_crtc *crtc,
+	struct cmdq_pkt **cmdq_handle, bool sync);
+//#endif
 
 int mtk_drm_crtc_wait_blank(struct mtk_drm_crtc *mtk_crtc);
 /* ********************* Legacy DISP API *************************** */

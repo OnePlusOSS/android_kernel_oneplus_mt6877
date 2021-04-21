@@ -11,8 +11,8 @@
  * GNU General Public License for more details.
  */
 #include <linux/atomic.h>
-static atomic_t mutex_clk_count = ATOMIC_INIT(0);
-static atomic_t dl_clk_count = ATOMIC_INIT(0);
+#define CLK_COUNT_NUM 15
+static int32_t mdp_clk_count[CLK_COUNT_NUM];
 #include "cmdq_reg.h"
 #include "mdp_common.h"
 #ifdef CMDQ_MET_READY
@@ -1101,72 +1101,93 @@ static void config_port_34bit(enum CMDQ_ENG_ENUM engine)
 
 void cmdq_mdp_enable_clock(bool enable, enum CMDQ_ENG_ENUM engine)
 {
+	int32_t clk_count_idx = -1;
+
 	switch (engine) {
 	case CMDQ_ENG_MDP_CAMIN:
-		if (enable) {
-			atomic_inc(&dl_clk_count);
-		} else {
-			atomic_dec(&dl_clk_count);
-			if (atomic_read(&dl_clk_count) < 0)
-				CMDQ_ERR("%s MDP_CAMIN disable dl_clk_count %d\n",
-					__func__, atomic_read(&dl_clk_count));
-		}
+		clk_count_idx = 1;
 		cmdq_mdp_enable_clock_IMG_DL_ASYNC0(enable);
 		cmdq_mdp_enable_clock_IMG0_IMG_DL_ASYNC0(enable);
 		cmdq_mdp_enable_clock_IMG0_IMG_DL_RELAY0_ASYNC0(enable);
 		break;
 	case CMDQ_ENG_MDP_CAMIN2:
+		clk_count_idx = 2;
 		cmdq_mdp_enable_clock_IMG_DL_ASYNC1(enable);
 		cmdq_mdp_enable_clock_IMG0_IMG_DL_ASYNC1(enable);
 		cmdq_mdp_enable_clock_IMG0_IMG_DL_RELAY1_ASYNC1(enable);
 		break;
 	case CMDQ_ENG_MDP_RDMA0:
+		clk_count_idx = 3;
 		cmdq_mdp_enable_clock_MDP_RDMA0(enable);
 		if (enable)
 			config_port_34bit(CMDQ_ENG_MDP_RDMA0);
 		break;
 	case CMDQ_ENG_MDP_RDMA1:
+		clk_count_idx = 4;
 		cmdq_mdp_enable_clock_MDP_RDMA1(enable);
 		if (enable)
 			config_port_34bit(CMDQ_ENG_MDP_RDMA1);
 		break;
 	case CMDQ_ENG_MDP_RSZ0:
+		clk_count_idx = 5;
 		cmdq_mdp_enable_clock_MDP_RSZ0(enable);
 		break;
 	case CMDQ_ENG_MDP_RSZ1:
+		clk_count_idx = 6;
 		cmdq_mdp_enable_clock_MDP_RSZ1(enable);
 		break;
 	case CMDQ_ENG_MDP_WROT0:
+		clk_count_idx = 7;
 		cmdq_mdp_enable_clock_MDP_WROT0(enable);
 		if (enable)
 			config_port_34bit(CMDQ_ENG_MDP_WROT0);
 		break;
 	case CMDQ_ENG_MDP_WROT1:
+		clk_count_idx = 8;
 		cmdq_mdp_enable_clock_MDP_WROT1(enable);
 		if (enable)
 			config_port_34bit(CMDQ_ENG_MDP_WROT1);
 		break;
 	case CMDQ_ENG_MDP_TDSHP0:
+		clk_count_idx = 9;
 		cmdq_mdp_enable_clock_MDP_TDSHP0(enable);
 		break;
 	case CMDQ_ENG_MDP_TDSHP1:
+		clk_count_idx = 10;
 		cmdq_mdp_enable_clock_MDP_TDSHP1(enable);
 		break;
 	case CMDQ_ENG_MDP_COLOR0:
+		clk_count_idx = 11;
 		cmdq_mdp_enable_clock_MDP_COLOR0(enable);
 		break;
 	case CMDQ_ENG_MDP_HDR0:
+		clk_count_idx = 12;
 		cmdq_mdp_enable_clock_MDP_HDR0(enable);
 		break;
 	case CMDQ_ENG_MDP_AAL0:
+		clk_count_idx = 13;
 		cmdq_mdp_enable_clock_MDP_AAL0(enable);
 		break;
 	case CMDQ_ENG_MDP_AAL1:
+		clk_count_idx = 14;
 		cmdq_mdp_enable_clock_MDP_AAL1(enable);
 		break;
 	default:
+		clk_count_idx = -1;
 		CMDQ_ERR("try to enable unknown mdp clock");
 		break;
+	}
+
+	if (clk_count_idx > 0 && clk_count_idx < CLK_COUNT_NUM) {
+		if (enable)
+			mdp_clk_count[clk_count_idx]++;
+		else {
+			mdp_clk_count[clk_count_idx]--;
+			if (mdp_clk_count[clk_count_idx] < 0)
+				CMDQ_ERR("%s disable mdp_clk_count[%d] %d\n",
+					__func__, clk_count_idx,
+					mdp_clk_count[clk_count_idx]);
+		}
 	}
 }
 
@@ -2027,14 +2048,13 @@ static void cmdq_mdp_enable_common_clock(bool enable)
 		/* Use SMI clock API */
 		smi_bus_prepare_enable(SMI_LARB2, "MDP");
 		cmdq_mdp_enable_clock_APB(enable);
-		atomic_inc(&mutex_clk_count);
+		mdp_clk_count[0]++;
 		cmdq_mdp_enable_clock_MDP_MUTEX0(enable);
 	} else {
 		/* disable, reverse the sequence */
-		atomic_dec(&mutex_clk_count);
-		if (atomic_read(&mutex_clk_count) < 0)
-			CMDQ_ERR("%s MDP_MUTEX0 disable %d\n",
-				__func__, atomic_read(&mutex_clk_count));
+		mdp_clk_count[0]--;
+		if (mdp_clk_count[0] < 0)
+			CMDQ_ERR("%s MDP_MUTEX0 disable %d\n", __func__, mdp_clk_count[0]);
 		cmdq_mdp_enable_clock_MDP_MUTEX0(enable);
 		cmdq_mdp_enable_clock_APB(enable);
 		smi_bus_disable_unprepare(SMI_LARB2, "MDP");

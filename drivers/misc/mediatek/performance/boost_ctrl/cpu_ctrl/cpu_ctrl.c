@@ -43,6 +43,7 @@ static int log_enable;
 static unsigned long *policy_mask;
 static int num_cpu;
 static int *cpu_isolation[CPU_ISO_MAX_KIR];
+static int perfserv_isolation_cpu;
 
 #ifdef CONFIG_MTK_CPU_CTRL_CFP
 static int cfp_init_ret;
@@ -468,11 +469,137 @@ static int perfmgr_perfmgr_log_proc_show(struct seq_file *m, void *v)
 	return 0;
 }
 
+/*******************************************/
+static ssize_t perfmgr_perfserv_iso_cpu_proc_write(struct file *filp,
+		const char __user *ubuf, size_t cnt, loff_t *pos)
+{
+	int i, data = 0;
+
+	int rv = check_proc_write(&data, ubuf, cnt);
+
+	if (rv != 0)
+		return rv;
+
+	perfserv_isolation_cpu = data;
+
+	for (i = 0; i < num_cpu; i++) {
+		if ((perfserv_isolation_cpu & (1 << i)) > 0)
+			update_isolation_cpu(CPU_ISO_KIR_PERF, 1, i);
+		else
+			update_isolation_cpu(CPU_ISO_KIR_PERF, -1, i);
+	}
+
+	return cnt;
+}
+
+static int perfmgr_perfserv_iso_cpu_proc_show(struct seq_file *m, void *v)
+{
+	if (m)
+		seq_printf(m, "0x%x\n", perfserv_isolation_cpu);
+	return 0;
+}
+
+#ifdef OPLUS_FEATURE_SCHED_ASSIST
+#include <linux/sched_assist/sched_assist_common.h>
+#include "../../../../../kernel/sched/sched.h"
+#include <linux/sched/cpufreq.h>
+#include <linux/topology.h>
+static int boost_cluster = -1;
+static int boost_enable = 0;
+unsigned long boost_util = 0;
+ktime_t last_hint_ts;
+int freq_cpu = -1;
+raw_spinlock_t obt_lock;
+
+is_obt_boost(struct task_struct *p)
+{
+	struct task_struct *grp_leader = p->group_leader;
+	if (strstr(grp_leader->comm, "com.tencent.mm") || strstr(grp_leader->comm, "com.UCMobile"))
+		return true;
+
+	return false;
+}
+
+void start_assist_boost(void) {
+	struct rq *rq;
+
+	if (boost_cluster < 0 || freq_cpu < 0)
+		return;
+
+        last_hint_ts =  ktime_get();
+	rq = cpu_rq(freq_cpu);
+	boost_util = 1024;
+	cpufreq_update_util(rq, SCHED_CPUFREQ_BOOST);
+}
+
+void stop_assist_boost(void) {
+	struct rq *rq;
+
+	if (boost_cluster < 0 || freq_cpu < 0)
+		return;
+
+	rq = cpu_rq(freq_cpu);
+	boost_util = 0;
+	cpufreq_update_util(rq, SCHED_CPUFREQ_BOOST);
+
+	boost_cluster = -1;
+	freq_cpu = -1;
+}
+
+static ssize_t perfmgr_sched_assist_boost_freq_proc_write(struct file *filp
+		, const char __user *ubuf, size_t cnt, loff_t *pos)
+{
+	int data = 0;
+	unsigned long irq_flag;
+
+	int rv = check_proc_write(&data, ubuf, cnt);
+
+	if (rv != 0)
+		return rv;
+
+	raw_spin_lock_irqsave(&obt_lock, irq_flag);
+	if (is_heavy_ux_task(current) && is_obt_boost(current)) {
+
+		boost_enable = data > 0 ? 1 : 0;
+
+		if (boost_enable) {
+			int curr_cluster = arch_get_cluster_id(task_cpu(current));
+			if (curr_cluster < 0 )
+				goto out;
+
+			if (boost_cluster < 0 && freq_cpu < 0) {
+				boost_cluster = curr_cluster;
+				freq_cpu = task_cpu(current);
+				start_assist_boost();
+			}
+		} else {
+			stop_assist_boost();
+		}
+	}
+out:
+	raw_spin_unlock_irqrestore(&obt_lock, irq_flag);
+
+	return cnt;
+
+}
+
+static int perfmgr_sched_assist_boost_freq_proc_show(struct seq_file * m, void * v)
+{
+	if (m)
+		seq_printf(m, "%d\n", boost_enable);
+	return 0;
+}
+#endif
+
 
 PROC_FOPS_RW(perfserv_freq);
 PROC_FOPS_RW(boot_freq);
 PROC_FOPS_RO(current_freq);
 PROC_FOPS_RW(perfmgr_log);
+PROC_FOPS_RW(perfserv_iso_cpu);
+#ifdef OPLUS_FEATURE_SCHED_ASSIST
+PROC_FOPS_RW(sched_assist_boost_freq);
+#endif
 
 /************************************************/
 int cpu_ctrl_init(struct proc_dir_entry *parent)
@@ -490,6 +617,10 @@ int cpu_ctrl_init(struct proc_dir_entry *parent)
 		PROC_ENTRY(boot_freq),
 		PROC_ENTRY(current_freq),
 		PROC_ENTRY(perfmgr_log),
+		PROC_ENTRY(perfserv_iso_cpu),
+#ifdef OPLUS_FEATURE_SCHED_ASSIST
+		PROC_ENTRY(sched_assist_boost_freq),
+#endif
 	};
 	mutex_init(&boost_freq);
 
@@ -545,6 +676,9 @@ int cpu_ctrl_init(struct proc_dir_entry *parent)
 		for (j = 0; j < num_cpu; j++)
 			cpu_isolation[i][j] = -1;
 	}
+
+	perfserv_isolation_cpu = 0;
+
 out:
 	return ret;
 

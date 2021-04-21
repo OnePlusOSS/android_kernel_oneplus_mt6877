@@ -37,7 +37,6 @@
 #define PCM_32K_TICKS_PER_SEC		(32768)
 #define PCM_TICK_TO_SEC(TICK)	(TICK / PCM_32K_TICKS_PER_SEC)
 
-#ifdef CONFIG_MTK_LPM_GS_DUMP_SUPPORT
 struct MT6886_LOGGER_NODE mt6833_log_gs_idle;
 struct MTK_LPM_GS_IDLE_INFO {
 	unsigned short limit;
@@ -390,10 +389,11 @@ static u32 is_blocked_cnt;
 	is_no_blocked = wakesta->debug_flag & 0x2;
 
 	/* Check if System LPM ever is blocked over 10 times */
-	if (!is_no_blocked)
+	if (!is_no_blocked){
 		is_blocked_cnt++;
-	else
+	}else{
 		is_blocked_cnt = 0;
+	}	
 
 	if (is_blocked_cnt < IS_BLOCKED_OVER_TIMES)
 		return;
@@ -669,7 +669,6 @@ static int mt6833_show_message(struct mt6833_spm_wake_status *wakesrc, int type,
 		rcu_irq_exit_irqson();
 	} else
 		pr_info("[name:spm&][SPM] %s", log_buf);
-
 	return wr;
 }
 
