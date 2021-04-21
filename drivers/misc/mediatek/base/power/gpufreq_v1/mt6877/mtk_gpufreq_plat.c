@@ -1496,7 +1496,7 @@ static void __mt_gpufreq_update_table_by_asensor(void)
 	adiff = MAX(adiff1, adiff2);
 
 	/* apply volt=0.8V, temp=30C to get leakage information.
-	 * For leakage < 20, DISABLE aging reduction.
+	 * For leakage < 16 (mW), DISABLE aging reduction.
 	 */
 	leak_power = mt_spower_get_leakage(MTK_SPOWER_GPU, (80000 / 100), 30);
 
@@ -1507,7 +1507,7 @@ static void __mt_gpufreq_update_table_by_asensor(void)
 		aging_table_id = 3;
 	else if (error_bit)
 		aging_table_id = 3;
-	else if (leak_power < 20)
+	else if (leak_power < 16)
 		aging_table_id = 3;
 	else if (adiff < MT_GPUFREQ_AGING_GAP0)
 		aging_table_id = 3;
