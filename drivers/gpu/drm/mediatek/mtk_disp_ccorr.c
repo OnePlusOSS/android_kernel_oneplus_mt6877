@@ -52,7 +52,7 @@
 static unsigned int g_ccorr_relay_value[DISP_CCORR_TOTAL];
 #define index_of_ccorr(module) ((module == DDP_COMPONENT_CCORR0) ? 0 : 1)
 
-static bool bypass_color;
+//static bool bypass_color;
 
 static atomic_t g_ccorr_is_clock_on[DISP_CCORR_TOTAL] = {
 	ATOMIC_INIT(0), ATOMIC_INIT(0) };
@@ -616,6 +616,7 @@ int disp_ccorr_set_color_matrix(struct mtk_ddp_comp *comp,
 		}
 	}
 
+/* hwc skip client color transform already by customer, so remove this patch by request
 	// hint: 0: identity matrix; 1: arbitraty matrix
 	// fte_flag: true: gpu overlay && hwc not identity matrix
 	// arbitraty matrix maybe identity matrix or color transform matrix;
@@ -633,6 +634,7 @@ int disp_ccorr_set_color_matrix(struct mtk_ddp_comp *comp,
 			bypass_color = true;
 		}
 	}
+*/
 
 #if defined(CONFIG_MACH_MT6885) || defined(CONFIG_MACH_MT6873) \
 	|| defined(CONFIG_MACH_MT6893) || defined(CONFIG_MACH_MT6853) \
