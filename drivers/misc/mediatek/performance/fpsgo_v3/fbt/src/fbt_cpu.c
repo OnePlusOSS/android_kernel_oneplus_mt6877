@@ -371,6 +371,7 @@ static unsigned int cpu_max_freq;
 static struct fbt_cpu_dvfs_info *cpu_dvfs;
 static int max_cap_cluster, min_cap_cluster;
 static unsigned int def_capacity_margin;
+static int max_cl_core_num;
 
 static int limit_policy;
 static struct fbt_syslimit *limit_clus_ceil;
@@ -1236,11 +1237,10 @@ static void fbt_set_min_cap_locked(struct render_info *thr, int min_cap,
 			do_affinity = boost_affinity_120;
 	}
 
-	if (loading_th
-		|| (do_affinity && limit_policy == FPSGO_LIMIT_CAPACITY))
+	if (loading_th || do_affinity)
 		fbt_query_dep_list_loading(thr);
 
-	if (do_affinity && limit_policy == FPSGO_LIMIT_CAPACITY)
+	if (do_affinity)
 		heavy_pid = fbt_get_heavy_pid(thr->dep_valid_size, thr->dep_arr);
 
 	dep_str = kcalloc(size + 1, MAX_PID_DIGIT * sizeof(char),
@@ -1255,8 +1255,7 @@ static void fbt_set_min_cap_locked(struct render_info *thr, int min_cap,
 		if (!fl->pid)
 			continue;
 
-		if (loading_th
-			|| (do_affinity && limit_policy == FPSGO_LIMIT_CAPACITY)) {
+		if (loading_th || do_affinity) {
 			fpsgo_systrace_c_fbt_gm(fl->pid, thr->buffer_id,
 				fl->loading, "dep-loading");
 
@@ -1292,6 +1291,10 @@ static void fbt_set_min_cap_locked(struct render_info *thr, int min_cap,
 			fbt_set_per_task_min_cap(fl->pid, min_cap);
 			if (do_affinity)
 				fbt_set_task_policy(fl, FPSGO_TPOLICY_AFFINITY,
+						FPSGO_PREFER_BIG, 1);
+		} else if (do_affinity && thr->pid == fl->pid && max_cl_core_num > 1) {
+			fbt_set_per_task_min_cap(fl->pid, min_cap);
+			fbt_set_task_policy(fl, FPSGO_TPOLICY_AFFINITY,
 						FPSGO_PREFER_BIG, 1);
 		} else {
 			fbt_set_per_task_min_cap(fl->pid, min_cap);
@@ -4137,6 +4140,7 @@ static void fbt_update_pwd_tbl(void)
 {
 	int cluster, opp;
 	unsigned int max_cap = 0, min_cap = UINT_MAX;
+	struct cpumask max_cluster_cpu, online_cpu;
 
 	for (cluster = 0; cluster < cluster_num ; cluster++) {
 		struct cpumask cluster_cpus;
@@ -4192,6 +4196,10 @@ static void fbt_update_pwd_tbl(void)
 	max_cap_cluster = clamp(max_cap_cluster, 0, cluster_num - 1);
 	min_cap_cluster = clamp(min_cap_cluster, 0, cluster_num - 1);
 	fbt_set_cap_limit();
+
+	arch_get_cluster_cpus(&max_cluster_cpu, max_cap_cluster);
+	cpumask_and(&online_cpu, &max_cluster_cpu, cpu_online_mask);
+	max_cl_core_num = cpumask_weight(&online_cpu);
 
 	if (!cpu_max_freq) {
 		FPSGO_LOGE("NULL power table\n");
