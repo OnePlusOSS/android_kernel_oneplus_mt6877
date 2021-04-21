@@ -27,6 +27,7 @@
 #include "clk-mt6877.h"
 
 #include <dt-bindings/clock/mt6877-clk.h>
+#include <memory/mediatek/dramc.h>
 
 /* bringup config */
 #define MT_CCF_BRINGUP		1
@@ -219,6 +220,10 @@
 #define USBPLL_CON1				0x31C
 #define USBPLL_CON2				0x320
 #define USBPLL_CON3				0x324
+#define IMGPLL_CON0				0x370
+#define IMGPLL_CON1				0x374
+#define IMGPLL_CON2				0x378
+#define IMGPLL_CON3				0x37C
 
 static DEFINE_SPINLOCK(mt6877_clk_lock);
 
@@ -2225,6 +2230,87 @@ static const struct mtk_pll_data apmixed_plls[] = {
 		USBPLL_CON1, 0, 22/*pcw*/),
 };
 
+static const struct mtk_pll_data lp5_apmixed_plls[] = {
+	PLL(CLK_APMIXED_ARMPLL_LL, "armpll_ll", ARMPLL_LL_CON0/*base*/,
+		ARMPLL_LL_CON0, BIT(0)/*en*/,
+		ARMPLL_LL_CON3/*pwr*/, PLL_AO, BIT(0)/*rstb*/,
+		ARMPLL_LL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		ARMPLL_LL_CON1, 0, 22/*pcw*/),
+	PLL(CLK_APMIXED_ARMPLL_BL, "armpll_bl", ARMPLL_BL_CON0/*base*/,
+		ARMPLL_BL_CON0, BIT(0)/*en*/,
+		ARMPLL_BL_CON3/*pwr*/, PLL_AO, BIT(0)/*rstb*/,
+		ARMPLL_BL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		ARMPLL_BL_CON1, 0, 22/*pcw*/),
+	PLL(CLK_APMIXED_CCIPLL, "ccipll", CCIPLL_CON0/*base*/,
+		CCIPLL_CON0, BIT(0)/*en*/,
+		CCIPLL_CON3/*pwr*/, PLL_AO, BIT(0)/*rstb*/,
+		CCIPLL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		CCIPLL_CON1, 0, 22/*pcw*/),
+	PLL(CLK_APMIXED_MAINPLL, "mainpll", MAINPLL_CON0/*base*/,
+		MAINPLL_CON0, BIT(0)/*en*/,
+		MAINPLL_CON3/*pwr*/, HAVE_RST_BAR | PLL_AO, BIT(23)/*rstb*/,
+		MAINPLL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		MAINPLL_CON1, 0, 22/*pcw*/),
+	PLL(CLK_APMIXED_UNIVPLL, "univpll", IMGPLL_CON0/*base*/,
+		IMGPLL_CON0, BIT(0)/*en*/,
+		IMGPLL_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
+		UNIVPLL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		UNIVPLL_CON1, 0, 22/*pcw*/),
+	PLL(CLK_APMIXED_MSDCPLL, "msdcpll", MSDCPLL_CON0/*base*/,
+		MSDCPLL_CON0, BIT(0)/*en*/,
+		MSDCPLL_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
+		MSDCPLL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		MSDCPLL_CON1, 0, 22/*pcw*/),
+	PLL(CLK_APMIXED_MMPLL, "mmpll", MMPLL_CON0/*base*/,
+		MMPLL_CON0, BIT(0)/*en*/,
+		MMPLL_CON3/*pwr*/, HAVE_RST_BAR, BIT(23)/*rstb*/,
+		MMPLL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		MMPLL_CON1, 0, 22/*pcw*/),
+	PLL(CLK_APMIXED_ADSPPLL, "adsppll", ADSPPLL_CON0/*base*/,
+		ADSPPLL_CON0, BIT(0)/*en*/,
+		ADSPPLL_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
+		ADSPPLL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		ADSPPLL_CON1, 0, 22/*pcw*/),
+	PLL(CLK_APMIXED_TVDPLL, "tvdpll", TVDPLL_CON0/*base*/,
+		TVDPLL_CON0, BIT(0)/*en*/,
+		TVDPLL_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
+		TVDPLL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		TVDPLL_CON1, 0, 22/*pcw*/),
+	PLL(CLK_APMIXED_APLL1, "apll1", APLL1_CON0/*base*/,
+		APLL1_CON0, BIT(0)/*en*/,
+		APLL1_CON4/*pwr*/, 0, BIT(0)/*rstb*/,
+		APLL1_CON1, 24/*pd*/,
+		0, AP_PLL_CON3, 0/*tuner*/,
+		APLL1_CON2, 0, 32/*pcw*/),
+	PLL(CLK_APMIXED_APLL2, "apll2", APLL2_CON0/*base*/,
+		APLL2_CON0, BIT(0)/*en*/,
+		APLL2_CON4/*pwr*/, 0, BIT(0)/*rstb*/,
+		APLL2_CON1, 24/*pd*/,
+		0, AP_PLL_CON3, 5/*tuner*/,
+		APLL2_CON2, 0, 32/*pcw*/),
+	PLL(CLK_APMIXED_MPLL, "mpll", MPLL_CON0/*base*/,
+		MPLL_CON0, BIT(0)/*en*/,
+		MPLL_CON3/*pwr*/, PLL_AO, BIT(0)/*rstb*/,
+		MPLL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		MPLL_CON1, 0, 22/*pcw*/),
+	PLL(CLK_APMIXED_USBPLL, "usbpll", USBPLL_CON0/*base*/,
+		USBPLL_CON0, BIT(0)/*en*/,
+		USBPLL_CON3/*pwr*/, 0, BIT(0)/*rstb*/,
+		USBPLL_CON1, 24/*pd*/,
+		0, 0, 0/*tuner*/,
+		USBPLL_CON1, 0, 22/*pcw*/),
+};
+
 int clk_mt6877_pll_registration(enum subsys_id id,
 		const struct mtk_pll_data *plls,
 		struct platform_device *pdev,
@@ -2270,8 +2356,31 @@ int clk_mt6877_pll_registration(enum subsys_id id,
 
 static int clk_mt6877_apmixed_probe(struct platform_device *pdev)
 {
-	return clk_mt6877_pll_registration(APMIXEDSYS, apmixed_plls,
-			pdev, ARRAY_SIZE(apmixed_plls));
+	struct device_node *node;
+	unsigned int dram_type;
+	int ret = 0;
+
+	node = of_find_compatible_node(NULL, NULL,
+		"mediatek,mt6877-dramc");
+	if (node) {
+		ret = of_property_read_u32(node, "dram_type", &dram_type);
+		if (ret) {
+			pr_err("%s(): get property failed\n", __func__);
+			return -EINVAL;
+		}
+
+		if (dram_type == TYPE_LPDDR5)
+			ret = clk_mt6877_pll_registration(APMIXEDSYS,
+					lp5_apmixed_plls, pdev, ARRAY_SIZE(apmixed_plls));
+		else
+			ret = clk_mt6877_pll_registration(APMIXEDSYS,
+					apmixed_plls, pdev, ARRAY_SIZE(apmixed_plls));
+	} else {
+		pr_err("%s(): get dram node failed\n", __func__);
+		return PTR_ERR(node);
+	}
+
+	return ret;
 }
 
 static int clk_mt6877_ifrao_probe(struct platform_device *pdev)
