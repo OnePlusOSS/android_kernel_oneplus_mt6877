@@ -514,6 +514,7 @@ struct g_asensor_info {
 	u32 a_tn_lvt_cnt, a_tn_ulvt_cnt;
 	int tj1, tj2;
 	int adiff1, adiff2;
+	int leak_power;
 };
 unsigned int g_aging_table[][NUM_OF_OPP_IDX] = {
 	/* Aging Table 0 */
