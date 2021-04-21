@@ -873,8 +873,8 @@ static long tz_client_tee_service(struct file *file, unsigned long arg,
 		}
 	}
 
-	ret = KREE_TeeServiceCall(handle, cparam.command, cparam.paramTypes,
-			param);
+	ret = KREE_TeeServiceCallPlus(handle, cparam.command, cparam.paramTypes,
+				      param, cparam.cpumask);
 
 	cparam.ret = ret;
 	tmpTypes = cparam.paramTypes;
@@ -1247,6 +1247,8 @@ TZ_RESULT gz_manual_adjust_trusty_wq_attr(char __user *user_req)
 		manual_task_attr.pri[TRUSTY_TASK_KICK_ID],
 		manual_task_attr.mask[TRUSTY_TASK_CHK_ID],
 		manual_task_attr.pri[TRUSTY_TASK_CHK_ID]);
+
+	tipc_set_default_cpumask(manual_task_attr.mask[TRUSTY_TASK_KICK_ID]);
 
 	return gz_adjust_task_attr(&manual_task_attr);
 }

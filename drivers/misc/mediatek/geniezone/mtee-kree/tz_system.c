@@ -81,6 +81,12 @@ DEFINE_MUTEX(fd_mutex);
 DEFINE_MUTEX(session_mutex);
 DEFINE_MUTEX(port_mutex);
 
+/* For high performance required and do not use mutiha API user, it may have
+ * some delay when run into multi HA situation. Use servicecall_lock to ensure
+ * the performance for such users.
+ */
+DEFINE_MUTEX(servicecall_lock);
+
 int perf_boost_cnt;
 struct mutex perf_boost_lock;
 struct platform_device *tz_system_dev;
@@ -1298,11 +1304,12 @@ close_session_out:
 }
 EXPORT_SYMBOL(KREE_CloseSession);
 
-TZ_RESULT KREE_TeeServiceCall(KREE_SESSION_HANDLE handle, uint32_t command,
-			      uint32_t paramTypes, union MTEEC_PARAM param[4])
+TZ_RESULT KREE_TeeServiceCallPlus(KREE_SESSION_HANDLE handle, uint32_t command,
+				  uint32_t paramTypes, union MTEEC_PARAM param[4],
+				  uint32_t cpumask)
 {
 	int iret;
-	struct gz_syscall_cmd_param *cparam;
+	struct gz_syscall_cmd_param cparam;
 	int32_t Fd;
 	struct tipc_dn_chan *chan_p;
 	struct tipc_k_port *port;
@@ -1315,40 +1322,48 @@ TZ_RESULT KREE_TeeServiceCall(KREE_SESSION_HANDLE handle, uint32_t command,
 		return TZ_RESULT_ERROR_BAD_PARAMETERS;
 	}
 
+	/* pass cpumask to channel */
+	chan_p->cpumask = cpumask;
+
 	port = lookup_port_by_id(chan_p->port_id);
 	if (!port) {
 		KREE_ERR("%s: port is not found\n", __func__);
 		return TZ_RESULT_ERROR_BAD_PARAMETERS;
 	}
 
-	KREE_SESSION_LOCK(Fd);
-	kree_perf_boost(1);
-	cparam = kmalloc(sizeof(*cparam), GFP_KERNEL);
-	if (!cparam) {
-		KREE_ERR("==>cparam kmalloc fail. Stop.\n");
-
-		/*perf. boost reset*/
-		kree_perf_boost(0);
-		/*unlock sess_lock*/
-		KREE_SESSION_UNLOCK(Fd);
-
-		return TZ_RESULT_ERROR_OUT_OF_MEMORY;
-	}
-	cparam->command = command;
-	cparam->paramTypes = paramTypes;
-	memcpy(&(cparam->param[0]), param, sizeof(union MTEEC_PARAM) * 4);
+	cparam.command = command;
+	cparam.paramTypes = paramTypes;
+	memcpy(cparam.param, param, sizeof(union MTEEC_PARAM) * 4);
 
 	KREE_DEBUG(" ===> KREE Tee Service Call cmd = %d / %d\n", command,
-		   cparam->command);
+		   cparam.command);
+
+	if (cpumask == (uint32_t)(-1))
+		mutex_lock(&servicecall_lock);
+
+	KREE_SESSION_LOCK(Fd);
 	mutex_lock(&port->lock);
-	iret = _GzServiceCall_body(Fd, command, cparam, param);
-	mutex_unlock(&port->lock);
-	memcpy(param, &(cparam->param[0]), sizeof(union MTEEC_PARAM) * 4);
-	kfree(cparam);
+	kree_perf_boost(1);
+
+	iret = _GzServiceCall_body(Fd, command, &cparam, param);
+
 	kree_perf_boost(0);
+	mutex_unlock(&port->lock);
 	KREE_SESSION_UNLOCK(Fd);
 
+	if (cpumask == (uint32_t)(-1))
+		mutex_unlock(&servicecall_lock);
+
+	memcpy(param, cparam.param, sizeof(union MTEEC_PARAM) * 4);
+
 	return iret;
+}
+EXPORT_SYMBOL(KREE_TeeServiceCallPlus);
+
+TZ_RESULT KREE_TeeServiceCall(KREE_SESSION_HANDLE handle, uint32_t command,
+			      uint32_t paramTypes, union MTEEC_PARAM param[4])
+{
+	return KREE_TeeServiceCallPlus(handle, command, paramTypes, param, -1);
 }
 EXPORT_SYMBOL(KREE_TeeServiceCall);
 

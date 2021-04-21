@@ -865,7 +865,7 @@ static void trusty_poll_work(struct kthread_work *work)
 static int trusty_poll_create(struct trusty_state *s)
 {
 	int ret;
-	struct sched_param param;
+	struct sched_param param = { .sched_priority = MAX_RT_PRIO - 1 };
 
 	s->poll_notifier.notifier_call = trusty_poll_notify;
 	s->poll_notifier.priority = -1;
@@ -887,7 +887,7 @@ static int trusty_poll_create(struct trusty_state *s)
 		return PTR_ERR(s->poll_task);
 	}
 
-	sched_setscheduler(s->poll_task, SCHED_NORMAL, &param);
+	sched_setscheduler(s->poll_task, SCHED_RR, &param);
 	set_user_nice(s->poll_task, PRIO_TO_NICE(100));
 
 	wake_up_process(s->poll_task);
