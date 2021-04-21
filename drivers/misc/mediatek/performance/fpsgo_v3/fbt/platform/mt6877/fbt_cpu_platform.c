@@ -55,7 +55,7 @@ void fbt_boost_dram(int boost)
 	}
 
 	if (boost)
-		pm_qos_update_request(&dram_req, 0);
+		pm_qos_update_request(&dram_req, 1);
 	else
 		pm_qos_update_request(&dram_req,
 				PM_QOS_DDR_OPP_DEFAULT_VALUE);
