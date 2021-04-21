@@ -431,7 +431,7 @@ void disp_aal_refresh_by_kernel(void)
 void disp_aal_notify_backlight_changed(int bl_1024)
 {
 	unsigned long flags;
-	int max_backlight = 0;
+	//int max_backlight = 0;
 	unsigned int service_flags;
 
 	AALAPI_LOG("%d/1023\n", bl_1024);
@@ -440,9 +440,12 @@ void disp_aal_notify_backlight_changed(int bl_1024)
 
 	// FIXME
 	//max_backlight = disp_pwm_get_max_backlight(DISP_PWM0);
-	max_backlight = 2048;
-	if (bl_1024 > max_backlight)
-		bl_1024 = max_backlight;
+
+	#ifdef OPLUS_BUG_STABILITY
+	//max_backlight = 2048;
+	//if (bl_1024 > max_backlight)
+	//	bl_1024 = max_backlight;
+	#endif
 
 	atomic_set(&g_aal_backlight_notified, bl_1024);
 

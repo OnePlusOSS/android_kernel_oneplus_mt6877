@@ -1256,6 +1256,12 @@ config SND_SOC_RT5509
 	depends on I2C
 	select RT_REGMAP
 
+#ifdef OPLUS_BUG_COMPATIBILITY
+config SND_SOC_CODEC_MICBIAS_2P8V
+	bool "Set Micbias 2.8V After Recording"
+	default n
+#endif /* OPLUS_BUG_COMPATIBILITY */
+
 config SND_RICHTEK_SPM
 	bool "Richtek SPM Class"
 	help

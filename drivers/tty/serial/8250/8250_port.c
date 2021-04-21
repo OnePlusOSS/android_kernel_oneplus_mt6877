@@ -15,8 +15,10 @@
  *  membase is an 'ioremapped' cookie.
  */
 
+#ifndef OPLUS_FEATURE_CHG_BASIC
 #if defined(CONFIG_SERIAL_8250_CONSOLE) && defined(CONFIG_MAGIC_SYSRQ)
 #define SUPPORT_SYSRQ
+#endif
 #endif
 
 #include <linux/module.h>
@@ -710,7 +712,7 @@ EXPORT_SYMBOL_GPL(serial8250_rpm_put_tx);
  */
 static void serial8250_set_sleep(struct uart_8250_port *p, int sleep)
 {
-	unsigned char lcr = 0, efr = 0;
+	unsigned char efr = 0;
 	/*
 	 * Exar UARTs have a SLEEP register that enables or disables
 	 * each UART to enter sleep mode separately.  On the XR17V35x the

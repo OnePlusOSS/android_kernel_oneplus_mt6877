@@ -59,12 +59,20 @@
 //#include <mmprofile.h>
 //#include <mmprofile_function.h>
 
+#ifdef CONFIG_OPLUS_ION_BOOSTPOOL
+#include <linux/proc_fs.h>
+#endif /* CONFIG_OPLUS_ION_BOOSTPOOL */
+
 #define ION_FUNC_ENTER
 #define ION_FUNC_LEAVE
 
 /* #pragma GCC optimize ("O0") */
 #define DEFAULT_PAGE_SIZE 0x1000
 #define PAGE_ORDER 12
+
+#ifdef CONFIG_OPLUS_ION_BOOSTPOOL
+struct proc_dir_entry *boost_root_dir;
+#endif /* CONFIG_OPLUS_ION_BOOSTPOOL */
 
 struct ion_device *g_ion_device;
 EXPORT_SYMBOL(g_ion_device);
@@ -580,12 +588,28 @@ static long ion_sys_ioctl(struct ion_client *client, unsigned int cmd,
 	ion_phys_addr_t phy_addr;
 
 	ION_FUNC_ENTER;
-	if (from_kernel)
+	if (!arg) {
+		IONMSG("%s:err arg = NULL. %s(%s),%d, k:%d\n",
+		       __func__, client->name, client->dbg_name,
+		       client->pid, from_kernel);
+		ret = -EINVAL;
+		goto err;
+	}
+
+	if (from_kernel) {
 		param = *(struct ion_sys_data *)arg;
-	else
+	} else {
 		ret_copy =
 		    copy_from_user(&param, (void __user *)arg,
 				   sizeof(struct ion_sys_data));
+		if (ret_copy != 0) {
+			IONMSG("%s:err arg copy failed, ret_copy = %d. %s(%s),%d, k:%d\n",
+			       __func__, ret_copy, client->name, client->dbg_name,
+			       client->pid, from_kernel);
+			ret = -EFAULT;
+			goto err;
+		}
+	}
 
 	switch (param.sys_cmd) {
 	case ION_SYS_CACHE_SYNC:
@@ -626,8 +650,8 @@ static long ion_sys_ioctl(struct ion_client *client, unsigned int cmd,
 		}
 		break;
 	case ION_SYS_SET_CLIENT_NAME:
-		ion_sys_copy_client_name(param.client_name_param.name,
-					 client->dbg_name);
+		ret = ion_sys_copy_client_name(param.client_name_param.name,
+					       client->dbg_name);
 		break;
 	default:
 		IONMSG(
@@ -636,12 +660,22 @@ static long ion_sys_ioctl(struct ion_client *client, unsigned int cmd,
 		ret = -EFAULT;
 		break;
 	}
+
+	if (ret) {
+		IONMSG("[%s]:failed to finish io-cmd(%d). %s(%s),%d, k:%d\n",
+		       __func__, param.sys_cmd,
+		       client->name, client->dbg_name,
+		       client->pid, from_kernel);
+		goto err;
+	}
+
 	if (from_kernel)
 		*(struct ion_sys_data *)arg = param;
 	else
 		ret_copy =
 		    copy_to_user((void __user *)arg, &param,
 				 sizeof(struct ion_sys_data));
+err:
 	ION_FUNC_LEAVE;
 	return ret;
 }
@@ -786,14 +820,27 @@ int ion_device_destroy_heaps(struct ion_device *dev)
 {
 	struct ion_heap *heap, *tmp;
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	down_write(&dev->heap_lock);
+#else
 	down_write(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 
 	plist_for_each_entry_safe(heap, tmp, &dev->heaps, node) {
 		plist_del((struct plist_node *)heap, &dev->heaps);
 		ion_mtk_heap_destroy(heap);
 	}
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device 
+ */
+	up_write(&dev->heap_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	up_write(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 
 	return 0;
 }
@@ -809,7 +856,13 @@ static int ion_clients_summary_show(struct seq_file *s, void *unused)
 	enum mtk_ion_heap_type cam_heap = ION_HEAP_TYPE_MULTIMEDIA_FOR_CAMERA;
 	enum mtk_ion_heap_type mm_heap = ION_HEAP_TYPE_MULTIMEDIA;
 
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	if (!down_read_trylock(&dev->client_lock))
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	if (!down_read_trylock(&dev->lock))
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 		return 0;
 	seq_printf(s, "%-16.s %-8.s %-8.s\n", "client_name", "pid", "size");
 	seq_puts(s, "------------------------------------------\n");
@@ -843,7 +896,13 @@ static int ion_clients_summary_show(struct seq_file *s, void *unused)
 	}
 
 	seq_puts(s, "-------------------------------------------\n");
+#ifdef OPLUS_FEATURE_PERFORMANCE
+/* use two separate locks for heaps and
+ * clients in ion_device */
+	up_read(&dev->client_lock);
+#else /* OPLUS_FEATURE_PERFORMANCE */
 	up_read(&dev->lock);
+#endif /* OPLUS_FEATURE_PERFORMANCE */
 
 	return 0;
 }
@@ -905,6 +964,10 @@ static int ion_drv_probe(struct platform_device *pdev)
 		IONMSG("ion_device_create() error! device=%p\n", g_ion_device);
 		return PTR_ERR(g_ion_device);
 	}
+
+#ifdef CONFIG_OPLUS_ION_BOOSTPOOL
+	boost_root_dir = proc_mkdir("boost_pool", NULL);
+#endif /* CONFIG_OPLUS_ION_BOOSTPOOL */
 
 	/* create the heaps as specified in the board file */
 	for (i = 0; i < num_heaps; i++) {

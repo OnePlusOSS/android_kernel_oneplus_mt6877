@@ -26,6 +26,11 @@
 #include <mt-plat/aee.h>
 #include "sda.h"
 
+#ifdef CONFIG_MACH_MT6877
+#include <mt-plat/upmu_common.h>
+#include "mach/mtk_cpufreq_api.h"
+#endif
+
 #define MCU_BP_IRQ_TRIGGER_THRESHOLD	(2)
 #define INFRA_BP_IRQ_TRIGGER_THRESHOLD	(2)
 
@@ -298,6 +303,20 @@ static irqreturn_t mcu_bp_isr(int irq, void *dev_id)
 		mcu_bp.ts = local_clock();
 	mcu_bp.nr_err++;
 
+#ifdef CONFIG_MACH_MT6877
+	/* dump CPU frequency and voltage (Vproc / Vcore) for debugging */
+	BPR_LOG("[MCU_BP_ISR] PMIC_RG_BUCK_VGPU11_VOSEL = 0x%x\n",
+		pmic_get_register_value(PMIC_RG_BUCK_VGPU11_VOSEL));
+	BPR_LOG("[MCU_BP_ISR] [Voltage] CPU_LL = 0x%x, CPU_L = 0x%x, CCI = 0x%x\n",
+		mt_cpufreq_get_cur_volt(0),
+		mt_cpufreq_get_cur_volt(1),
+		mt_cpufreq_get_cur_volt(2));
+	BPR_LOG("[MCU_BP_ISR] [Frequency] CPU_LL = 0x%x, CPU_L = 0x%x, CCI = 0x%x\n",
+		mt_cpufreq_get_cur_freq(0),
+		mt_cpufreq_get_cur_freq(1),
+		mt_cpufreq_get_cur_freq(2));
+#endif
+
 	status = readl(mcu_bp.parity_sta);
 	for (i = 0; i < mcu_bp.nr_bpm; i++) {
 		if (status & (0x1<<i)) {
@@ -372,6 +391,20 @@ static irqreturn_t infra_bp_isr(int irq, void *dev_id)
 	if (!infra_bp.nr_err)
 		infra_bp.ts = local_clock();
 	infra_bp.nr_err++;
+
+#ifdef CONFIG_MACH_MT6877
+	/* dump CPU frequency and voltage (Vproc / Vcore) for debugging */
+	BPR_LOG("[INFRA_BP_ISR] PMIC_RG_BUCK_VGPU11_VOSEL = 0x%x\n",
+		pmic_get_register_value(PMIC_RG_BUCK_VGPU11_VOSEL));
+	BPR_LOG("[INFRA_BP_ISR] [Voltage] CPU_LL = 0x%x, CPU_L = 0x%x, CCI = 0x%x\n",
+		mt_cpufreq_get_cur_volt(0),
+		mt_cpufreq_get_cur_volt(1),
+		mt_cpufreq_get_cur_volt(2));
+	BPR_LOG("[INFRA_BP_ISR] [Frequency] CPU_LL = 0x%x, CPU_L = 0x%x, CCI = 0x%x\n",
+		mt_cpufreq_get_cur_freq(0),
+		mt_cpufreq_get_cur_freq(1),
+		mt_cpufreq_get_cur_freq(2));
+#endif
 
 	for (i = 0; i < infra_bp.nr_bpm; i++) {
 		status = readl(infra_bp.bpm[i].base);

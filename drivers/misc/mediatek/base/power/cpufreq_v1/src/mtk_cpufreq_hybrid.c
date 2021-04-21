@@ -45,6 +45,10 @@
 #include <trace/events/power.h>
 /* #include <trace/events/mtk_events.h> */
 
+#if defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED)
+#include <linux/task_sched_info.h>
+#endif /* defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED) */
+
 #if defined(CONFIG_MTK_TINYSYS_SSPM_SUPPORT) && \
 	!defined(CONFIG_MTK_TINYSYS_MCUPM_SUPPORT)
 #include "v1/sspm_ipi.h"
@@ -73,6 +77,10 @@ extern unsigned int cpumssv_get_state(void);
 #include <mcupm_ipi_id.h>
 #endif
 #include <linux/of_address.h>
+//#ifdef OPLUS_FEATURE_FINGERPRINT
+//#define DVFSP_DT_NODE               "mediatek,mt6833-dvfsp"
+//#endif /* OPLUS_FEATURE_FINGERPRINT */
+
 u32 *g_dbg_repo;
 static u32 dvfsp_probe_done;
 void __iomem *log_repo;
@@ -351,25 +359,24 @@ int Ripi_cpu_dvfs_thread(void *data)
 					freqs.new = p->mt_policy->max;
 					cpufreq_freq_transition_begin(p->mt_policy, &freqs);
 					cpufreq_freq_transition_end(p->mt_policy, &freqs, 0);
-					p->idx_opp_tbl = _search_available_freq_idx(p,
-						freqs.new, 0);
+					p->idx_opp_tbl = _search_available_freq_idx(p, freqs.new, 0);
 				} else if (p->mt_policy->cur < p->mt_policy->min) {
 					freqs.old = p->mt_policy->cur;
 					freqs.new = p->mt_policy->min;
 					cpufreq_freq_transition_begin(p->mt_policy, &freqs);
 					cpufreq_freq_transition_end(p->mt_policy, &freqs, 0);
-					p->idx_opp_tbl = _search_available_freq_idx(p,
-						freqs.new, 0);
-				} else if (cpu_dvfs_get_freq_by_idx(p, p->idx_opp_tbl) !=
-						p->mt_policy->cur) {
+					p->idx_opp_tbl = _search_available_freq_idx(p, freqs.new, 0);
+				} else if (cpu_dvfs_get_freq_by_idx(p, p->idx_opp_tbl) != p->mt_policy->cur) {
 					freqs.old = cpu_dvfs_get_freq_by_idx(p, p->idx_opp_tbl);
 					freqs.new = p->mt_policy->cur;
 					cpufreq_freq_transition_begin(p->mt_policy, &freqs);
 					cpufreq_freq_transition_end(p->mt_policy, &freqs, 0);
-					p->idx_opp_tbl = _search_available_freq_idx(p,
-						freqs.new, 0);
+					p->idx_opp_tbl = _search_available_freq_idx(p, freqs.new, 0);
 				}
 #endif
+#if defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED)
+				update_freq_limit_info(p->mt_policy);
+#endif /* defined(OPLUS_FEATURE_TASK_CPUSTATS) && defined(CONFIG_OPLUS_SCHED) */
 				trace_cpu_frequency_limits(p->mt_policy->max,
 					p->mt_policy->min,
 					p->mt_policy->cpu);
@@ -378,7 +385,7 @@ int Ripi_cpu_dvfs_thread(void *data)
 				if (p->idx_opp_tbl != j ||
 				(p->idx_opp_ppm_limit != previous_limit) ||
 				(p->idx_opp_ppm_base != previous_base)) {
-#if !defined(CONFIG_MACH_MT6893) || !defined(CONFIG_MACH_MT6877)
+#if !defined(CONFIG_MACH_MT6893) && !defined(CONFIG_MACH_MT6877)
 					freqs.old = cpu_dvfs_get_cur_freq(p);
 					freqs.new =
 					cpu_dvfs_get_freq_by_idx(p, j);
@@ -988,6 +995,7 @@ static int _mt_dvfsp_pdrv_probe(struct platform_device *pdev)
 	int flag;
 	struct cpudvfs_doe *d = &dvfs_doe;
 #endif
+        printk("wp: _mt_dvfsp_pdrv_probe enter!\n");
 	csram_base = of_iomap(pdev->dev.of_node, 1);
 
 #ifdef ENABLE_DOE

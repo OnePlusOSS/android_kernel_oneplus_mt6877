@@ -301,6 +301,27 @@ void sched_max_util_task(int *cpu, int *pid, int *util, int *boost)
 }
 EXPORT_SYMBOL(sched_max_util_task);
 
+#if defined(OPLUS_FEATURE_CORE_CTL) && defined(CONFIG_SCHED_CORE_CTL)
+unsigned int sched_get_cpu_util(int cpu)
+{
+	struct rq *rq = cpu_rq(cpu);
+	u64 util;
+	unsigned long capacity, flags;
+	unsigned int busy;
+
+	raw_spin_lock_irqsave(&rq->lock, flags);
+
+	util = rq->cfs.avg.util_avg;
+	capacity = capacity_orig_of(cpu);
+
+	raw_spin_unlock_irqrestore(&rq->lock, flags);
+
+	util = (util >= capacity) ? capacity : util;
+	busy = div64_ul((util * 100), capacity);
+	return busy;
+}
+#endif /* OPLUS_FEATURE_CORE_CTL */
+
 /**
  * sched_get_nr_running_avg
  * @return: Average nr_running and iowait value since last poll.

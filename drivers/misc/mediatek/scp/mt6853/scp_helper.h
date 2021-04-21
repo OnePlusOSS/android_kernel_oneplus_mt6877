@@ -124,6 +124,7 @@ enum scp_reserve_mem_id_t {
 #ifdef SCP_PARAMS_TO_SCP_SUPPORT
 	SCP_DRV_PARAMS_MEM_ID,
 #endif
+	SENS_FB_MEM_ID,
 	NUMS_MEM_ID,
 };
 
@@ -156,6 +157,11 @@ struct scp_region_info_st {
 	uint32_t regdump_start;
 	uint32_t regdump_size;
 	uint32_t ap_params_start;
+    uint32_t nOperator;
+    uint32_t nPCBVersion;
+    uint32_t nProject;
+    uint32_t sensor_data_addr;
+
 };
 
 /* scp device attribute */

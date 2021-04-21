@@ -130,6 +130,12 @@ struct mtk_btag_mictx_struct {
 	__u16 q_depth_top;
 	spinlock_t lock;
 	bool enabled;
+	bool boosted;
+	bool earaio_enabled;
+	bool uevt_req;
+	bool uevt_state;
+	struct workqueue_struct *uevt_workq;
+	struct work_struct uevt_work;
 };
 
 struct mtk_btag_vmstat {

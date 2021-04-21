@@ -38,6 +38,19 @@
 #include "mtk_secure_api.h"
 #include "i2c-mtk.h"
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+#include <linux/pinctrl/consumer.h>
+#include <mt-plat/mtk_boot_common.h>
+#define I2C_RESET_BUS            7
+#define FG_DEVICE_ADDR           0x55
+#define CHG_DEVICE_ADDR          0x5c
+#define CHARGE_PUMP_DEVICE_ADDR  0x68
+#define RK826_DEVICE_ADDR        0x0A
+#define SY6610_DEVICE_ADDR       0x06
+#define DEVICE_TYPE_ZY0602       3
+#define I2C_STATE        "i2c-state"
+#define OUTPUT_LOW_STATE "output-low-state"
+#endif /*OPLUS_FEATURE_CHG_BASIC*/
 static struct i2c_dma_info g_dma_regs[I2C_MAX_CHANNEL];
 static struct mt_i2c *g_mt_i2c[I2C_MAX_CHANNEL];
 static struct mtk_i2c_compatible i2c_common_compat;
@@ -637,6 +650,15 @@ void i2c_dump_info(struct mt_i2c *i2c)
 {
 	/* I2CFUC(); */
 	/* int val=0; */
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (i2c->id == I2C_RESET_BUS) {
+		if (i2c->gpiobase) {
+			gpio_dump_regs_range(i2c->scl_gpio_id, i2c->sda_gpio_id + 1);
+		} else {
+			dev_info(i2c->dev, "i2c gpiobase is NULL\n");
+		}
+	}
+#endif
 	pr_info_ratelimited("%s: +++++++++++++++++++\n", __func__);
 	pr_info_ratelimited("I2C structure:\n"
 	       I2CTAG "Clk=%ld,Id=%d,Op=0x%x,Irq_stat=0x%x,Total_len=0x%x\n"
@@ -758,6 +780,15 @@ void i2c_dump_info(struct mt_i2c *i2c)
 #else
 void i2c_dump_info(struct mt_i2c *i2c)
 {
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (i2c->id == I2C_RESET_BUS) {
+		if (i2c->gpiobase) {
+			gpio_dump_regs_range(i2c->scl_gpio_id, i2c->sda_gpio_id + 1);
+		} else {
+			dev_info(i2c->dev, "i2c gpiobase is NULL\n");
+		}
+	}
+#endif
 }
 #endif
 
@@ -796,6 +827,83 @@ void dump_i2c_status(int id)
 }
 EXPORT_SYMBOL(dump_i2c_status);
 
+#ifdef OPLUS_FEATURE_CHG_BASIC
+static int fg_device_type = 0;
+static void i2c_gpio_reset(struct mt_i2c *i2c)
+{
+	int ret = 0;
+	static bool i2c_reset_processing = false;
+	struct pinctrl *pctrl = NULL;
+	struct pinctrl_state *i2c_state = NULL;
+	struct pinctrl_state *output_low_state = NULL;
+	int boot_mode = get_boot_mode();
+
+	//pr_err("%s: test i2c id=%d\n", __func__, i2c->id);   /*for debug*/
+	if ((i2c == NULL) || (i2c->id != I2C_RESET_BUS))
+		return;
+
+	pctrl = i2c->pctrl;
+	if (IS_ERR_OR_NULL(pctrl)) {
+		pr_err("%s: no pinctrl setting! id=%d\n", __func__, i2c->id);
+		return;
+	}
+	 if (boot_mode == META_BOOT || boot_mode == FACTORY_BOOT
+		 || boot_mode == ADVMETA_BOOT || boot_mode == ATE_FACTORY_BOOT) {
+		pr_err("i2c_gpio_reset boot_mode:%d, return\n", boot_mode);
+		return;
+	}
+	if (i2c_reset_processing == true) {
+		pr_err("%s: i2c_reset is processing, return\n", __func__);
+		return;
+	}
+	i2c_reset_processing = true;
+
+	i2c_state = pinctrl_lookup_state(pctrl, I2C_STATE);
+	if (IS_ERR_OR_NULL(i2c_state)) {
+		pr_err("%s: get pinctrl state: %s failed! id=%d\n", __func__, I2C_STATE, i2c->id);
+		return;
+	}
+
+	output_low_state = pinctrl_lookup_state(pctrl, OUTPUT_LOW_STATE);
+	if (IS_ERR_OR_NULL(output_low_state)) {
+		pr_err("%s: get pinctrl state: %s failed! id=%d\n", __func__, OUTPUT_LOW_STATE, i2c->id);
+		return;
+	}
+
+	ret = pinctrl_select_state(pctrl, output_low_state);
+	if (ret < 0) {
+		pr_err("%s: set pinctrl state: %s failed! id=%d\n", __func__, OUTPUT_LOW_STATE, i2c->id);
+		return;
+	}
+
+	mdelay(2500);
+
+	ret = pinctrl_select_state(pctrl, i2c_state);
+	if (ret < 0) {
+		pr_err("%s: set pinctrl state: %s failed! id=%d\n", __func__, I2C_STATE, i2c->id);
+		return;
+	}
+
+	i2c_reset_processing = false;
+	pr_err("%s: gpio reset successful id=%d\n", __func__, i2c->id);
+}
+
+int oplus_get_fg_device_type(void)
+{
+	pr_err("oplus_get_fg_device_type  fg_device_type[%d]\n", fg_device_type);
+	return fg_device_type;
+}
+EXPORT_SYMBOL(oplus_get_fg_device_type);
+
+void oplus_set_fg_device_type(int device_type)
+{
+	pr_err("oplus_set_fg_device_type  fg_device_type[%d]\n", fg_device_type);
+	fg_device_type = device_type;
+	return;
+}
+EXPORT_SYMBOL(oplus_set_fg_device_type);
+#endif /*OPLUS_FEATURE_CHG_BASIC*/
+
 static int mt_i2c_do_transfer(struct mt_i2c *i2c)
 {
 	u16 addr_reg = 0;
@@ -810,6 +918,9 @@ static int mt_i2c_do_transfer(struct mt_i2c *i2c)
 	u8 *ptr;
 	int ret = 0;
 	/* u16 ch_offset; */
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	static int err_count_for_reset = 0;
+#endif
 
 	i2c->trans_stop = false;
 	i2c->irq_stat = 0;
@@ -1113,6 +1224,26 @@ static int mt_i2c_do_transfer(struct mt_i2c *i2c)
 		dev_info(i2c->dev,
 			"timeout:start=0x%x,ch_err=0x%x\n",
 			start_reg, i2c_readw(i2c, OFFSET_ERROR));
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (i2c->id == I2C_RESET_BUS && i2c->addr != RK826_DEVICE_ADDR && i2c->addr != SY6610_DEVICE_ADDR) {
+			dev_err(i2c->dev, "[OPLUS_TEST] %s, %x, %d\n", dev_name(i2c->dev), i2c->addr, err_count_for_reset);
+			if (oplus_get_fg_device_type() == DEVICE_TYPE_ZY0602) {
+				if (err_count_for_reset >= 2) {
+					i2c_gpio_reset(i2c);
+					err_count_for_reset = 0;
+				} else {
+					err_count_for_reset++;
+				}
+			} else {
+				if (err_count_for_reset >= 1 && err_count_for_reset < 10) {
+					i2c_gpio_reset(i2c);
+				} else {
+					dev_err(i2c->dev, "err_count_for_reset(%d) >= 10 or < 1,so not reset\n", err_count_for_reset);
+				}
+				err_count_for_reset++;
+			}
+		}
+#endif /*OPLUS_FEATURE_CHG_BASIC*/
 
 		i2c_dump_info(i2c);
 		i2c_gpio_dump_info(i2c);
@@ -1153,6 +1284,26 @@ static int mt_i2c_do_transfer(struct mt_i2c *i2c)
 		dev_info(i2c->dev,
 			"error:addr=0x%x,irq_stat=0x%x,ch_offset=0x%x,mask:0x%x\n",
 			i2c->addr, i2c->irq_stat, i2c->ch_offset, int_reg);
+#ifdef OPLUS_FEATURE_CHG_BASIC
+		if (i2c->id == I2C_RESET_BUS && i2c->addr != RK826_DEVICE_ADDR && i2c->addr != SY6610_DEVICE_ADDR) {
+			dev_err(i2c->dev, "[OPLUS_TEST] %s, %x, %d \n", dev_name(i2c->dev), i2c->addr, err_count_for_reset);
+			if (oplus_get_fg_device_type() == DEVICE_TYPE_ZY0602) {
+				if (err_count_for_reset >= 2) {
+					i2c_gpio_reset(i2c);
+					err_count_for_reset = 0;
+				} else {
+					err_count_for_reset++;
+				}
+			} else {
+				if (err_count_for_reset >= 1  && err_count_for_reset < 10) {
+					i2c_gpio_reset(i2c);
+				} else {
+					dev_err(i2c->dev, "err_count_for_reset(%d) >= 10 or < 1,so not reset\n", err_count_for_reset);
+				}
+				err_count_for_reset++;
+			}
+		}
+#endif /*OPLUS_FEATURE_CHG_BASIC*/
 
 		/* clear fifo addr:bit2,multi-chn;bit0,normal */
 		i2c_writew(I2C_FIFO_ADDR_CLR_MCH | I2C_FIFO_ADDR_CLR,
@@ -1168,7 +1319,6 @@ static int mt_i2c_do_transfer(struct mt_i2c *i2c)
 
 		if ((i2c->irq_stat & (I2C_HS_NACKERR | I2C_ACKERR)))
 			dev_info(i2c->dev, "addr:0x%x,ACK error\n", i2c->addr);
-
 		if (i2c->irq_stat & I2C_TIMEOUT)
 			dev_info(i2c->dev, "addr:0x%x,SCL tied low timeout error\n",
 				i2c->addr);
@@ -1217,6 +1367,11 @@ static int mt_i2c_do_transfer(struct mt_i2c *i2c)
 		}
 	}
 	dev_dbg(i2c->dev, "i2c transferred done.\n");
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	if (i2c->id == I2C_RESET_BUS && i2c->addr != RK826_DEVICE_ADDR && i2c->addr != SY6610_DEVICE_ADDR) {
+		err_count_for_reset = 0;
+	}
+#endif /*OPLUS_FEATURE_CHG_BASIC*/
 
 	return 0;
 }
@@ -1713,7 +1868,9 @@ static int mt_i2c_probe(struct platform_device *pdev)
 	unsigned int clk_src_in_hz;
 	struct resource *res;
 	const struct of_device_id *of_id;
-
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	dev_info(&pdev->dev, ">>> mt_i2c_probe start.. \n");
+#endif
 	i2c = devm_kzalloc(&pdev->dev, sizeof(struct mt_i2c), GFP_KERNEL);
 	if (i2c == NULL)
 		return -ENOMEM;
@@ -1725,6 +1882,9 @@ static int mt_i2c_probe(struct platform_device *pdev)
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 
 	i2c->base = devm_ioremap_resource(&pdev->dev, res);
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	dev_info(&pdev->dev, "i2c->base: %p, res %p\n",i2c->base, res);
+#endif
 	if (IS_ERR(i2c->base))
 		return PTR_ERR(i2c->base);
 
@@ -1749,7 +1909,7 @@ static int mt_i2c_probe(struct platform_device *pdev)
 	if (i2c->irqnr <= 0)
 		return -EINVAL;
 	init_waitqueue_head(&i2c->wait);
-
+#ifndef OPLUS_FEATURE_CHG_BASIC
 	ret = devm_request_irq(&pdev->dev, i2c->irqnr, mt_i2c_irq,
 		IRQF_NO_SUSPEND | IRQF_TRIGGER_NONE, I2C_DRV_NAME, i2c);
 	if (ret < 0) {
@@ -1757,10 +1917,13 @@ static int mt_i2c_probe(struct platform_device *pdev)
 			"Request I2C IRQ %d fail\n", i2c->irqnr);
 		return ret;
 	}
+#endif
 	of_id = of_match_node(mtk_i2c_of_match, pdev->dev.of_node);
 	if (!of_id)
 		return -EINVAL;
-
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	i2c->pctrl = devm_pinctrl_get(&pdev->dev);
+#endif
 	i2c->dev_comp = of_id->data;
 	i2c->i2c_pll_info = &i2c_pll_info;
 	i2c->adap.dev.of_node = pdev->dev.of_node;
@@ -1875,6 +2038,16 @@ static int mt_i2c_probe(struct platform_device *pdev)
 	mt_i2c_init_hw(i2c);
 
 	mt_i2c_clock_disable(i2c);
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	ret = devm_request_irq(&pdev->dev, i2c->irqnr, mt_i2c_irq,
+					IRQF_NO_SUSPEND | IRQF_TRIGGER_NONE, I2C_DRV_NAME, i2c);
+	dev_info(&pdev->dev, "devm_request_irq  mt_i2c_irq.\n");
+	if (ret < 0) {
+		dev_info(&pdev->dev,
+				"Request I2C IRQ %d fail\n", i2c->irqnr);
+		return ret;
+	}
+#endif
 	if (i2c->ch_offset_default)
 		i2c->dma_buf.vaddr = dma_alloc_coherent(&pdev->dev,
 			(PAGE_SIZE * 2), &i2c->dma_buf.paddr, GFP_KERNEL);
@@ -1895,7 +2068,9 @@ static int mt_i2c_probe(struct platform_device *pdev)
 		return ret;
 	}
 	platform_set_drvdata(pdev, i2c);
-
+#ifdef OPLUS_FEATURE_CHG_BASIC
+	dev_info(&pdev->dev, "<<< mt_i2c_probe end Id: %d \n", i2c->id);
+#endif
 	if (!map_cg_regs(i2c))
 		pr_info("Map cg regs successfully.\n");
 

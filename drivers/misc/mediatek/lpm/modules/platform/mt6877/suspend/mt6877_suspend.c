@@ -37,6 +37,9 @@
 #include "mt6877.h"
 #include "mt6877_suspend.h"
 
+#ifdef OPLUS_FEATURE_POWERINFO_STANDBY
+#include "../../../../../../../base/power/owakelock/oplus_wakelock_profiler_garen.h"
+#endif/*OPLUS_FEATURE_POWERINFO_STANDBY*/
 unsigned int mt6877_suspend_status;
 struct md_sleep_status before_md_sleep_status;
 struct md_sleep_status after_md_sleep_status;
@@ -102,6 +105,9 @@ static void log_md_sleep_info(void)
 	if (after_md_sleep_status.sleep_time >= before_md_sleep_status.sleep_time) {
 		printk_deferred("[name:spm&][SPM] md_slp_duration = %llu (32k)\n",
 			after_md_sleep_status.sleep_time - before_md_sleep_status.sleep_time);
+		#ifdef OPLUS_FEATURE_POWERINFO_STANDBY
+		oplus_rpmh_stats_statics("Mpss",0,(after_md_sleep_status.sleep_time - before_md_sleep_status.sleep_time));
+		#endif/*OPLUS_FEATURE_POWERINFO_STANDBY*/
 
 		log_size += scnprintf(log_buf + log_size,
 		LOG_BUF_SIZE - log_size, "[name:spm&][SPM] ");

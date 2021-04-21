@@ -662,6 +662,9 @@ int pseudo_dump_all_port_status(struct seq_file *s)
 			continue;
 		}
 
+		if (4 == larb)
+			continue;
+
 		ret = larb_clock_on(larb, 1);
 		if (ret < 0) {
 			M4U_ERR("err enable larb%d\n", larb);
@@ -1317,7 +1320,6 @@ static int pseudo_client_add_buf(struct m4u_client_t *client,
  * @remark
  * @see
  * @to-do	we need to add multi domain support here.
- * @author K Zhang	  @date 2013/11/14
  */
 static struct m4u_buf_info_t *pseudo_client_find_buf(
 						  struct m4u_client_t *client,

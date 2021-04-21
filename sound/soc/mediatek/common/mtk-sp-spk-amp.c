@@ -485,7 +485,11 @@ MODULE_DEVICE_TABLE(of, mtk_spk_match_table);
 
 static struct i2c_driver mtk_spk_i2c_driver = {
 	.driver = {
-		.name = "speaker_amp",
+//#ifdef OPLUS_ARCH_EXTENDS
+		.name = "tfa98xx",
+//#else
+//		.name = "speaker_amp",
+//#endif
 		.owner = THIS_MODULE,
 		.of_match_table = of_match_ptr(mtk_spk_match_table),
 	},

@@ -37,7 +37,6 @@
 //#endif
 
 #ifdef MTK_DRM_BRINGUP_STAGE
-#define DRM_BYPASS_PQ
 #else
 #define MTK_DRM_ESD_SUPPORT
 #define MTK_FB_MMDVFS_SUPPORT
@@ -65,6 +64,12 @@
  */
 #define MTK_DRM_DELAY_PRESENT_FENCE_SOF
 #endif
+
+
+/*
+* add for fingerprint notify frigger
+*/
+#define MTK_ONSCREENFINGERPRINT_EVENT 20
 
 #if defined(CONFIG_MACH_MT6893) || defined(CONFIG_MACH_MT6853)\
 	|| defined(CONFIG_MACH_MT6877)

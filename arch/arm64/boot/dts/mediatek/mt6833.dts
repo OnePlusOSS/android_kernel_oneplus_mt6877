@@ -40,7 +40,6 @@
 		bootargs = "console=tty0 console=ttyS0,921600n1 root=/dev/ram \
 vmalloc=400M slub_debug=OFZPU swiotlb=noforce \
 firmware_class.path=/vendor/firmware \
-loglevel=8 \
 androidboot.hardware=mt6833 \
 page_owner=on loop.max_part=7";
 		kaslr-seed = <0 0>;
@@ -219,6 +218,18 @@ page_owner=on loop.max_part=7";
 		};
 	};
 
+        shell_front {
+                compatible = "oplus,shell-temp";
+        };
+
+        shell_frame {
+                compatible = "oplus,shell-temp";
+        };
+
+        shell_back {
+                compatible = "oplus,shell-temp";
+        };
+
 	mcucfg_mp0_counter {
 		compatible = "mediatek,mcucfg_mp0_counter";
 		reg_mp0_counter_base = <&mcucfg>;
@@ -242,8 +253,9 @@ page_owner=on loop.max_part=7";
 
 		backlight {
 			label = "lcd-backlight";
-			max-brightness = <255>;
-			led-bits = <8>;
+			max-brightness = <4095>;
+			led-bits = <12>;
+			trans-bits = <12>;
 			default-state = "on";
 		};
 	};
@@ -254,8 +266,8 @@ page_owner=on loop.max_part=7";
 		backlight {
 			label = "lcd-backlight";
 			pwms = <&disp_pwm 0 39385>;
-			max-brightness = <255>;
-			led-bits = <8>;
+			max-brightness = <4095>;
+			led-bits = <12>;
 			pwm-names = "lcd-backlight";
 		};
 	};
@@ -2436,7 +2448,7 @@ page_owner=on loop.max_part=7";
 			"PWM-main";
 	};
 
-	wifi@18000000 {
+	wifi: wifi@18000000 {
 		compatible = "mediatek,wifi";
 		reg = <0 0x18000000 0 0x100000>;
 		interrupts = <GIC_SPI 377 IRQ_TYPE_LEVEL_HIGH>;
@@ -2468,6 +2480,12 @@ page_owner=on loop.max_part=7";
 		compatible = "mediatek,mtboard-thermistor3";
 		io-channels = <&auxadc 2>;
 		io-channel-names = "thermistor-ch2";
+	};
+
+	tboard_thermistor4: thermal-sensor4 {
+		compatible = "mediatek,mtboard-thermistor4";
+		io-channels = <&auxadc 3>;
+		io-channel-names = "thermistor-ch3";
 	};
 	usb0@11200000 {
 		compatible = "mediatek,mt6833-usb20";
@@ -3450,7 +3468,7 @@ page_owner=on loop.max_part=7";
 			<0>, /*MTK_DRM_OPT_MET_LOG*/
 			<1>, /*MTK_DRM_OPT_USE_PQ*/
 			<1>, /*MTK_DRM_OPT_ESD_CHECK_RECOVERY*/
-			<1>, /*MTK_DRM_OPT_ESD_CHECK_SWITCH*/
+			<0>, /*MTK_DRM_OPT_ESD_CHECK_SWITCH*/
 			<1>, /*MTK_DRM_OPT_PRESENT_FENCE*/
 			<0>, /*MTK_DRM_OPT_RDMA_UNDERFLOW_AEE*/
 			<1>, /*MTK_DRM_OPT_DSI_UNDERRUN_AEE*/
@@ -5059,6 +5077,26 @@ page_owner=on loop.max_part=7";
 		compatible = "simple-bus";
 		/* reserved for overlay by odm */
 	};
+	
+//#ifdef OPLUS_FEATURE_FINGERPRINT
+	oplus_fp_common:oplus_fp_common { //Slave driver and CS ID
+		compatible = "oplus,fp_common"; //Manufacture, and Model
+	};
+
+	goodix_fp: fingerprint {
+		compatible = "goodix,goodix_fp";
+	};
+	
+	fpc_interrupt:fpc_interrupt {
+		status        = "ok";
+		compatible    = "fpc,fpc_irq";
+	};
+	
+	silead_fp: silead_fp {
+		status        = "ok";
+		compatible = "sil,silead_fp-pins";
+	};
+//#endif /* OPLUS_FEATURE_FINGERPRINT */
 
 	memory_ssmr_features: memory-ssmr-features {
 		compatible = "mediatek,memory-ssmr-features";
@@ -5468,6 +5506,12 @@ page_owner=on loop.max_part=7";
 		/* status = "enable"; */
 	};
 
+//#ifdef OPLUS_FEATURE_BOOT_SECURITY
+	oplus_secure_common:oplus_secure_common {
+		compatible = "oplus,secure_common";
+	};
+//#endif /* OPLUS_FEATURE_BOOT_SECURITY */
+
 	mt_charger: mt_charger {
 		compatible = "mediatek,mt-charger";
 	};
@@ -5615,6 +5659,14 @@ page_owner=on loop.max_part=7";
 		ibus_err = <14>;
 		vsys_watt = <5000000>;
 	};
+/*#ifdef OPLUS_FEATURE_CHG_BASIC*/
+	phy_tuning: phy_tuning {
+		compatible = "mediatek,phy_tuning";
+		u2_vrt_ref = <6>;
+		u2_term_ref = <6>;
+		u2_enhance = <2>;
+    };
+/*#endif OPLUS_FEATURE_CHG_BASIC*/
 
 	pd_adapter: pd_adapter {
 		compatible = "mediatek,pd_adapter";
@@ -5888,3 +5940,6 @@ page_owner=on loop.max_part=7";
 #include "mediatek/trusty.dtsi"
 #endif
 #include "mediatek/mt6360_pd.dtsi"
+
+#include "mediatek/20015-sia81xx.dtsi"
+

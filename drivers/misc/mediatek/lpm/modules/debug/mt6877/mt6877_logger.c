@@ -53,6 +53,12 @@ struct cpumask mtk_lpm_gs_idle_cpumask;
 	(x.limit != x.limit_set))
 #endif
 
+
+#ifdef OPLUS_FEATURE_POWERINFO_STANDBY
+static int wakeup_state;
+#include "../../drivers/base/power/owakelock/oplus_wakelock_profiler_garen.h"
+#endif
+
 static struct mt6877_spm_wake_status mt6877_wake;
 void __iomem *mt6877_spm_base;
 
@@ -229,7 +235,7 @@ int mt6877_get_wakeup_status(struct mt6877_log_helper *help)
 	help->wakesrc->timer_out = plat_mmio_read(SPM_BK_PCM_TIMER);
 
 	/* get other SYS and co-clock status */
-	help->wakesrc->r13 = plat_mmio_read(MD32PCM_STA);
+	help->wakesrc->r13 = plat_mmio_read(MD32PCM_SCU_STA0);
 	help->wakesrc->idle_sta = plat_mmio_read(SUBSYS_IDLE_STA);
 	help->wakesrc->req_sta0 = plat_mmio_read(SPM_REQ_STA_0);
 	help->wakesrc->req_sta1 = plat_mmio_read(SPM_REQ_STA_1);
@@ -401,11 +407,17 @@ static u32 is_blocked_cnt;
 	is_no_blocked = wakesta->debug_flag & 0x2;
 
 	/* Check if System LPM ever is blocked over 10 times */
-	if (!is_no_blocked)
+	if (!is_no_blocked){
+		#ifdef OPLUS_FEATURE_POWERINFO_STANDBY
+		clk_state_statics(wakesta->r13,wakesta->timer_out,plat_mmio_read(SPM_BK_VTCXO_DUR),"static_clk_no_sleep");
+		#endif/*OPLUS_FEATURE_POWERINFO_STANDBY*/
 		is_blocked_cnt++;
-	else
+	}else{
+		#ifdef OPLUS_FEATURE_POWERINFO_STANDBY
+		clk_state_statics(wakesta->debug_flag,wakesta->timer_out,plat_mmio_read(SPM_BK_VTCXO_DUR),"static_clk_sleep_count");
+		#endif/*OPLUS_FEATURE_POWERINFO_STANDBY*/
 		is_blocked_cnt = 0;
-
+	}
 	if (is_blocked_cnt < IS_BLOCKED_OVER_TIMES)
 		return;
 
@@ -417,7 +429,7 @@ static u32 is_blocked_cnt;
 	req_sta_0 = plat_mmio_read(SPM_REQ_STA_0);
 	req_sta_1 = plat_mmio_read(SPM_REQ_STA_1);
 	req_sta_2 = plat_mmio_read(SPM_REQ_STA_2);
-	req_sta_1 = plat_mmio_read(SPM_REQ_STA_3);
+	req_sta_3 = plat_mmio_read(SPM_REQ_STA_3);
 	req_sta_4 = plat_mmio_read(SPM_REQ_STA_4);
 	req_sta_5 = plat_mmio_read(SPM_REQ_STA_5);
 
@@ -691,6 +703,17 @@ static int mt6877_show_message(struct mt6877_spm_wake_status *wakesrc, int type,
 	} else
 		pr_info("[name:spm&][SPM] %s", log_buf);
 
+	#ifdef OPLUS_FEATURE_POWERINFO_STANDBY
+	//R12_EINT_EVENT_B wakeup statistics in other place
+	if((type == MT_LPM_ISSUER_SUSPEND) && (!(wakesrc->r12 & R12_EINT_EVENT_B))){
+		pr_info("%s:wakeup_reson=%d scenario=%s wakeupby(buf)=%s",__func__,wr,scenario,buf);
+		wakeup_state=false;
+		wakeup_state=wakeup_reasons_statics(buf, WS_CNT_WLAN|WS_CNT_ADSP|WS_CNT_SENSOR|WS_CNT_MODEM);
+		if((wakeup_state==false)&&(strlen(buf)!=0)){
+			wakeup_reasons_statics("other",WS_CNT_OTHER);
+		}
+	}
+	#endif /* OPLUS_FEATURE_POWERINFO_STANDBY */
 	return wr;
 }
 

@@ -234,8 +234,9 @@ static void qos_timer_func(unsigned long arg)
 
 	/* queue work because mutex sleep must be happened */
 	enque_qos_wq(&qos_work);
-	mod_timer(&counter->qos_timer,
-		jiffies + msecs_to_jiffies(DEFAUTL_QOS_POLLING_TIME));
+	if (timer_pending(&counter->qos_timer))
+		mod_timer(&counter->qos_timer,
+			jiffies + msecs_to_jiffies(DEFAUTL_QOS_POLLING_TIME));
 
 	LOG_DETAIL("-\n");
 }

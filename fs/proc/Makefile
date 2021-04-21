@@ -33,3 +33,9 @@ proc-$(CONFIG_PROC_KCORE)	+= kcore.o
 proc-$(CONFIG_PROC_VMCORE)	+= vmcore.o
 proc-$(CONFIG_PRINTK)	+= kmsg.o
 proc-$(CONFIG_PROC_PAGE_MONITOR)	+= page.o
+proc-y += devinfo.o
+proc-y	+= task_cpustats.o
+obj-y	+= oplus_healthinfo/
+#ifdef OPLUS_FEATURE_TASK_CPUSTATS
+obj-y	+= task_cpustats/
+#endif /* OPLUS_FEATURE_TASK_CPUSTATS */

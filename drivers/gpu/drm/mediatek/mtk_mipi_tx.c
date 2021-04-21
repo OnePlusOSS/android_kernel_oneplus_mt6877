@@ -226,6 +226,10 @@
 #define MIPITX_CK_SW_LPTX_PRE_OE	(0x0348UL)
 #define MIPITX_CKC_SW_LPTX_PRE_OE	(0x0368UL)
 
+#ifdef OPLUS_BUG_STABILITY
+unsigned int oplus_panel_index;
+#endif	/* OPLUS_BUG_STABILITY */
+
 enum MIPITX_PAD_VALUE {
 	PAD_D2P_T0A = 0,
 	PAD_D2N_T0B,
@@ -1291,6 +1295,9 @@ static int mtk_mipi_tx_pll_prepare_mt6877(struct clk_hw *hw)
 	struct mtk_mipi_tx *mipi_tx = mtk_mipi_tx_from_clk_hw(hw);
 	unsigned int txdiv, txdiv0, txdiv1, tmp;
 	u32 rate;
+	#ifdef OPLUS_BUG_STABILITY
+	/*u32 reg_val = 0;*/
+	#endif	/* OPLUS_BUG_STABILITY */
 
 	DDPDBG("%s+\n", __func__);
 
@@ -1355,7 +1362,8 @@ static int mtk_mipi_tx_pll_prepare_mt6877(struct clk_hw *hw)
 	usleep_range(30, 100);
 	mtk_mipi_tx_update_bits(mipi_tx, MIPITX_PLL_PWR,
 				FLD_AD_DSI_PLL_SDM_ISO_EN, 0);
-
+	if (rate > 1200)
+		rate = 1684;
 	tmp = _dsi_get_pcw(rate, txdiv);
 	writel(tmp, mipi_tx->regs + MIPITX_PLL_CON0);
 
@@ -1368,6 +1376,21 @@ static int mtk_mipi_tx_pll_prepare_mt6877(struct clk_hw *hw)
 
 	/* TODO: should write bit8 to set SW_ANA_CK_EN here */
 	mtk_mipi_tx_set_bits(mipi_tx, MIPITX_SW_CTRL_CON4, 1);
+
+	#ifdef OPLUS_BUG_STABILITY
+	/*2108101 is "oplus21081_samsung_ams643ag01_1080p_dsi_cmd,lcm"*/
+	if (oplus_panel_index == 2108101) {
+		writel(0x01b10003, mipi_tx->regs + MIPITX_PLL_CON2);
+		/*example,mipi clock down n% ,(( n x mipi clock x 4 x 262144 + 281644 ) / 563329)*/
+		writel(0x00380038, mipi_tx->regs + MIPITX_PLL_CON3);
+
+
+		/*reg_val = readl(mipi_tx->regs + MIPITX_PLL_CON2);
+		printk("299M down 0.1%- %s - open ssc CON2 reg_val=0x%x \n",__func__,reg_val);
+		reg_val = readl(mipi_tx->regs + MIPITX_PLL_CON3);
+		printk("%s - open ssc CON3 reg_val=0x%x \n",__func__,reg_val);*/
+	}
+	#endif	/* OPLUS_BUG_STABILITY */
 
 	DDPDBG("%s-\n", __func__);
 #endif

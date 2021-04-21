@@ -231,8 +231,9 @@ page_owner=on loop.max_part=7";
 
 		backlight {
 			label = "lcd-backlight";
-			max-brightness = <255>;
-			led-bits = <8>;
+			max-brightness = <2047>;
+			led-bits = <11>;
+			trans-bits = <11>;
 			default-state = "on";
 		};
 	};
@@ -2401,7 +2402,7 @@ page_owner=on loop.max_part=7";
 		clock-names = "btifc","apdmac";
 	};
 
-	wifi@18000000 {
+	wifi: wifi@18000000 {
 		compatible = "mediatek,wifi";
 		reg = <0 0x18000000 0 0x100000>;
 		interrupts = <GIC_SPI 376 IRQ_TYPE_LEVEL_HIGH>;
@@ -5977,6 +5978,10 @@ page_owner=on loop.max_part=7";
 		pwm_data_invert = <0>;
 	};
 
+	oplus_secure_common:oplus_secure_common {
+		compatible = "oplus,secure_common";
+	};
+
 	mt_charger: mt_charger {
 		compatible = "mediatek,mt-charger";
 	};
@@ -6149,7 +6154,7 @@ page_owner=on loop.max_part=7";
 	};
 
 	mrdump_ext_rst: mrdump_ext_rst {
-		compatible = "mediatek, mrdump_ext_rst-eint";
+		//compatible = "mediatek, mrdump_ext_rst-eint";
 		mode = "IRQ";
 		status = "okay";
 	};

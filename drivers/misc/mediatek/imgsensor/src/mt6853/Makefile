@@ -43,6 +43,19 @@ ifneq ($(ARCH_MTK_PROJECT), k6833v1_64_mt6317)
 obj-y				+= ../common/$(COMMON_VERSION)/imgsensor_pwr_seq.o
 endif
 
+#ifdef OPLUS_FEATURE_CAMERA_COMMON
+obj-y += ../OplusImgsensor/imgsensor_eeprom.o
+obj-y += ../OplusImgsensor/imgsensor_hwcfg_20075.o
+obj-y += ../OplusImgsensor/imgsensor_hwcfg_20015.o
+obj-y += ../OplusImgsensor/imgsensor_hwcfg_20609.o
+obj-y += ../OplusImgsensor/imgsensor_hwcfg_20131.o
+obj-y += ../OplusImgsensor/imgsensor_hwcfg_20181.o
+obj-y += ../OplusImgsensor/imgsensor_hwcfg_21081.o
+obj-y += ../OplusImgsensor/imgsensor_hwcfg_212A1.o
+obj-y += ../OplusImgsensor/imgsensor_hwcfg_21851.o
+obj-y += ../OplusImgsensor/imgsensor_hwcfg_custom.o
+#endif
+
 define FILTER_DRV
 ifeq ($(wildcard $(IMGSENSOR_DRIVER_PATH)/$(MTK_PLATFORM)/camera_project/$(ARCH_MTK_PROJECT)/$(1)),)
 ifeq ($(wildcard $(IMGSENSOR_DRIVER_PATH)/$(MTK_PLATFORM)/$(1)),)

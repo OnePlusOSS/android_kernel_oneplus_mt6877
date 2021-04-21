@@ -75,6 +75,8 @@
 #include "ufshpb_skh.h"
 #endif
 
+#include "ufs_signal_quality.h"
+
 /* MTK PATCH */
 #include <linux/rpmb.h>
 
@@ -280,6 +282,9 @@ struct ufs_desc_size {
 	int interc_desc;
 	int unit_desc;
 	int conf_desc;
+#ifdef CONFIG_OPLUS_FEATURE_UFS
+	int hlth_desc;
+#endif
 };
 
 /**
@@ -610,6 +615,34 @@ enum ufs_crypto_state {
 	UFS_CRYPTO_HW_FBE_ENCRYPTED   = (1 << 3),
 };
 
+#ifdef OPLUS_FEATURE_MIDAS
+struct ufs_transmission_status_t
+{
+	u8  transmission_status_enable;
+
+	u64 gear_min_write_sec;
+	u64 gear_max_write_sec;
+	u64 gear_min_read_sec;
+	u64 gear_max_read_sec;
+
+	u64 gear_min_write_us;
+	u64 gear_max_write_us;
+	u64 gear_min_read_us;
+	u64 gear_max_read_us;
+
+	u64 gear_min_dev_us;
+	u64 gear_max_dev_us;
+
+	u64 gear_min_other_sec;
+	u64 gear_max_other_sec;
+	u64 gear_min_other_us;
+	u64 gear_max_other_us;
+
+	u64 scsi_send_count;
+	u64 dev_cmd_count;
+};
+#endif /*OPLUS_FEATURE_MIDAS*/
+
 /**
  * struct ufs_hba - per adapter private structure
  * @mmio_base: UFSHCI base register address
@@ -911,7 +944,10 @@ struct ufs_hba {
 
 	struct rw_semaphore clk_scaling_lock;
 	struct ufs_desc_size desc_size;
-
+#ifdef CONFIG_OPLUS_FEATURE_UFS
+	int latency_hist_enabled;
+	struct io_latency_state io_lat_s;
+#endif
 	/* MTK PATCH */
 	/* record vendor id for vendor-specific configurations */
 	u32 manu_id;
@@ -960,7 +996,7 @@ struct ufs_hba {
 #if defined(CONFIG_SCSI_SKHPB)
 	struct scsi_device *sdev_ufs_lu[UFS_UPIU_MAX_GENERAL_LUN];
 #endif
-
+	struct unipro_signal_quality_ctrl signalCtrl;
 #ifdef CONFIG_SCSI_UFS_CRYPTO
 	/* crypto */
 	union ufs_crypto_capabilities crypto_capabilities;
@@ -970,6 +1006,10 @@ struct ufs_hba {
 	void *crypto_DO_NOT_USE[8];
 #endif /* CONFIG_SCSI_UFS_CRYPTO */
 
+#ifdef OPLUS_FEATURE_MIDAS
+	struct ufs_transmission_status_t ufs_transmission_status;
+	struct device_attribute ufs_transmission_status_attr;
+#endif
 	u32 ufs_mtk_qcmd_r_cmd_cnt;
 	u32 ufs_mtk_qcmd_w_cmd_cnt;
 };
@@ -1237,6 +1277,7 @@ void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba);
 int ufshcd_devfreq_scale(struct ufs_hba *hba, bool scale_up);
 void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs);
 void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs);
+void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep);
 int ufshcd_hba_enable(struct ufs_hba *hba);
 int ufshcd_make_hba_operational(struct ufs_hba *hba);
 void ufshcd_print_host_state(struct ufs_hba *hba,

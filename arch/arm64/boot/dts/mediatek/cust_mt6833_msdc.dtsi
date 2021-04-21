@@ -75,8 +75,12 @@
 #endif
 
 	host_function = /bits/ 8 <MSDC_SD>;
+//#ifdef OPLUS_FEATURE_SDCARD
+	cd_level = /bits/ 8 <MSDC_CD_HIGH>;
+//#else
+//	cd_level = /bits/ 8 <MSDC_CD_LOW>;
+//#endif /* OPLUS_FEATURE_SDCARD */
 
-	cd_level = /bits/ 8 <MSDC_CD_LOW>;
 #ifndef CONFIG_FPGA_EARLY_PORTING
 	cd-gpios = <&pio 4 0>;
 #endif
@@ -197,13 +201,13 @@
 
 	msdc1_pins_ddr50: msdc1@ddr50 {
 		pins_cmd {
-			drive-strength = /bits/ 8 <3>;
+			drive-strength = /bits/ 8 <2>;
 		};
 		pins_dat {
-			drive-strength = /bits/ 8 <3>;
+			drive-strength = /bits/ 8 <2>;
 		};
 		pins_clk {
-			drive-strength = /bits/ 8 <3>;
+			drive-strength = /bits/ 8 <2>;
 		};
 	};
 

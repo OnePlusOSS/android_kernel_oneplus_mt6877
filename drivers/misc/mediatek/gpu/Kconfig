@@ -25,7 +25,7 @@ config MTK_GPU_COMMON_DVFS_SUPPORT
 config MTK_GPU_OPP_STATS_SUPPORT
 	bool "Support GPU opp stat"
 	depends on MTK_GPU_COMMON_DVFS_SUPPORT
-	default n
+	default y
 	help
 	  This config supports to enable opp stat during DVFS.
 	  This also provides to track DevFreq like in debugFS and add
