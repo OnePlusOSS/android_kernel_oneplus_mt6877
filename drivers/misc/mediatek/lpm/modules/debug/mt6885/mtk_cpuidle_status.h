@@ -18,6 +18,8 @@ enum {
 	NF_IDLE_PARAM
 };
 
+#define S2IDLE_STATE_NAME	"s2idle"
+
 #define get_residency(drv, idx)\
 	((drv)->states[idx].target_residency)
 #define get_latency(drv, idx)\
@@ -65,5 +67,7 @@ void mtk_cpuidle_state_enable(bool en);
 
 int __init mtk_cpuidle_status_init(void);
 void __exit mtk_cpuidle_status_exit(void);
+
+int mtk_s2idle_state_enable(bool en);
 
 #endif /* __MTK_CPUIDLE_STATUS_H__ */

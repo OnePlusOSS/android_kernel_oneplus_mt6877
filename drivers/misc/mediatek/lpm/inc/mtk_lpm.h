@@ -14,8 +14,8 @@
 
 #define MTK_LPM_DTS_COMPATIBLE		"mediatek,mtk-lpm"
 
-#define MTK_LP_REQ_NONE				0
-#define MTK_LP_REQ_NOLOCK			(1<<0L)
+#define MTK_LP_REQ_NONE			0
+#define MTK_LP_REQ_NOLOCK		(1<<0L)
 #define MTK_LP_REQ_NOBROADCAST		(1<<1L)
 #define MTK_LP_REQ_NOSUSPEND		(1<<2L)
 #define MTK_LP_REQ_NOSYSCORE_CB		(1<<3L)

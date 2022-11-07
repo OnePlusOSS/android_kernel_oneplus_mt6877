@@ -309,7 +309,10 @@ struct dpmaif_drb_msg {
 	unsigned int    count_l:16;
 	unsigned int    channel_id:8;
 	unsigned int    network_type:3;
-	unsigned int    reserved2:5;
+	unsigned int    r:1;
+	unsigned int    ipv4:1; /* enable ul checksum offload for ipv4 header */
+	unsigned int    l4:1; /* enable ul checksum offload for tcp/udp */
+	unsigned int    rsv:2;
 };
 
 struct dpmaif_drb_skb {
@@ -409,6 +412,7 @@ struct hif_dpmaif_ctrl {
 	char traffic_started;
 #endif
 
+	atomic_t suspend_flag;
 };
 
 static inline int ccci_dpma_hif_send_skb(unsigned char hif_id, int tx_qno,
@@ -482,6 +486,7 @@ int dpmaif_stop_rx(unsigned char hif_id);
 int dpmaif_stop_tx(unsigned char hif_id);
 int dpmaif_stop(unsigned char hif_id);
 void dpmaif_stop_hw(void);
+extern void ccmni_clr_flush_timer(void);
 #ifdef CONFIG_MTK_GIC_V3_EXT
 extern void mt_irq_dump_status(int irq);
 #endif
@@ -499,5 +504,6 @@ extern int ccmni_header(int md_id, int ccmni_idx, struct sk_buff *skb);
 extern int ccmni_rx_list_push(int md_id, int ccmni_idx, struct list_head *head,
 			bool is_gro);
 #endif
-
+extern int dpmaif_suspend_noirq(struct device *dev);
+extern int dpmaif_resume_noirq(struct device *dev);
 #endif				/* __MODEM_DPMA_H__ */

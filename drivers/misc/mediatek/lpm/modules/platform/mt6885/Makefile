@@ -7,6 +7,7 @@ ccflags-y += -I$(srctree)/drivers/misc/mediatek/mcupm/$(MTK_PLATFORM)/
 endif
 
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/lpm/inc/
+ccflags-y += -I$(srctree)/drivers/misc/mediatek/lpm/modules/debug/mt6885/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/lpm/mtk_lpm_trace_event/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/lpm/modules/include/
 ccflags-y += -I$(srctree)/drivers/misc/mediatek/lpm/modules/include/mt6885/

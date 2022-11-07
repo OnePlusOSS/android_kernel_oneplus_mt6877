@@ -175,7 +175,7 @@ static int initAF(void)
 static inline int moveAF(unsigned long a_u4Position)
 {
 	int ret = 0;
-
+    LOG_INF("move %d", a_u4Position);
 	if (s4AF_WriteReg((unsigned short)a_u4Position) == 0) {
 		g_u4CurrPosition = a_u4Position;
 		ret = 0;
@@ -244,15 +244,27 @@ long DW9718AF_Ioctl(struct file *a_pstFile, unsigned int a_u4Command,
 int DW9718AF_Release(struct inode *a_pstInode, struct file *a_pstFile)
 {
 	LOG_INF("Start\n");
-
-	if (*g_pAF_Opened == 2) {
-		int i4RetValue = 0;
-		char puSendCmd[2] = {0x00, 0x01};
+    if (*g_pAF_Opened == 2) {
+        int pos = g_u4CurrPosition;
+        int interval = 15;
+        if (pos > 0 && pos <= 1023) {
+            while (pos >= 138) {
+                pos = pos * 10 / 13 + 10;
+                if (s4AF_WriteReg(pos) != 0) {
+                    LOG_INF("AF DW9718TAF_Release I2C failed");
+                }
+                LOG_INF("DW9718T_Release p%d d%d", pos, interval);
+                mdelay(4);
+            }
+            s4AF_WriteReg(90);
+            mdelay(3);
+            s4AF_WriteReg(60);
+        }
 
 		LOG_INF("apply\n");
-
-		i4RetValue = i2c_master_send(g_pstAF_I2Cclient, puSendCmd, 2);
-	}
+        g_pstAF_I2Cclient->addr = AF_I2C_SLAVE_ADDR;
+        g_pstAF_I2Cclient->addr = g_pstAF_I2Cclient->addr >> 1;
+    }
 
 	if (*g_pAF_Opened) {
 		LOG_INF("Free\n");

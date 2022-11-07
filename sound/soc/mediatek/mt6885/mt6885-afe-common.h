@@ -80,6 +80,7 @@ enum {
 	MT6885_DAI_NUM,
 };
 
+#define MT6885_DAI_I2S_MAX_NUM 9 //depends each platform's max i2s num
 #define MT6885_RECORD_MEMIF MT6885_MEMIF_VUL12
 #define MT6885_ECHO_REF_MEMIF MT6885_MEMIF_AWB
 #define MT6885_PRIMARY_MEMIF MT6885_MEMIF_DL1
@@ -238,6 +239,7 @@ struct mt6885_afe_private {
 	int speech_md_headversion;
 	int speech_md_version;
 	int speech_cust_param_init;
+	int speech_dynamic_dl_mute;
 };
 
 int mt6885_dai_adda_register(struct mtk_base_afe *afe);
