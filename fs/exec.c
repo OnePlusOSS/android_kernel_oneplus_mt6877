@@ -1249,11 +1249,20 @@ EXPORT_SYMBOL_GPL(__get_task_comm);
  * so that a new one can be started
  */
 
+#ifdef CONFIG_LOCKING_PROTECT
+extern void sched_locking_target_comm(struct task_struct *p);
+#endif
 void __set_task_comm(struct task_struct *tsk, const char *buf, bool exec)
 {
 	task_lock(tsk);
 	trace_task_rename(tsk, buf);
 	strlcpy(tsk->comm, buf, sizeof(tsk->comm));
+#ifdef OPLUS_FEATURE_SCHED_ASSIST
+	sched_assist_target_comm(tsk);
+#endif /* OPLUS_FEATURE_SCHED_ASSIST */
+#ifdef CONFIG_LOCKING_PROTECT
+	sched_locking_target_comm(tsk);
+#endif
 	task_unlock(tsk);
 	perf_event_comm(tsk, exec);
 }
@@ -1719,6 +1728,11 @@ static int exec_binprm(struct linux_binprm *bprm)
 	return ret;
 }
 
+#ifdef CONFIG_OPLUS_SECURE_GUARD
+#if defined(CONFIG_OPLUS_EXECVE_BLOCK) || defined(CONFIG_OPLUS_EXECVE_REPORT)
+extern int oplus_exec_block(struct file *file);
+#endif /* CONFIG_OPLUS_EXECVE_BLOCK or CONFIG_OPLUS_EXECVE_REPORT */
+#endif /* CONFIG_OPLUS_SECURE_GUARD */
 /*
  * sys_execve() executes a new program.
  */
@@ -1773,6 +1787,15 @@ static int __do_execve_file(int fd, struct filename *filename,
 	if (IS_ERR(file))
 		goto out_unmark;
 
+#ifdef CONFIG_OPLUS_SECURE_GUARD
+#if defined(CONFIG_OPLUS_EXECVE_BLOCK) || defined(CONFIG_OPLUS_EXECVE_REPORT)
+    retval = oplus_exec_block(file);
+	if (retval){
+		fput(file);
+		goto out_unmark;
+	}
+#endif /* CONFIG_OPLUS_EXECVE_BLOCK or CONFIG_OPLUS_EXECVE_REPORT */
+#endif /* CONFIG_OPLUS_SECURE_GUARD */
 	sched_exec();
 
 	bprm->file = file;
