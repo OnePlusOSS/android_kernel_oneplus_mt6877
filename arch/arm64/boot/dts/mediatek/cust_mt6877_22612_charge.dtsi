@@ -123,7 +123,7 @@
 		qcom,vooc-high-temp = <500>;
 		qcom,vooc-low-soc = <0>;
 		qcom,vooc-high-soc = <90>;
-		qcom,vooc-normal-high-temp = <430>;
+		qcom,vooc-normal-high-temp = <440>;
 		qcom,vooc-warm-allow-vol = <4000>;
 		qcom,vooc-warm-allow-soc = <50>;
 
@@ -154,7 +154,7 @@
 		qcom,vooc_little_cold_full_voltage = <4430>;
 		qcom,vooc_cool_full_voltage = <4430>;
 		qcom,vooc_warm_full_voltage = <4130>;
-		qcom,vooc_1time_full_voltage = <4490>;
+		qcom,vooc_1time_full_voltage = <4500>;
 		qcom,vooc_ntime_full_voltage = <4490>;
 		qcom,low_curr_full_t1 = <120>;
 		qcom,low_curr_full_t2 = <350>;

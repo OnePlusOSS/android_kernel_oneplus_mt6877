@@ -65,7 +65,8 @@ extern unsigned int oplus_enhance_mipi_strength;
 extern bool is_forbid_enter_ulps_aod_state;
 //extern bool pq_trigger;
 //extern bool enter_dc_flag;
-
+static bool panel_init = false;
+static bool aod_after_panel_init = false;
 
 struct LCM_setting_table {
   	unsigned int cmd;
@@ -309,6 +310,7 @@ static void jdi_panel_init(struct jdi *ctx)
 	jdi_dcs_write_seq_static(ctx,0xFF,0x78,0x38,0x00);
 	jdi_dcs_write_seq_static(ctx,0x29,0x00);
 
+	panel_init = true;
 	pr_info("SYQ %s-\n", __func__);
 }
 
@@ -779,6 +781,8 @@ static int jdi_setbacklight_cmdq(void *dsi, dcs_write_gce cb, void *handle,
 	char bl_tb0[] = {0x51, 0x07, 0xFF};
 //	char bl_tb1[] = {0xB2, 0x01};
 //	char bl_tb2[] = {0xF0, 0x55, 0xAA, 0x52, 0x08, 0x00};
+        char bl_aod1[] = {0xFF,0x78,0x38,0x00};
+        char bl_aod2[] = {0x13};
 
 	if (get_boot_mode() == KERNEL_POWER_OFF_CHARGING_BOOT && level > 0)
 		level = 3515;
@@ -794,7 +798,12 @@ static int jdi_setbacklight_cmdq(void *dsi, dcs_write_gce cb, void *handle,
 	if (!cb)
 		return -1;
 
+	panel_init = false;
 	if (level ==1) {
+                cb(dsi, handle, bl_aod1, ARRAY_SIZE(bl_aod1));
+                cb(dsi, handle, bl_aod2, ARRAY_SIZE(bl_aod2));
+                cb(dsi, handle, bl_aod1, ARRAY_SIZE(bl_aod1));
+		aod_after_panel_init = false;
 		pr_err("enter aod!!!\n");
 		return 0;
 	}
@@ -805,6 +814,12 @@ static int jdi_setbacklight_cmdq(void *dsi, dcs_write_gce cb, void *handle,
 //		bl_tb1[1] = 0x11;
 	esd_brightness = level;
 
+	if (aod_after_panel_init == true) {
+		cb(dsi, handle, bl_aod1, ARRAY_SIZE(bl_aod1));
+                cb(dsi, handle, bl_aod2, ARRAY_SIZE(bl_aod2));
+                cb(dsi, handle, bl_aod1, ARRAY_SIZE(bl_aod1));
+                aod_after_panel_init = false;
+	}
 	cb(dsi, handle, bl_tb0, ARRAY_SIZE(bl_tb0));
 
 //	cb(dsi, handle, bl_tb2, ARRAY_SIZE(bl_tb2));
@@ -860,12 +875,21 @@ static int panel_hbm_set_cmdq(struct drm_panel *panel, void *dsi,
 			      dcs_write_gce cb, void *handle, bool en)
 {
 	//char hbm_tb[] = {0x53, 0xe0};
+        char bl_aod1[] = {0xFF,0x78,0x38,0x00};
+        char bl_aod2[] = {0x13};
 	int i = 0;
 	if (!cb)
 		return -1;
 
 	pr_err("debug for oplus_display_brightness= %ld, en=%u\n", oplus_display_brightness, en);
 
+	panel_init = false;
+	if (aod_after_panel_init == true) {
+		cb(dsi, handle, bl_aod1, ARRAY_SIZE(bl_aod1));
+                cb(dsi, handle, bl_aod2, ARRAY_SIZE(bl_aod2));
+                cb(dsi, handle, bl_aod1, ARRAY_SIZE(bl_aod1));
+                aod_after_panel_init = false;
+	}
 	if(en == 1) {
 		//oplus_lcm_dc_backlight(dsi,cb,handle, oplus_display_brightness, 1);
 		for (i = 0; i < sizeof(lcm_finger_HBM_on_setting)/sizeof(struct LCM_setting_table); i++){
@@ -1000,6 +1024,43 @@ static int panel_doze_disable(struct drm_panel *panel, void *dsi, dcs_write_gce 
 	return 0;
 }
 
+static struct LCM_setting_table lcm_normal_to_aod_sam_panel_init[] = {
+/*
+   {REGFLAG_CMD, 4, {0xFF,0x78,0x38,0x08}},
+   {REGFLAG_CMD, 2, {0x45,0x4C}},
+   {REGFLAG_CMD, 4, {0xFF,0x78,0x38,0x07}},
+   {REGFLAG_CMD, 2, {0x29,0x01}},
+   {REGFLAG_CMD, 100, {0x20,0x00,0x00,0x00,0x00,0x00,0x11,0x00,0x00,0xab,0x30,0x80,0x09,0x6c,0x04,0x38,0x00,0x0c,0x02,0x1c,0x02,0x1c,0x02,0x00,0x02,0x0e,0x00,0x20,0x01,0x1f,0x00,0x07,0x00,0x0c,0x08,0xbb,0x08,0x7a,0x18,0x00,0x10,0xf0,0x07,0x10,0x20,0x00,0x06,0x0f,0x0f,0x33,0x0e,0x1c,0x2a,0x38,0x46,0x54,0x62,0x69,0x70,0x77,0x79,0x7b,0x7d,0x7e,0x02,0x02,0x22,0x00,0x2a,0x40,0x2a,0xbe,0x3a,0xfc,0x3a,0xfa,0x3a,0xf8,0x3b,0x38,0x3b,0x78,0x3b,0xb6,0x4b,0xf6,0x4c,0x34,0x4c,0x74,0x5c,0x74,0x8c,0xf4,0x00,0x00,0x00,0x00,0x00,0x00}},
+   {REGFLAG_CMD, 4, {0xFF,0x78,0x38,0x00}},
+   {REGFLAG_CMD, 2, {0x96,0x21}},
+   {REGFLAG_CMD, 2, {0x97,0x8A}},
+   {REGFLAG_CMD, 2, {0x98,0x0C}},
+   {REGFLAG_CMD, 2, {0x95,0x10}},
+
+    {REGFLAG_CMD, 1, {0x35}},
+    {REGFLAG_CMD, 2, {0x53,0x20}},
+
+    {REGFLAG_CMD, 1, {0x11}},
+    {REGFLAG_DELAY,120,{}},
+    {REGFLAG_CMD, 1, {0x29}},*/
+    //{REGFLAG_DELAY,20,{}},
+
+    //{REGFLAG_CMD, 1, {0x28}},
+    {REGFLAG_CMD, 4, {0xFF,0x78,0x38,0x00}},
+    {REGFLAG_CMD, 1, {0x39}},
+    {REGFLAG_CMD, 4, {0xFF,0x78,0x38,0x0C}},
+    {REGFLAG_CMD, 2, {0xBE,0x01}},
+    {REGFLAG_CMD, 4, {0xFF,0x78,0x38,0x00}},
+    {REGFLAG_CMD, 1, {0x22}},
+    {REGFLAG_CMD, 4, {0xFF,0x78,0x38,0x00}},
+    //{REGFLAG_DELAY,20,{}},
+
+    /* Display on */
+    //{REGFLAG_CMD, 1, {0x29}},
+
+	{REGFLAG_END_OF_TABLE, 0x00, {}}
+};
+
 static struct LCM_setting_table lcm_normal_to_aod_sam[] = {
 /*
    {REGFLAG_CMD, 4, {0xFF,0x78,0x38,0x08}},
@@ -1032,35 +1093,60 @@ static struct LCM_setting_table lcm_normal_to_aod_sam[] = {
     /* Display on */
     //{REGFLAG_CMD, 1, {0x29}},
 
-	{REGFLAG_END_OF_TABLE, 0x00, {}}
+        {REGFLAG_END_OF_TABLE, 0x00, {}}
 };
-
 static int panel_doze_enable(struct drm_panel *panel, void *dsi, dcs_write_gce cb, void *handle)
 {
 	unsigned int i=0;
-	pr_err("debug for lcm %s\n", __func__);
+	pr_err("debug for lcm %s, panel_init = %d\n", __func__, panel_init);
 	aod_state = true;
 	aod_flag = true;
 
-	for (i = 0; i < (sizeof(lcm_normal_to_aod_sam) / sizeof(struct LCM_setting_table)); i++) {
-		unsigned cmd;
-		cmd = lcm_normal_to_aod_sam[i].cmd;
+	if (panel_init == true) {
+                for (i = 0; i < (sizeof(lcm_normal_to_aod_sam_panel_init) / sizeof(struct LCM_setting_table)); i++) {
+                        unsigned cmd;
+                        cmd = lcm_normal_to_aod_sam_panel_init[i].cmd;
 
-		switch (cmd) {
+                        switch (cmd) {
 
-			case REGFLAG_DELAY:
-				msleep(lcm_normal_to_aod_sam[i].count);
-				break;
+                                case REGFLAG_DELAY:
+                                        msleep(lcm_normal_to_aod_sam_panel_init[i].count);
+                                        break;
 
-			case REGFLAG_UDELAY:
-				udelay(lcm_normal_to_aod_sam[i].count);
-				break;
+                                case REGFLAG_UDELAY:
+                                        udelay(lcm_normal_to_aod_sam_panel_init[i].count);
+                                        break;
 
-			case REGFLAG_END_OF_TABLE:
-				break;
+                                case REGFLAG_END_OF_TABLE:
+                                        break;
 
-			default:
-				cb(dsi, handle, lcm_normal_to_aod_sam[i].para_list, lcm_normal_to_aod_sam[i].count);
+                                default:
+                                        cb(dsi, handle, lcm_normal_to_aod_sam_panel_init[i].para_list, lcm_normal_to_aod_sam_panel_init[i].count);
+                        }
+                }
+		panel_init = false;
+		aod_after_panel_init = true;
+	} else {
+		for (i = 0; i < (sizeof(lcm_normal_to_aod_sam) / sizeof(struct LCM_setting_table)); i++) {
+			unsigned cmd;
+			cmd = lcm_normal_to_aod_sam[i].cmd;
+
+			switch (cmd) {
+
+				case REGFLAG_DELAY:
+					msleep(lcm_normal_to_aod_sam[i].count);
+					break;
+
+				case REGFLAG_UDELAY:
+					udelay(lcm_normal_to_aod_sam[i].count);
+					break;
+
+				case REGFLAG_END_OF_TABLE:
+					break;
+
+				default:
+					cb(dsi, handle, lcm_normal_to_aod_sam[i].para_list, lcm_normal_to_aod_sam[i].count);
+			}
 		}
 	}
 

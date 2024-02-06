@@ -302,6 +302,7 @@
 			regulator-name = "ext_buck_vmddr";
 			regulator-min-microvolt = <300000>;
 			regulator-max-microvolt = <1300000>;
+			regulator-always-on;
 			status = "okay";
 		};
 

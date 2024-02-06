@@ -765,6 +765,9 @@
 /* OPLUS_BUG_STABILITY oplus project start */
 	oplus_project:oplus_project {
 		compatible = "oplus,oplus_project";
+/*********workaround：error code start issue NO.230506103757615893********/
+		qcom,pmic_not_support_lpm;
+/*********workaround：error code end********/
 	};
 	oplus_devinfo:oplus_devinfo {
 		compatible = "oplus-devinfo";
@@ -810,6 +813,17 @@
 		interrupts = <7 IRQ_TYPE_EDGE_FALLING 7 0>;
 		debounce = <32000>;
 		status = "okay";
+	};
+
+	pmic_history_count:pmic_history_count {
+	};
+	pmic_history0:pmic_history0 {
+	};
+	pmic_history1:pmic_history1 {
+	};
+	pmic_history2:pmic_history2 {
+	};
+	pmic_history3:pmic_history3 {
 	};
 
 };

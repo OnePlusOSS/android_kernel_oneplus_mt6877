@@ -14,7 +14,11 @@
 #include "include/pmic.h"
 #include "include/pmic_api.h"
 #include "include/pmic_api_buck.h"
-
+#ifdef OPLUS_FEATURE_CHG_BASIC
+/*********workaround：error code start issue NO.230506103757615893********/
+extern bool pmic_not_support_lpm;
+/*********workaround：error code end********/
+#endif
 #define LP_INIT_SETTING_VERIFIED 1
 
 unsigned int g_pmic_chip_version = 1;
@@ -415,7 +419,13 @@ void PMIC_LP_INIT_SETTING(void)
 	pmic_buck_vgpu11_lp(SRCLKEN0, 1, 1, HW_LP);
 	pmic_buck_vgpu12_lp(SW, 1, 1, SW_OFF);
 	pmic_buck_vmodem_lp(SRCLKEN1, 0, 1, HW_OFF);
-	pmic_buck_vs1_lp(SRCLKEN0, 1, 1, HW_LP);
+#ifdef OPLUS_FEATURE_CHG_BASIC
+/*********workaround：error code start issue NO.230506103757615893********/
+	if (!pmic_not_support_lpm) {
+		pmic_buck_vs1_lp(SRCLKEN0, 1, 1, HW_LP);
+	}
+/*********workaround：error code end********/
+#endif
 	pmic_buck_vs2_lp(SRCLKEN0, 1, 1, HW_LP);
 	pmic_buck_vpa_lp(SW, 1, 1, SW_OFF);
 	pmic_ldo_vsram_proc1_lp(SW, 1, 1, SW_OFF);
@@ -457,7 +467,13 @@ void PMIC_LP_INIT_SETTING(void)
 	pmic_buck_vgpu11_lp(SRCLKEN2, 1, 1, HW_LP);
 	pmic_buck_vgpu12_lp(SW, 1, 1, SW_OFF);
 	pmic_buck_vmodem_lp(SRCLKEN1, 0, 1, HW_OFF);
-	pmic_buck_vs1_lp(SRCLKEN2, 1, 1, HW_LP);
+#ifdef OPLUS_FEATURE_CHG_BASIC
+/*********workaround：error code start issue NO.230506103757615893********/
+	if (!pmic_not_support_lpm) {
+		pmic_buck_vs1_lp(SRCLKEN2, 1, 1, HW_LP);
+	}
+/*********workaround：error code end********/
+#endif
 	pmic_buck_vs2_lp(SRCLKEN2, 1, 1, HW_LP);
 	pmic_buck_vpa_lp(SW, 1, 1, SW_OFF);
 	pmic_ldo_vsram_proc1_lp(SW, 1, 1, SW_OFF);

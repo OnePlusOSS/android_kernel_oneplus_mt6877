@@ -1656,6 +1656,15 @@ pinctrl-names = "default",
 	};
 /* #endif */
 };
+
+&odm {
+/* Add for sim detect */
+    oplus_sim_detect {
+        compatible = "oplus, sim_detect";
+        Hw,sim_det = <&pio 77 0x00>;
+    };
+};
+
 /* GPS GPIO standardization start */
 &pio {
 	gps_pins_default: gps_default {

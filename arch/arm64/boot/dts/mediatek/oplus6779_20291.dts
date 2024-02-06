@@ -1002,6 +1002,9 @@
 		 */
 		touchpanel,button-type = <4>;
 		touchpanel.button-TRx = <0 0>;
+		tp_exit_suspend_support;
+		irq_need_dev_resume_ok;
+		touchpanel,msecs-to-jiffies-time = <500>;
 	};
 };
 /*#endif OPLUS_FEATURE_TP_BASIC*/

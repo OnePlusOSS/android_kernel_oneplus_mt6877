@@ -69,6 +69,8 @@ enum {
 	CABC_LEVEL_2 = 3,
 	CABC_EXIT_SPECIAL = 8,
 	CABC_ENTER_SPECIAL = 9,
+	GLOBAL_DRE_OPEN = 10,
+	GLOBAL_DRE_CLOSE = 11,
 };
 
 int oplus_display_set_brightness(void *buf)
@@ -204,6 +206,18 @@ int oplus_display_set_cabc_status(void *buf)
 		cabc_mode, cabc_back_flag, mtk_crtc->panel_ext->params->oplus_display_global_dre);
 	if (cabc_mode < 4) {
 		cabc_back_flag = cabc_mode;
+	}
+
+	if (mtk_crtc->panel_ext->params->oplus_display_global_dre) {
+		if (cabc_mode == GLOBAL_DRE_OPEN) {
+			disp_aal_set_dre_en(1);
+			printk("%s adb cmd enable dre\n", __func__);
+			return 0;
+		} else if (cabc_mode == GLOBAL_DRE_CLOSE) {
+			disp_aal_set_dre_en(0);
+			printk("%s adb cmd disable dre\n", __func__);
+			return 0;
+		}
 	}
 
 	if (cabc_mode == CABC_ENTER_SPECIAL) {

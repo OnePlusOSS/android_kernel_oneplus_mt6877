@@ -1367,7 +1367,7 @@ static int ufs_mtk_init(struct ufs_hba *hba)
 			   MTK_PM_QOS_MEMORY_BANDWIDTH, 0);
 	host->pm_qos_init = true;
 
-	ufs_mtk_biolog_init(host->qos_allowed);
+	ufs_mtk_biolog_init(host, host->qos_allowed);
 
 	ufsdbg_register(hba->dev);
 
@@ -2081,10 +2081,11 @@ EXPORT_SYMBOL_GPL(ufs_mtk_get_hba);
 static int ufs_mtk_remove(struct platform_device *pdev)
 {
 	struct ufs_hba *hba =  platform_get_drvdata(pdev);
+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
 
 	pm_runtime_get_sync(&(pdev)->dev);
 	ufshcd_remove(hba);
-	ufs_mtk_biolog_exit();
+	ufs_mtk_biolog_exit(host);
 	return 0;
 }
 

@@ -120,6 +120,8 @@
 		       16, 4, buf, __len, false);                        \
 } while (0)
 
+extern void blk_uxio_set_read_opt(bool enable);
+
 int ufshcd_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
 		     const char *prefix)
 {
@@ -258,7 +260,7 @@ static struct ufs_dev_fix ufs_fixups[] = {
 	UFS_FIX(UFS_ANY_VENDOR, UFS_ANY_MODEL,
 		UFS_DEVICE_QUIRK_VCC_OFF_DELAY),
 
-	#if defined(CONFIG_SCSI_SKHPB)
+#if defined(CONFIG_SCSI_SKHPB)
 	UFS_FIX(UFS_VENDOR_SKHYNIX, "H28S",
 		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
 
@@ -288,6 +290,14 @@ static struct ufs_dev_fix ufs_fixups[] = {
 	UFS_FIX(UFS_VENDOR_SKHYNIX, "H9HQ21AHDMM",
 		SKHPB_QUIRK_PURGE_HINT_INFO_WHEN_SLEEP),
 #endif
+	UFS_FIX(UFS_VENDOR_SAMSUNG, "KM8L9001JM-B624",
+		UFS_DEVICE_QUIRK_WORSE_PERFORMANCE),
+	UFS_FIX(UFS_VENDOR_SAMSUNG, "KM2L9001CM-B518",
+		UFS_DEVICE_QUIRK_WORSE_PERFORMANCE),
+        UFS_FIX(UFS_VENDOR_SAMSUNG, "KM8L9001JM-B624",
+		UFS_DEVICE_QUIRK_URGENT_GC),
+        UFS_FIX(UFS_VENDOR_SAMSUNG, "KM2L9001CM-B518",
+                UFS_DEVICE_QUIRK_URGENT_GC),
 
 	END_FIX
 };
@@ -2081,7 +2091,7 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
 {
 	hba->lrb[task_tag].issue_time_stamp = ktime_get();
 	hba->lrb[task_tag].compl_time_stamp = ktime_set(0, 0);
-	ufshcd_add_command_trace(hba, task_tag, "send");
+	//ufshcd_add_command_trace(hba, task_tag, "send");
 	ufshcd_clk_scaling_start_busy(hba);
 
 	if (ufshcd_vops_has_ufshci_perf_heuristic(hba) &&
@@ -5373,7 +5383,7 @@ static int __ufshcd_transfer_req_compl(struct ufs_hba *hba,
 		ufshcd_vops_compl_xfer_req(hba, index, completed_reqs,
 			(cmd) ? true : false);
 		if (cmd) {
-			ufshcd_add_command_trace(hba, index, "complete");
+			//ufshcd_add_command_trace(hba, index, "complete");
 
 			if (hba->invalid_resp_upiu) {
 				if (hba->ufshcd_state != UFSHCD_STATE_RESET)
@@ -5411,8 +5421,8 @@ static int __ufshcd_transfer_req_compl(struct ufs_hba *hba,
 			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
 			lrbp->compl_time_stamp = ktime_get();
 			if (hba->dev_cmd.complete) {
-				ufshcd_add_command_trace(hba, index,
-						"dev_complete");
+				//ufshcd_add_command_trace(hba, index,
+				//		"dev_complete");
 				complete(hba->dev_cmd.complete);
 			}
 		}
@@ -6841,7 +6851,7 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
 
 	/* Print Transfer Request of aborted task */
 	dev_err(hba->dev, "%s: Device abort task at tag %d\n", __func__, tag);
-	ufshcd_add_command_trace(hba, tag, "abort");
+	//ufshcd_add_command_trace(hba, tag, "abort");
 
 	/*
 	 * Print detailed info about aborted request.
@@ -7839,6 +7849,10 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
 	if (hba->dev_info.wmanufacturerid == UFS_VENDOR_SKHYNIX)
 		schedule_delayed_work(&hba->skhpb_init_work, 0);
 #endif
+	/* for worse performance device */
+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_WORSE_PERFORMANCE) {
+		blk_uxio_set_read_opt(true);
+	}
 
 	/*
 	 * bActiveICCLevel is volatile for UFS device (as per latest v2.1 spec)
@@ -7853,6 +7867,11 @@ static int ufshcd_probe_hba(struct ufs_hba *hba, bool async)
 
 	/* Enable Auto-Hibernate if configured */
 	ufshcd_auto_hibern8_enable(hba);
+
+	/* Allow auto bkops to enabled during runtime suspend */
+	/* Need to fix VCCQ2 issue first */
+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_WORSE_PERFORMANCE)
+		hba->caps |= UFSHCD_CAP_AUTO_BKOPS_SUSPEND;
 
 out:
 
@@ -9009,7 +9028,7 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
 		}
 	}
 #if defined(CONFIG_SCSI_UFS_FEATURE) && defined(CONFIG_SCSI_UFS_TW)
-		if (ufstw_need_flush(&hba->ufsf)) {
+		if (ufshcd_is_runtime_pm(pm_op) && ufstw_need_flush(&hba->ufsf)) {
 			ret = -EAGAIN;
 			pm_runtime_mark_last_busy(hba->dev);
 			goto enable_gating;

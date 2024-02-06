@@ -2625,6 +2625,8 @@ blk_qc_t submit_bio(struct bio *bio)
 		bio->bi_opf |= REQ_UX;
 	else if (high_prio_for_task(current))
 		bio->bi_opf |= REQ_FG;
+	else if (blk_uxio_get_read_opt() && !op_is_write(bio_op(bio)))
+		bio->bi_opf |= REQ_FG;
 #endif
 	/*
 	 * If we're reading data that is part of the userspace

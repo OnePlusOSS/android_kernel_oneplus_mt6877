@@ -49,6 +49,7 @@
 #define NAMEI_RA_CHUNKS  2
 #define NAMEI_RA_BLOCKS  4
 #define NAMEI_RA_SIZE	     (NAMEI_RA_CHUNKS * NAMEI_RA_BLOCKS)
+#define fname_usr_name(p) ((p)->usr_fname->name)
 
 static struct buffer_head *ext4_append(handle_t *handle,
 					struct inode *inode,
@@ -1549,6 +1550,18 @@ restart:
 		i = search_dirblock(bh, dir, fname,
 			    block << EXT4_BLOCK_SIZE_BITS(sb), res_dir);
 		if (i == 1) {
+			if (*res_dir && dir->i_ino == le32_to_cpu((*res_dir)->inode)
+				&& strcmp(fname_usr_name(fname), ".") != 0
+				&& strncmp(fname_name(fname), ".", fname_len(fname)) == 0) {
+					/*
+					 * If the found ino is equal to parent ino, the searched file
+					 * name is not ".", and the filename's ciphertext is equal to
+					 * ".". It is false alarm. The error should be ignored.
+					 */
+					brelse(bh);
+					i = -1;
+					goto cleanup_and_exit;
+			}
 			EXT4_I(dir)->i_dir_start_lookup = block;
 			ret = bh;
 			goto cleanup_and_exit;
