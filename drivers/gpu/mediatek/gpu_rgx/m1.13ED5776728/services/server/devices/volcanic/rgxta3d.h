@@ -150,6 +150,7 @@ typedef struct {
 	IMG_UINT32				ui32ZSBufferID;
 	IMG_UINT32				ui32RefCount;
 	IMG_BOOL				bOnDemand;
+	IMG_BOOL				bIsBacked;
 
 	IMG_BOOL				ui32NumReqByApp;		/* Number of Backing Requests from Application */
 	IMG_BOOL				ui32NumReqByFW;			/* Number of Backing Requests from Firmware */

@@ -2324,7 +2324,7 @@ static kal_uint32 set_test_pattern_mode(kal_bool enable)
 {
 	if (enable) {
 		write_cmos_sensor(0x5000, 0x81);
-		write_cmos_sensor(0x5080, 0x80);
+		write_cmos_sensor(0x5080, 0x81);
 	} else {
 		write_cmos_sensor(0x5000, 0xff);
 		write_cmos_sensor(0x5080, 0x00);

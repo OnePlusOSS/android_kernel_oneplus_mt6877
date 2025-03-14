@@ -198,6 +198,7 @@
 		pinctrl-3 = <&charging_inter_sleep>;
 
 		qcom,charging_switch1-gpio = <&pio 132 0x00>;
+		ovp_reg = <0x36>;
 
 		/*qcom,voocphy_dual_cp_support;*/
 		qcom,external_gauge_support;
