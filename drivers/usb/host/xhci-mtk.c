@@ -986,6 +986,9 @@ static int xhci_mtk_remove(struct platform_device *dev)
 	}
 #endif
 
+	pm_runtime_put_noidle(&dev->dev);
+	pm_runtime_disable(&dev->dev);
+
 	usb_remove_hcd(shared_hcd);
 	xhci->shared_hcd = NULL;
 	xhci_mtk_phy_power_off(mtk);
