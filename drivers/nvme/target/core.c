@@ -594,9 +594,20 @@ static void nvmet_start_ctrl(struct nvmet_ctrl *ctrl)
 {
 	lockdep_assert_held(&ctrl->lock);
 
-	if (nvmet_cc_iosqes(ctrl->cc) != NVME_NVM_IOSQES ||
-	    nvmet_cc_iocqes(ctrl->cc) != NVME_NVM_IOCQES ||
-	    nvmet_cc_mps(ctrl->cc) != 0 ||
+	/*
+	 * Only I/O controllers should verify iosqes,iocqes.
+	 * Strictly speaking, the spec says a discovery controller
+	 * should verify iosqes,iocqes are zeroed, however that
+	 * would break backwards compatibility, so don't enforce it.
+	 */
+	if (ctrl->subsys->type != NVME_NQN_DISC &&
+	    (nvmet_cc_iosqes(ctrl->cc) != NVME_NVM_IOSQES ||
+	     nvmet_cc_iocqes(ctrl->cc) != NVME_NVM_IOCQES)) {
+		ctrl->csts = NVME_CSTS_CFS;
+		return;
+	}
+
+	if (nvmet_cc_mps(ctrl->cc) != 0 ||
 	    nvmet_cc_ams(ctrl->cc) != 0 ||
 	    nvmet_cc_css(ctrl->cc) != 0) {
 		ctrl->csts = NVME_CSTS_CFS;
@@ -611,7 +622,8 @@ static void nvmet_start_ctrl(struct nvmet_ctrl *ctrl)
 	 * in case a host died before it enabled the controller.  Hence, simply
 	 * reset the keep alive timer when the controller is enabled.
 	 */
-	mod_delayed_work(system_wq, &ctrl->ka_work, ctrl->kato * HZ);
+	if (ctrl->kato)
+		mod_delayed_work(system_wq, &ctrl->ka_work, ctrl->kato * HZ);
 }
 
 static void nvmet_clear_ctrl(struct nvmet_ctrl *ctrl)
