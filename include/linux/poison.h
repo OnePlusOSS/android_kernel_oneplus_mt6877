@@ -2,6 +2,7 @@
 #ifndef _LINUX_POISON_H
 #define _LINUX_POISON_H
 
+#include <uapi/linux/const.h>
 /********** include/linux/list.h **********/
 
 /*
