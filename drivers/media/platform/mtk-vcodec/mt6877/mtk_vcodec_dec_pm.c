@@ -120,6 +120,8 @@ void mtk_vcodec_release_dec_pm(struct mtk_vcodec_dev *dev)
 	free_hist(&vdec_hists, 0);
 	mutex_unlock(&dev->dec_dvfs_mutex);
 #endif
+	pm_runtime_disable(dev->pm.dev);
+	put_device(dev->pm.larbvdec);
 }
 
 void mtk_vcodec_dec_pw_on(struct mtk_vcodec_pm *pm, int hw_id)

@@ -1662,10 +1662,15 @@ next_step:
 
 		if (phase == 3) {
 			inode = f2fs_iget(sb, dni.ino);
+
+			/* if encrypted inode, let's go phase 3 */
 			if (IS_ERR(inode) || is_bad_inode(inode)) {
 				set_sbi_flag(sbi, SBI_NEED_FSCK);
 				continue;
 			}
+
+			if (special_file(inode->i_mode))
+				continue;
 
 			if (!down_write_trylock(
 				&F2FS_I(inode)->i_gc_rwsem[WRITE])) {

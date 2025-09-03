@@ -665,6 +665,7 @@ static int mtu3_gadget_start(struct usb_gadget *gadget,
 
 	spin_unlock_irqrestore(&mtu->lock, flags);
 
+	synchronize_irq(mtu->irq);
 	return 0;
 }
 
